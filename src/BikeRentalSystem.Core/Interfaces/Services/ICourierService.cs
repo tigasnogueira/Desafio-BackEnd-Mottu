@@ -1,9 +1,14 @@
 ﻿using BikeRentalSystem.Core.Models;
 
-namespace BikeRentalSystem.Core.Interfaces.Repositories;
+namespace BikeRentalSystem.Core.Interfaces.Services;
 
-public interface ICourierRepository : IRepository<Courier>
+public interface ICourierService
 {
+    Task<Courier> GetCourierByIdAsync(Guid id);
+    Task<IEnumerable<Courier>> GetAllAsync();
+    Task<Courier> AddCourierAsync(Courier entity);
+    Task<Courier> UpdateCourierAsync(Courier entity);
+    Task<Courier> DeleteCourierAsync(Guid id);
     Task<IEnumerable<Courier>> GetAvailableCouriers();
     Task<IEnumerable<Courier>> GetUnavailableCouriers();
     Task<IEnumerable<Courier>> GetCouriersByFirstName(string firstName);

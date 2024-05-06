@@ -1,27 +1,91 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using Microsoft.Extensions.Logging;
-using MongoDB.Driver;
 
-namespace BikeRentalSystem.Infrastructure.Repositories;
+namespace BikeRentalSystem.Services.Services;
 
-public class CourierRepository : Repository<Courier>, ICourierRepository
+public class CourierService : ICourierService
 {
-    private readonly IMongoCollection<Courier> _collection;
-    private readonly ILogger<CourierRepository> _logger;
+    private readonly ICourierRepository _courierRepository;
+    private readonly ILogger<CourierService> _logger;
 
-    public CourierRepository(IMongoDatabase database, ILogger<CourierRepository> logger)
-        : base(database, "couriers", logger)
+    public CourierService(ICourierRepository courierRepository, ILogger<CourierService> logger)
     {
-        _collection = database.GetCollection<Courier>("couriers");
+        _courierRepository = courierRepository;
         _logger = logger;
+    }
+
+    public async Task<Courier> GetCourierByIdAsync(Guid id)
+    {
+        try
+        {
+            return await _courierRepository.GetByIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<Courier>> GetAllAsync()
+    {
+        try
+        {
+            return await _courierRepository.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<Courier> AddCourierAsync(Courier entity)
+    {
+        try
+        {
+            return await _courierRepository.AddAsync(entity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<Courier> UpdateCourierAsync(Courier entity)
+    {
+        try
+        {
+            return await _courierRepository.UpdateAsync(entity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<Courier> DeleteCourierAsync(Guid id)
+    {
+        try
+        {
+            return await _courierRepository.DeleteAsync(id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
     public async Task<IEnumerable<Courier>> GetAvailableCouriers()
     {
         try
         {
-            return _collection.Find(e => !e.IsAvailable).ToList();
+            return await _courierRepository.GetAvailableCouriers();
         }
         catch (Exception ex)
         {
@@ -34,7 +98,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.IsAvailable).ToList();
+            return await _courierRepository.GetUnavailableCouriers();
         }
         catch (Exception ex)
         {
@@ -47,7 +111,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.FirstName == firstName).ToList();
+            return await _courierRepository.GetCouriersByFirstName(firstName);
         }
         catch (Exception ex)
         {
@@ -60,7 +124,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.LastName == lastName).ToList();
+            return await _courierRepository.GetCouriersByLastName(lastName);
         }
         catch (Exception ex)
         {
@@ -73,7 +137,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.CNPJ == cnpj).ToList();
+            return await _courierRepository.GetCouriersByCNPJ(cnpj);
         }
         catch (Exception ex)
         {
@@ -86,7 +150,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.BirthDate == birthDate).ToList();
+            return await _courierRepository.GetCouriersByBirthDate(birthDate);
         }
         catch (Exception ex)
         {
@@ -99,7 +163,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.DriverLicenseNumber == driverLicenseNumber).ToList();
+            return await _courierRepository.GetCouriersByDriverLicenseNumber(driverLicenseNumber);
         }
         catch (Exception ex)
         {
@@ -112,7 +176,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.DriverLicenseType == driverLicenseType).ToList();
+            return await _courierRepository.GetCouriersByDriverLicenseType(driverLicenseType);
         }
         catch (Exception ex)
         {
@@ -125,7 +189,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.PhoneNumber == phoneNumber).ToList();
+            return await _courierRepository.GetCouriersByPhoneNumber(phoneNumber);
         }
         catch (Exception ex)
         {
@@ -138,7 +202,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.Email == email).ToList();
+            return await _courierRepository.GetCouriersByEmail(email);
         }
         catch (Exception ex)
         {
@@ -151,7 +215,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
     {
         try
         {
-            return _collection.Find(e => e.ImageUrl == imageUrl).ToList();
+            return await _courierRepository.GetCouriersByImageUrl(imageUrl);
         }
         catch (Exception ex)
         {

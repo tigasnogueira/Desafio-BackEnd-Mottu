@@ -1,5 +1,6 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
@@ -7,55 +8,129 @@ namespace BikeRentalSystem.Infrastructure.Repositories;
 public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepository
 {
     private readonly IMongoCollection<Motorcycle> _collection;
+    private readonly ILogger<MotorcycleRepository> _logger;
 
-    public MotorcycleRepository(IMongoDatabase database)
-        : base(database, "motorcycles")
+    public MotorcycleRepository(IMongoDatabase database, ILogger<MotorcycleRepository> logger)
+        : base(database, "motorcycles", logger)
     {
         _collection = database.GetCollection<Motorcycle>("motorcycles");
+        _logger = logger;
     }
 
-    public IEnumerable<Motorcycle> GetAvailableMotorcycles()
+    public async Task<IEnumerable<Motorcycle>> GetAvailableMotorcycles()
     {
-        return _collection.Find(e => !e.IsRented).ToList();
+        try
+        {
+            return _collection.Find(e => !e.IsRented).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetRentedMotorcycles()
+    public async Task<IEnumerable<Motorcycle>> GetRentedMotorcycles()
     {
-        return _collection.Find(e => e.IsRented).ToList();
+        try
+        {
+            return _collection.Find(e => e.IsRented).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetMotorcyclesByBrand(string brand)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByBrand(string brand)
     {
-        return _collection.Find(e => e.Brand == brand).ToList();
+        try
+        {
+            return _collection.Find(e => e.Brand == brand).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetMotorcyclesByModel(string model)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByModel(string model)
     {
-        return _collection.Find(e => e.Model == model).ToList();
+        try
+        {
+            return _collection.Find(e => e.Model == model).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetMotorcyclesByYear(int year)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByYear(int year)
     {
-        return _collection.Find(e => e.Year == year).ToList();
+        try
+        {
+            return _collection.Find(e => e.Year == year).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetMotorcyclesByColor(string color)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByColor(string color)
     {
-        return _collection.Find(e => e.Color == color).ToList();
+        try
+        {
+            return _collection.Find(e => e.Color == color).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetMotorcyclesByEngineSize(int engineSize)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByEngineSize(int engineSize)
     {
-        return _collection.Find(e => e.EngineSize == engineSize).ToList();
+        try
+        {
+            return _collection.Find(e => e.EngineSize == engineSize).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetMotorcyclesByMileage(int mileage)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByMileage(int mileage)
     {
-        return _collection.Find(e => e.Mileage == mileage).ToList();
+        try
+        {
+            return _collection.Find(e => e.Mileage == mileage).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
-    public IEnumerable<Motorcycle> GetMotorcyclesByLicensePlate(string licensePlate)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByLicensePlate(string licensePlate)
     {
-        return _collection.Find(e => e.LicensePlate == licensePlate).ToList();
+        try
+        {
+            return _collection.Find(e => e.LicensePlate == licensePlate).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 }
