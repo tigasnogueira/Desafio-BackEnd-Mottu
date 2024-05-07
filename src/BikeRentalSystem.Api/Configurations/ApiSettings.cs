@@ -12,6 +12,7 @@ public class ApiSettings
         services.AddDependencyInjection(configuration);
         services.AddSwaggerConfiguration();
         services.AddHealthChecksConfiguration(configuration);
+        services.AddAutoMapper(typeof(AutomapperConfig));
     }
 
     public void ConfigurePipeline(IApplicationBuilder app, IWebHostEnvironment env)

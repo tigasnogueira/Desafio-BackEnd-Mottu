@@ -4,6 +4,11 @@ namespace BikeRentalSystem.Core.Interfaces.Services;
 
 public interface IRentalService
 {
+    Task<Rental> GetRentalByIdAsync(Guid id);
+    Task<IEnumerable<Rental>> GetAllAsync();
+    Task<Rental> AddRentalAsync(Rental entity);
+    Task<Rental> UpdateRentalAsync(Rental entity);
+    Task<Rental> DeleteRentalAsync(Guid id);
     Task<IEnumerable<Rental>> GetRentalsByMotorcycleIdAsync(Guid motorcycleId);
     Task<IEnumerable<Rental>> GetRentalsByCourierIdAsync(Guid courierId);
     Task<IEnumerable<Rental>> GetRentalsByStartDateAsync(DateTime startDate);

@@ -16,6 +16,71 @@ public class RentalService : IRentalService
         _logger = logger;
     }
 
+    public async Task<Rental> GetRentalByIdAsync(Guid id)
+    {
+        try
+        {
+            return await _rentalRepository.GetByIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<Rental>> GetAllAsync()
+    {
+        try
+        {
+            return await _rentalRepository.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<Rental> AddRentalAsync(Rental entity)
+    {
+        try
+        {
+            return await _rentalRepository.AddAsync(entity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<Rental> UpdateRentalAsync(Rental entity)
+    {
+        try
+        {
+            return await _rentalRepository.UpdateAsync(entity);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<Rental> DeleteRentalAsync(Guid id)
+    {
+        try
+        {
+            return await _rentalRepository.DeleteAsync(id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
     public async Task<IEnumerable<Rental>> GetRentalsByMotorcycleIdAsync(Guid motorcycleId)
     {
         try
