@@ -2,23 +2,23 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Models.Validations;
 using Microsoft.Extensions.Logging;
 
 namespace BikeRentalSystem.Services.Services;
 
-public class RentalService : IRentalService
+public class RentalService : BaseService, IRentalService
 {
     private readonly IRentalRepository _rentalRepository;
     private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<RentalService> _logger;
     private readonly INotifier _notifier;
 
-    public RentalService(IRentalRepository rentalRepository, IMessagePublisher messagePublisher, ILogger<RentalService> logger, INotifier notifier)
+    public RentalService(IRentalRepository rentalRepository, IMessagePublisher messagePublisher, ILogger<RentalService> logger, INotifier notifier) : base(notifier)
     {
         _rentalRepository = rentalRepository;
         _messagePublisher = messagePublisher;
         _logger = logger;
-        _notifier = notifier;
     }
 
     public async Task<Rental> GetRentalByIdAsync(Guid id)
@@ -53,6 +53,8 @@ public class RentalService : IRentalService
     {
         try
         {
+            if (!ExecuteValidation(new RentalValidation(), entity)) return null;
+
             _notifier.Handle("Rental was added");
             return await _rentalRepository.AddAsync(entity);
         }
@@ -67,6 +69,8 @@ public class RentalService : IRentalService
     {
         try
         {
+            if (!ExecuteValidation(new RentalValidation(), entity)) return null;
+
             _notifier.Handle($"Rental with id {entity.Id} was updated");
             return await _rentalRepository.UpdateAsync(entity);
         }

@@ -2,23 +2,23 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Models.Validations;
 using Microsoft.Extensions.Logging;
 
 namespace BikeRentalSystem.Services.Services;
 
-public class CourierService : ICourierService
+public class CourierService : BaseService, ICourierService
 {
     private readonly ICourierRepository _courierRepository;
     private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<CourierService> _logger;
     private readonly INotifier _notifier;
 
-    public CourierService(ICourierRepository courierRepository, IMessagePublisher messagePublisher, ILogger<CourierService> logger, INotifier notifier)
+    public CourierService(ICourierRepository courierRepository, IMessagePublisher messagePublisher, ILogger<CourierService> logger, INotifier notifier) : base(notifier)
     {
         _courierRepository = courierRepository;
         _messagePublisher = messagePublisher;
         _logger = logger;
-        _notifier = notifier;
     }
 
     public async Task<Courier> GetCourierByIdAsync(Guid id)
@@ -53,6 +53,8 @@ public class CourierService : ICourierService
     {
         try
         {
+            if (!ExecuteValidation(new CourierValidation(_courierRepository), entity)) return null;
+
             _notifier.Handle("Courier was added");
             return await _courierRepository.AddAsync(entity);
         }
@@ -67,6 +69,8 @@ public class CourierService : ICourierService
     {
         try
         {
+            if (!ExecuteValidation(new CourierValidation(_courierRepository), entity)) return null;
+
             _notifier.Handle("Courier was updated");
             return await _courierRepository.UpdateAsync(entity);
         }
@@ -91,12 +95,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetAvailableCouriers()
+    public async Task<IEnumerable<Courier>> GetAvailableCouriersAsync()
     {
         try
         {
             _notifier.Handle("Available couriers were accessed");
-            return await _courierRepository.GetAvailableCouriers();
+            return await _courierRepository.GetAvailableCouriersAsync();
         }
         catch (Exception ex)
         {
@@ -105,12 +109,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetUnavailableCouriers()
+    public async Task<IEnumerable<Courier>> GetUnavailableCouriersAsync()
     {
         try
         {
             _notifier.Handle("Unavailable couriers were accessed");
-            return await _courierRepository.GetUnavailableCouriers();
+            return await _courierRepository.GetUnavailableCouriersAsync();
         }
         catch (Exception ex)
         {
@@ -119,12 +123,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByFirstName(string firstName)
+    public async Task<IEnumerable<Courier>> GetCouriersByFirstNameAsync(string firstName)
     {
         try
         {
             _notifier.Handle($"Couriers with first name {firstName} were accessed");
-            return await _courierRepository.GetCouriersByFirstName(firstName);
+            return await _courierRepository.GetCouriersByFirstNameAsync(firstName);
         }
         catch (Exception ex)
         {
@@ -133,12 +137,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByLastName(string lastName)
+    public async Task<IEnumerable<Courier>> GetCouriersByLastNameAsync(string lastName)
     {
         try
         {
             _notifier.Handle($"Couriers with last name {lastName} were accessed");
-            return await _courierRepository.GetCouriersByLastName(lastName);
+            return await _courierRepository.GetCouriersByLastNameAsync(lastName);
         }
         catch (Exception ex)
         {
@@ -147,12 +151,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByCNPJ(string cnpj)
+    public async Task<IEnumerable<Courier>> GetCouriersByCNPJAsync(string cnpj)
     {
         try
         {
             _notifier.Handle($"Couriers with CNPJ {cnpj} were accessed");
-            return await _courierRepository.GetCouriersByCNPJ(cnpj);
+            return await _courierRepository.GetCouriersByCNPJAsync(cnpj);
         }
         catch (Exception ex)
         {
@@ -161,12 +165,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByBirthDate(DateTime birthDate)
+    public async Task<IEnumerable<Courier>> GetCouriersByBirthDateAsync(DateTime birthDate)
     {
         try
         {
             _notifier.Handle($"Couriers with birth date {birthDate} were accessed");
-            return await _courierRepository.GetCouriersByBirthDate(birthDate);
+            return await _courierRepository.GetCouriersByBirthDateAsync(birthDate);
         }
         catch (Exception ex)
         {
@@ -175,12 +179,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseNumber(string driverLicenseNumber)
+    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseNumberAsync(string driverLicenseNumber)
     {
         try
         {
             _notifier.Handle($"Couriers with driver license number {driverLicenseNumber} were accessed");
-            return await _courierRepository.GetCouriersByDriverLicenseNumber(driverLicenseNumber);
+            return await _courierRepository.GetCouriersByDriverLicenseNumberAsync(driverLicenseNumber);
         }
         catch (Exception ex)
         {
@@ -189,12 +193,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseType(string driverLicenseType)
+    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseTypeAsync(string driverLicenseType)
     {
         try
         {
             _notifier.Handle($"Couriers with driver license type {driverLicenseType} were accessed");
-            return await _courierRepository.GetCouriersByDriverLicenseType(driverLicenseType);
+            return await _courierRepository.GetCouriersByDriverLicenseTypeAsync(driverLicenseType);
         }
         catch (Exception ex)
         {
@@ -203,12 +207,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByPhoneNumber(string phoneNumber)
+    public async Task<IEnumerable<Courier>> GetCouriersByPhoneNumberAsync(string phoneNumber)
     {
         try
         {
             _notifier.Handle($"Couriers with phone number {phoneNumber} were accessed");
-            return await _courierRepository.GetCouriersByPhoneNumber(phoneNumber);
+            return await _courierRepository.GetCouriersByPhoneNumberAsync(phoneNumber);
         }
         catch (Exception ex)
         {
@@ -217,12 +221,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByEmail(string email)
+    public async Task<IEnumerable<Courier>> GetCouriersByEmailAsync(string email)
     {
         try
         {
             _notifier.Handle($"Couriers with email {email} were accessed");
-            return await _courierRepository.GetCouriersByEmail(email);
+            return await _courierRepository.GetCouriersByEmailAsync(email);
         }
         catch (Exception ex)
         {
@@ -231,12 +235,12 @@ public class CourierService : ICourierService
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByImageUrl(string imageUrl)
+    public async Task<IEnumerable<Courier>> GetCouriersByImageUrlAsync(string imageUrl)
     {
         try
         {
             _notifier.Handle($"Couriers with image URL {imageUrl} were accessed");
-            return await _courierRepository.GetCouriersByImageUrl(imageUrl);
+            return await _courierRepository.GetCouriersByImageUrlAsync(imageUrl);
         }
         catch (Exception ex)
         {

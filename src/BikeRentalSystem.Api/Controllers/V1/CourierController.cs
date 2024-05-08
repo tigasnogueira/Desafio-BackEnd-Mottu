@@ -115,7 +115,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetAvailableCouriers();
+            var couriers = await _courierService.GetAvailableCouriersAsync();
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -131,7 +131,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetUnavailableCouriers();
+            var couriers = await _courierService.GetUnavailableCouriersAsync();
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -147,7 +147,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByFirstName(firstName);
+            var couriers = await _courierService.GetCouriersByFirstNameAsync(firstName);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -163,7 +163,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByLastName(lastName);
+            var couriers = await _courierService.GetCouriersByLastNameAsync(lastName);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -179,7 +179,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByCNPJ(cnpj);
+            var couriers = await _courierService.GetCouriersByCNPJAsync(cnpj);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -195,7 +195,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByBirthDate(birthDate);
+            var couriers = await _courierService.GetCouriersByBirthDateAsync(birthDate);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -211,7 +211,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByDriverLicenseNumber(driverLicenseNumber);
+            var couriers = await _courierService.GetCouriersByDriverLicenseNumberAsync(driverLicenseNumber);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -227,7 +227,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByDriverLicenseType(driverLicenseType);
+            var couriers = await _courierService.GetCouriersByDriverLicenseTypeAsync(driverLicenseType);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -243,7 +243,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByPhoneNumber(phoneNumber);
+            var couriers = await _courierService.GetCouriersByPhoneNumberAsync(phoneNumber);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -259,7 +259,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByEmail(email);
+            var couriers = await _courierService.GetCouriersByEmailAsync(email);
             return CustomResponse(couriers);
         }
         catch (Exception ex)
@@ -275,7 +275,7 @@ public class CourierController : MainController
     {
         try
         {
-            var couriers = await _courierService.GetCouriersByImageUrl(imageUrl);
+            var couriers = await _courierService.GetCouriersByImageUrlAsync(imageUrl);
             return CustomResponse(couriers);
         }
         catch (Exception ex)

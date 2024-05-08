@@ -19,7 +19,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Courier>> GetAvailableCouriers()
+    public async Task<IEnumerable<Courier>> GetAvailableCouriersAsync()
     {
         try
         {
@@ -33,7 +33,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetUnavailableCouriers()
+    public async Task<IEnumerable<Courier>> GetUnavailableCouriersAsync()
     {
         try
         {
@@ -47,7 +47,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByFirstName(string firstName)
+    public async Task<IEnumerable<Courier>> GetCouriersByFirstNameAsync(string firstName)
     {
         try
         {
@@ -61,7 +61,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByLastName(string lastName)
+    public async Task<IEnumerable<Courier>> GetCouriersByLastNameAsync(string lastName)
     {
         try
         {
@@ -75,7 +75,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByCNPJ(string cnpj)
+    public async Task<IEnumerable<Courier>> GetCouriersByCNPJAsync(string cnpj)
     {
         try
         {
@@ -89,7 +89,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByBirthDate(DateTime birthDate)
+    public async Task<IEnumerable<Courier>> GetCouriersByBirthDateAsync(DateTime birthDate)
     {
         try
         {
@@ -103,7 +103,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseNumber(string driverLicenseNumber)
+    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseNumberAsync(string driverLicenseNumber)
     {
         try
         {
@@ -117,7 +117,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseType(string driverLicenseType)
+    public async Task<IEnumerable<Courier>> GetCouriersByDriverLicenseTypeAsync(string driverLicenseType)
     {
         try
         {
@@ -131,7 +131,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByPhoneNumber(string phoneNumber)
+    public async Task<IEnumerable<Courier>> GetCouriersByPhoneNumberAsync(string phoneNumber)
     {
         try
         {
@@ -145,7 +145,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByEmail(string email)
+    public async Task<IEnumerable<Courier>> GetCouriersByEmailAsync(string email)
     {
         try
         {
@@ -159,12 +159,40 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         }
     }
 
-    public async Task<IEnumerable<Courier>> GetCouriersByImageUrl(string imageUrl)
+    public async Task<IEnumerable<Courier>> GetCouriersByImageUrlAsync(string imageUrl)
     {
         try
         {
             _notifier.Handle($"Couriers with image URL {imageUrl} were accessed");
             return _collection.Find(e => e.ImageUrl == imageUrl).ToList();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<bool> IsCNPJUniqueAsync(string cnpj)
+    {
+        try
+        {
+            _notifier.Handle($"Checking if courier with CNPJ {cnpj} is unique");
+            return await _collection.Find(e => e.CNPJ == cnpj).CountDocumentsAsync() == 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<bool> IsDriverLicenseNumberUniqueAsync(string driverLicenseNumber)
+    {
+        try
+        {
+            _notifier.Handle($"Checking if courier with driver license number {driverLicenseNumber} is unique");
+            return await _collection.Find(e => e.DriverLicenseNumber == driverLicenseNumber).CountDocumentsAsync() == 0;
         }
         catch (Exception ex)
         {

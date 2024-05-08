@@ -2,23 +2,23 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Models.Validations;
 using Microsoft.Extensions.Logging;
 
 namespace BikeRentalSystem.Services.Services;
 
-public class MotorcycleService : IMotorcycleService
+public class MotorcycleService : BaseService, IMotorcycleService
 {
     private readonly IMotorcycleRepository _motorcycleRepository;
     private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<MotorcycleService> _logger;
     private readonly INotifier _notifier;
 
-    public MotorcycleService(IMotorcycleRepository motorcycleRepository, IMessagePublisher messagePublisher, ILogger<MotorcycleService> logger, INotifier notifier)
+    public MotorcycleService(IMotorcycleRepository motorcycleRepository, IMessagePublisher messagePublisher, ILogger<MotorcycleService> logger, INotifier notifier) : base(notifier)
     {
         _motorcycleRepository = motorcycleRepository;
         _messagePublisher = messagePublisher;
         _logger = logger;
-        _notifier = notifier;
     }
 
     public async Task<Motorcycle> GetMotorcycleByIdAsync(Guid id)
@@ -53,10 +53,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
-            if (!await _motorcycleRepository.IsLicensePlateUniqueAsync(entity.LicensePlate))
-            {
-                throw new ArgumentException("License plate must be unique");
-            }
+            if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), entity)) return null;
 
             _notifier.Handle($"New motorcycle added: {entity.LicensePlate}");
             var addedMotorcycle = await _motorcycleRepository.AddAsync(entity);
@@ -80,6 +77,8 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), entity)) return null;
+
             _notifier.Handle($"Motorcycle updated: {entity.LicensePlate}");
             return await _motorcycleRepository.UpdateAsync(entity);
         }
@@ -94,6 +93,8 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), new Motorcycle { Id = id })) return null;
+
             _notifier.Handle($"Motorcycle deleted: {id}");
             return await _motorcycleRepository.DeleteAsync(id);
         }
@@ -104,12 +105,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetAvailableMotorcycles()
+    public async Task<IEnumerable<Motorcycle>> GetAvailableMotorcyclesAsync()
     {
         try
         {
             _notifier.Handle("Available motorcycles were accessed");
-            return await _motorcycleRepository.GetAvailableMotorcycles();
+            return await _motorcycleRepository.GetAvailableMotorcyclesAsync();
         }
         catch (Exception ex)
         {
@@ -118,12 +119,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetRentedMotorcycles()
+    public async Task<IEnumerable<Motorcycle>> GetRentedMotorcyclesAsync()
     {
         try
         {
             _notifier.Handle("Rented motorcycles were accessed");
-            return await _motorcycleRepository.GetRentedMotorcycles();
+            return await _motorcycleRepository.GetRentedMotorcyclesAsync();
         }
         catch (Exception ex)
         {
@@ -132,12 +133,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByBrand(string brand)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByBrandAsync(string brand)
     {
         try
         {
             _notifier.Handle($"Motorcycles by brand {brand} were accessed");
-            return await _motorcycleRepository.GetMotorcyclesByBrand(brand);
+            return await _motorcycleRepository.GetMotorcyclesByBrandAsync(brand);
         }
         catch (Exception ex)
         {
@@ -146,12 +147,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByModel(string model)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByModelAsync(string model)
     {
         try
         {
             _notifier.Handle($"Motorcycles by model {model} were accessed");
-            return await _motorcycleRepository.GetMotorcyclesByModel(model);
+            return await _motorcycleRepository.GetMotorcyclesByModelAsync(model);
         }
         catch (Exception ex)
         {
@@ -160,12 +161,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByYear(int year)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByYearAsync(int year)
     {
         try
         {
             _notifier.Handle($"Motorcycles by year {year} were accessed");
-            return await _motorcycleRepository.GetMotorcyclesByYear(year);
+            return await _motorcycleRepository.GetMotorcyclesByYearAsync(year);
         }
         catch (Exception ex)
         {
@@ -174,12 +175,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByColor(string color)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByColorAsync(string color)
     {
         try
         {
             _notifier.Handle($"Motorcycles by color {color} were accessed");
-            return await _motorcycleRepository.GetMotorcyclesByColor(color);
+            return await _motorcycleRepository.GetMotorcyclesByColorAsync(color);
         }
         catch (Exception ex)
         {
@@ -188,12 +189,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByEngineSize(int engineSize)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByEngineSizeAsync(int engineSize)
     {
         try
         {
             _notifier.Handle($"Motorcycles by engine size {engineSize} were accessed");
-            return await _motorcycleRepository.GetMotorcyclesByEngineSize(engineSize);
+            return await _motorcycleRepository.GetMotorcyclesByEngineSizeAsync(engineSize);
         }
         catch (Exception ex)
         {
@@ -202,12 +203,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByMileage(int mileage)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByMileageAsync(int mileage)
     {
         try
         {
             _notifier.Handle($"Motorcycles by mileage {mileage} were accessed");
-            return await _motorcycleRepository.GetMotorcyclesByMileage(mileage);
+            return await _motorcycleRepository.GetMotorcyclesByMileageAsync(mileage);
         }
         catch (Exception ex)
         {
@@ -216,17 +217,31 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<Motorcycle> GetMotorcycleByLicensePlate(string licensePlate)
+    public async Task<Motorcycle> GetMotorcycleByLicensePlateAsync(string licensePlate)
     {
         try
         {
             _notifier.Handle($"Motorcycle by license plate {licensePlate} was accessed");
-            return await _motorcycleRepository.GetMotorcycleByLicensePlate(licensePlate);
+            return await _motorcycleRepository.GetMotorcycleByLicensePlateAsync(licensePlate);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
             throw;
         }
+    }
+
+    public async Task<Motorcycle> UpdateMotorcycleLicensePlateAsync(Guid id, string newLicensePlate)
+    {
+        var motorcycle = await _motorcycleRepository.GetByIdAsync(id);
+        if (motorcycle == null)
+            throw new KeyNotFoundException("Motorcycle not found.");
+
+        if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), new Motorcycle { LicensePlate = newLicensePlate }))
+            return null;
+
+        motorcycle.LicensePlate = newLicensePlate;
+        await _motorcycleRepository.UpdateAsync(motorcycle);
+        return motorcycle;
     }
 }

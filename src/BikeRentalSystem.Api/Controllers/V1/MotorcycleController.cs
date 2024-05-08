@@ -122,7 +122,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetAvailableMotorcycles();
+            var motorcycles = await _motorcycleService.GetAvailableMotorcyclesAsync();
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -138,7 +138,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetRentedMotorcycles();
+            var motorcycles = await _motorcycleService.GetRentedMotorcyclesAsync();
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -154,7 +154,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcyclesByBrand(brand);
+            var motorcycles = await _motorcycleService.GetMotorcyclesByBrandAsync(brand);
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -170,7 +170,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcyclesByModel(model);
+            var motorcycles = await _motorcycleService.GetMotorcyclesByModelAsync(model);
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -186,7 +186,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcyclesByYear(year);
+            var motorcycles = await _motorcycleService.GetMotorcyclesByYearAsync(year);
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -202,7 +202,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcyclesByColor(color);
+            var motorcycles = await _motorcycleService.GetMotorcyclesByColorAsync(color);
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -218,7 +218,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcyclesByEngineSize(engineSize);
+            var motorcycles = await _motorcycleService.GetMotorcyclesByEngineSizeAsync(engineSize);
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -234,7 +234,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcyclesByMileage(mileage);
+            var motorcycles = await _motorcycleService.GetMotorcyclesByMileageAsync(mileage);
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)
@@ -250,13 +250,39 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcycleByLicensePlate(licensePlate);
-            return CustomResponse(motorcycles);
+            var motorcycle = await _motorcycleService.GetMotorcycleByLicensePlateAsync(licensePlate);
+            if (motorcycle == null)
+            {
+                NotifyError("Motorcycle not found.");
+                return NotFound();
+            }
+            return CustomResponse(_mapper.Map<MotorcycleDto>(motorcycle));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while fetching the motorcycle by license plate.");
+            NotifyError(ex.Message);
+            return CustomResponse();
+        }
+    }
+
+    [HttpPut("license-plate/{id:guid}")]
+    public async Task<ActionResult<MotorcycleDto>> UpdateMotorcycleLicensePlate(Guid id, string newLicensePlate)
+    {
+        try
+        {
+            var motorcycle = await _motorcycleService.UpdateMotorcycleLicensePlateAsync(id, newLicensePlate);
+            return CustomResponse(motorcycle);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            NotifyError(ex.Message);
+            return NotFound();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles by license plate.");
+            NotifyError("An error occurred while updating the motorcycle license plate.");
             return CustomResponse();
         }
     }

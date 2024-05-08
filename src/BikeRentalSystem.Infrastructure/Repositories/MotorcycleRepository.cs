@@ -9,17 +9,19 @@ namespace BikeRentalSystem.Infrastructure.Repositories;
 public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepository
 {
     private readonly IMongoCollection<Motorcycle> _collection;
+    private readonly IRentalRepository _rentalRepository;
     private readonly ILogger<MotorcycleRepository> _logger;
     private readonly INotifier _notifier;
 
-    public MotorcycleRepository(IMongoDatabase database, ILogger<MotorcycleRepository> logger, INotifier notifier)
+    public MotorcycleRepository(IMongoDatabase database, IRentalRepository rentalRepository, ILogger<MotorcycleRepository> logger, INotifier notifier)
         : base(database, "motorcycles", logger, notifier)
     {
         _collection = database.GetCollection<Motorcycle>("motorcycles");
+        _rentalRepository = rentalRepository;
         _logger = logger;
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetAvailableMotorcycles()
+    public async Task<IEnumerable<Motorcycle>> GetAvailableMotorcyclesAsync()
     {
         try
         {
@@ -33,7 +35,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetRentedMotorcycles()
+    public async Task<IEnumerable<Motorcycle>> GetRentedMotorcyclesAsync()
     {
         try
         {
@@ -47,7 +49,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByBrand(string brand)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByBrandAsync(string brand)
     {
         try
         {
@@ -61,7 +63,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByModel(string model)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByModelAsync(string model)
     {
         try
         {
@@ -75,7 +77,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByYear(int year)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByYearAsync(int year)
     {
         try
         {
@@ -89,7 +91,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByColor(string color)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByColorAsync(string color)
     {
         try
         {
@@ -103,7 +105,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByEngineSize(int engineSize)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByEngineSizeAsync(int engineSize)
     {
         try
         {
@@ -117,7 +119,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByMileage(int mileage)
+    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByMileageAsync(int mileage)
     {
         try
         {
@@ -131,7 +133,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         }
     }
 
-    public async Task<Motorcycle> GetMotorcycleByLicensePlate(string licensePlate)
+    public async Task<Motorcycle> GetMotorcycleByLicensePlateAsync(string licensePlate)
     {
         try
         {
@@ -151,5 +153,11 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         var existingMotorcycle = await _collection.Find(m => m.LicensePlate == licensePlate).FirstOrDefaultAsync();
         _notifier.Handle($"License plate {licensePlate} is {(existingMotorcycle == null ? "unique" : "not unique")}");
         return existingMotorcycle == null;
+    }
+
+    public async Task<bool> MotorcycleHasRentalsAsync(Guid motorcycleId)
+    {
+        var rentals = await _rentalRepository.GetRentalsByMotorcycleIdAsync(motorcycleId);
+        return rentals.Any();
     }
 }

@@ -4,15 +4,17 @@ namespace BikeRentalSystem.Core.Interfaces.Repositories;
 
 public interface ICourierRepository : IRepository<Courier>
 {
-    Task<IEnumerable<Courier>> GetAvailableCouriers();
-    Task<IEnumerable<Courier>> GetUnavailableCouriers();
-    Task<IEnumerable<Courier>> GetCouriersByFirstName(string firstName);
-    Task<IEnumerable<Courier>> GetCouriersByLastName(string lastName);
-    Task<IEnumerable<Courier>> GetCouriersByCNPJ(string cnpj);
-    Task<IEnumerable<Courier>> GetCouriersByBirthDate(DateTime birthDate);
-    Task<IEnumerable<Courier>> GetCouriersByDriverLicenseNumber(string driverLicenseNumber);
-    Task<IEnumerable<Courier>> GetCouriersByDriverLicenseType(string driverLicenseType);
-    Task<IEnumerable<Courier>> GetCouriersByPhoneNumber(string phoneNumber);
-    Task<IEnumerable<Courier>> GetCouriersByEmail(string email);
-    Task<IEnumerable<Courier>> GetCouriersByImageUrl(string imageUrl);
+    Task<IEnumerable<Courier>> GetAvailableCouriersAsync();
+    Task<IEnumerable<Courier>> GetUnavailableCouriersAsync();
+    Task<IEnumerable<Courier>> GetCouriersByFirstNameAsync(string firstName);
+    Task<IEnumerable<Courier>> GetCouriersByLastNameAsync(string lastName);
+    Task<IEnumerable<Courier>> GetCouriersByCNPJAsync(string cnpj);
+    Task<IEnumerable<Courier>> GetCouriersByBirthDateAsync(DateTime birthDate);
+    Task<IEnumerable<Courier>> GetCouriersByDriverLicenseNumberAsync(string driverLicenseNumber);
+    Task<IEnumerable<Courier>> GetCouriersByDriverLicenseTypeAsync(string driverLicenseType);
+    Task<IEnumerable<Courier>> GetCouriersByPhoneNumberAsync(string phoneNumber);
+    Task<IEnumerable<Courier>> GetCouriersByEmailAsync(string email);
+    Task<IEnumerable<Courier>> GetCouriersByImageUrlAsync(string imageUrl);
+    Task<bool> IsCNPJUniqueAsync(string cnpj);
+    Task<bool> IsDriverLicenseNumberUniqueAsync(string driverLicenseNumber);
 }

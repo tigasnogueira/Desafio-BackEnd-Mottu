@@ -54,7 +54,7 @@ public class MotorcycleEventConsumer
     {
         try
         {
-            var motorcycle = await _motorcycleRepository.GetMotorcycleByLicensePlate(licensePlate);
+            var motorcycle = await _motorcycleRepository.GetMotorcycleByLicensePlateAsync(licensePlate);
             if (motorcycle != null && motorcycle.Year == 2024)
             {
                 _logger.LogInformation($"Received event for new 2024 motorcycle: License Plate {motorcycle.LicensePlate}");
