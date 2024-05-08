@@ -250,7 +250,7 @@ public class MotorcycleController : MainController
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetMotorcyclesByLicensePlate(licensePlate);
+            var motorcycles = await _motorcycleService.GetMotorcycleByLicensePlate(licensePlate);
             return CustomResponse(motorcycles);
         }
         catch (Exception ex)

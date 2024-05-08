@@ -12,5 +12,6 @@ public interface IMotorcycleRepository : IRepository<Motorcycle>
     Task<IEnumerable<Motorcycle>> GetMotorcyclesByColor(string color);
     Task<IEnumerable<Motorcycle>> GetMotorcyclesByEngineSize(int engineSize);
     Task<IEnumerable<Motorcycle>> GetMotorcyclesByMileage(int mileage);
-    Task<IEnumerable<Motorcycle>> GetMotorcyclesByLicensePlate(string licensePlate);
+    Task<Motorcycle> GetMotorcycleByLicensePlate(string licensePlate);
+    Task<bool> IsLicensePlateUniqueAsync(string licensePlate);
 }

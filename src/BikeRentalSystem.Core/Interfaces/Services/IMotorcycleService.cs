@@ -17,5 +17,5 @@ public interface IMotorcycleService
     Task<IEnumerable<Motorcycle>> GetMotorcyclesByColor(string color);
     Task<IEnumerable<Motorcycle>> GetMotorcyclesByEngineSize(int engineSize);
     Task<IEnumerable<Motorcycle>> GetMotorcyclesByMileage(int mileage);
-    Task<IEnumerable<Motorcycle>> GetMotorcyclesByLicensePlate(string licensePlate);
+    Task<Motorcycle> GetMotorcycleByLicensePlate(string licensePlate);
 }

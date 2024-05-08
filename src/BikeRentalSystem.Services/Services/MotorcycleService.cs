@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using Microsoft.Extensions.Logging;
@@ -8,18 +9,23 @@ namespace BikeRentalSystem.Services.Services;
 public class MotorcycleService : IMotorcycleService
 {
     private readonly IMotorcycleRepository _motorcycleRepository;
+    private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<MotorcycleService> _logger;
+    private readonly INotifier _notifier;
 
-    public MotorcycleService(IMotorcycleRepository motorcycleRepository, ILogger<MotorcycleService> logger)
+    public MotorcycleService(IMotorcycleRepository motorcycleRepository, IMessagePublisher messagePublisher, ILogger<MotorcycleService> logger, INotifier notifier)
     {
         _motorcycleRepository = motorcycleRepository;
+        _messagePublisher = messagePublisher;
         _logger = logger;
+        _notifier = notifier;
     }
 
     public async Task<Motorcycle> GetMotorcycleByIdAsync(Guid id)
     {
         try
         {
+            _notifier.Handle($"Motorcycle with id {id} was accessed");
             return await _motorcycleRepository.GetByIdAsync(id);
         }
         catch (Exception ex)
@@ -33,6 +39,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle("All motorcycles were accessed");
             return await _motorcycleRepository.GetAllAsync();
         }
         catch (Exception ex)
@@ -46,7 +53,21 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
-            return await _motorcycleRepository.AddAsync(entity);
+            if (!await _motorcycleRepository.IsLicensePlateUniqueAsync(entity.LicensePlate))
+            {
+                throw new ArgumentException("License plate must be unique");
+            }
+
+            _notifier.Handle($"New motorcycle added: {entity.LicensePlate}");
+            var addedMotorcycle = await _motorcycleRepository.AddAsync(entity);
+
+            if (addedMotorcycle.Year == 2024)
+            {
+                _notifier.Handle($"New 2024 motorcycle registered: {addedMotorcycle.LicensePlate}");
+                await _messagePublisher.PublishAsync("motorcycle_registered", $"New 2024 motorcycle registered: {addedMotorcycle.LicensePlate}");
+            }
+
+            return addedMotorcycle;
         }
         catch (Exception ex)
         {
@@ -59,6 +80,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycle updated: {entity.LicensePlate}");
             return await _motorcycleRepository.UpdateAsync(entity);
         }
         catch (Exception ex)
@@ -72,6 +94,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycle deleted: {id}");
             return await _motorcycleRepository.DeleteAsync(id);
         }
         catch (Exception ex)
@@ -85,6 +108,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle("Available motorcycles were accessed");
             return await _motorcycleRepository.GetAvailableMotorcycles();
         }
         catch (Exception ex)
@@ -98,6 +122,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle("Rented motorcycles were accessed");
             return await _motorcycleRepository.GetRentedMotorcycles();
         }
         catch (Exception ex)
@@ -111,6 +136,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycles by brand {brand} were accessed");
             return await _motorcycleRepository.GetMotorcyclesByBrand(brand);
         }
         catch (Exception ex)
@@ -124,6 +150,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycles by model {model} were accessed");
             return await _motorcycleRepository.GetMotorcyclesByModel(model);
         }
         catch (Exception ex)
@@ -137,6 +164,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycles by year {year} were accessed");
             return await _motorcycleRepository.GetMotorcyclesByYear(year);
         }
         catch (Exception ex)
@@ -150,6 +178,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycles by color {color} were accessed");
             return await _motorcycleRepository.GetMotorcyclesByColor(color);
         }
         catch (Exception ex)
@@ -163,6 +192,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycles by engine size {engineSize} were accessed");
             return await _motorcycleRepository.GetMotorcyclesByEngineSize(engineSize);
         }
         catch (Exception ex)
@@ -176,6 +206,7 @@ public class MotorcycleService : IMotorcycleService
     {
         try
         {
+            _notifier.Handle($"Motorcycles by mileage {mileage} were accessed");
             return await _motorcycleRepository.GetMotorcyclesByMileage(mileage);
         }
         catch (Exception ex)
@@ -185,11 +216,12 @@ public class MotorcycleService : IMotorcycleService
         }
     }
 
-    public async Task<IEnumerable<Motorcycle>> GetMotorcyclesByLicensePlate(string licensePlate)
+    public async Task<Motorcycle> GetMotorcycleByLicensePlate(string licensePlate)
     {
         try
         {
-            return await _motorcycleRepository.GetMotorcyclesByLicensePlate(licensePlate);
+            _notifier.Handle($"Motorcycle by license plate {licensePlate} was accessed");
+            return await _motorcycleRepository.GetMotorcycleByLicensePlate(licensePlate);
         }
         catch (Exception ex)
         {

@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
+    <ProjectReference Include="..\BikeRentalSystem.Messaging\BikeRentalSystem.Messaging.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.Services\BikeRentalSystem.Services.csproj" />
   </ItemGroup>
 

@@ -1,4 +1,4 @@
-﻿namespace BikeRentalSystem.Infrastructure.Configurations;
+﻿namespace BikeRentalSystem.Api.Configurations;
 
 public class DatabaseSettings
 {

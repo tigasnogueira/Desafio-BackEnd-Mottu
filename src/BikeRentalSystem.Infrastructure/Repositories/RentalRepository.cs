@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -9,9 +10,10 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
 {
     private readonly IMongoCollection<Rental> _collection;
     private readonly ILogger<RentalRepository> _logger;
+    private readonly INotifier _notifier;
 
-    public RentalRepository(IMongoDatabase database, ILogger<RentalRepository> logger)
-        : base(database, "rentals", logger)
+    public RentalRepository(IMongoDatabase database, ILogger<RentalRepository> logger, INotifier notifier)
+        : base(database, "rentals", logger, notifier)
     {
         _collection = database.GetCollection<Rental>("rentals");
         _logger = logger;
@@ -21,6 +23,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with motorcycle id {motorcycleId} were accessed");
             return await _collection.Find(r => r.MotorcycleId == motorcycleId).ToListAsync();
         }
         catch (Exception ex)
@@ -34,6 +37,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with courier id {courierId} were accessed");
             return await _collection.Find(r => r.CourierId == courierId).ToListAsync();
         }
         catch (Exception ex)
@@ -47,6 +51,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with start date {startDate} were accessed");
             return await _collection.Find(r => r.StartDate == startDate).ToListAsync();
         }
         catch (Exception ex)
@@ -60,6 +65,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with end date {endDate} were accessed");
             return await _collection.Find(r => r.EndDate == endDate).ToListAsync();
         }
         catch (Exception ex)
@@ -73,6 +79,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals in the date range from {startDate} to {endDate} were accessed");
             return await _collection.Find(r => r.StartDate >= startDate && r.EndDate <= endDate).ToListAsync();
         }
         catch (Exception ex)
@@ -86,6 +93,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with price {price} were accessed");
             return await _collection.Find(r => r.Price == price).ToListAsync();
         }
         catch (Exception ex)
@@ -99,6 +107,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with price between {minPrice} and {maxPrice} were accessed");
             return await _collection.Find(r => r.Price >= minPrice && r.Price <= maxPrice).ToListAsync();
         }
         catch (Exception ex)
@@ -112,6 +121,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with paid status {isPaid} were accessed");
             return await _collection.Find(r => r.IsPaid == isPaid).ToListAsync();
         }
         catch (Exception ex)
@@ -125,6 +135,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
     {
         try
         {
+            _notifier.Handle($"Rentals with finished status {isFinished} were accessed");
             return await _collection.Find(r => r.IsFinished == isFinished).ToListAsync();
         }
         catch (Exception ex)
