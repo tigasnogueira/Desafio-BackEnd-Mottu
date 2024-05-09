@@ -1,6 +1,7 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Infrastructure.Database;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -12,7 +13,7 @@ public class Repository<T> : IRepository<T> where T : EntityModel
     private readonly ILogger<Repository<T>> _logger;
     private readonly INotifier _notifier;
 
-    public Repository(IMongoDatabase database, string collectionName, ILogger<Repository<T>> logger, INotifier notifier)
+    public Repository(MongoDBContext database, string collectionName, ILogger<Repository<T>> logger, INotifier notifier)
     {
         _collection = database.GetCollection<T>(collectionName);
         _logger = logger;

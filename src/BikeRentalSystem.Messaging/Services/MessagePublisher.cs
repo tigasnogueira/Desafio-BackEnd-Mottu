@@ -1,6 +1,7 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Messaging.Configurations;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using System.Text;
 
@@ -12,19 +13,20 @@ public class MessagePublisher : IMessagePublisher
     private readonly IModel _channel;
     private readonly ILogger<MessagePublisher> _logger;
 
-    public MessagePublisher(ILogger<MessagePublisher> logger, RabbitMQSettings settings)
+    public MessagePublisher(ILogger<MessagePublisher> logger, IOptions<RabbitMQSettings> settings)
     {
         _logger = logger;
+        RabbitMQSettings settingsValue = settings.Value;
         var factory = new ConnectionFactory()
         {
-            HostName = settings.HostName,
-            UserName = settings.UserName,
-            Password = settings.Password
+            HostName = settingsValue.HostName,
+            UserName = settingsValue.UserName,
+            Password = settingsValue.Password
         };
         _connection = factory.CreateConnection();
         _channel = _connection.CreateModel();
 
-        _channel.ExchangeDeclare(exchange: settings.ExchangeName, type: ExchangeType.Fanout);
+        _channel.ExchangeDeclare(exchange: settingsValue.ExchangeName, type: ExchangeType.Fanout);
     }
 
     public async Task PublishAsync(string topic, string message)

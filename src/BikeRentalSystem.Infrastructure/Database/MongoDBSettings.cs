@@ -1,6 +1,6 @@
-﻿namespace BikeRentalSystem.Api.Configurations;
+﻿namespace BikeRentalSystem.Infrastructure.Database;
 
-public class DatabaseSettings
+public class MongoDBSettings
 {
     public string ConnectionString { get; set; }
     public string DatabaseName { get; set; }
