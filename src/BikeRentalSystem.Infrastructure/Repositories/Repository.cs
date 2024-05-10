@@ -2,30 +2,33 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
 
-public class Repository<T> : IRepository<T> where T : EntityModel
+public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityModel , new()
 {
-    private readonly IMongoCollection<T> _collection;
-    private readonly ILogger<Repository<T>> _logger;
+    protected readonly BikeRentalDbContext _context;
+    protected readonly DbSet<TEntity> _dbSet;
+    private readonly ILogger<Repository<TEntity>> _logger;
     private readonly INotifier _notifier;
 
-    public Repository(MongoDBContext database, string collectionName, ILogger<Repository<T>> logger, INotifier notifier)
+    public Repository(BikeRentalDbContext context, ILogger<Repository<TEntity>> logger, INotifier notifier)
     {
-        _collection = database.GetCollection<T>(collectionName);
+        _context = context;
+        _dbSet = context.Set<TEntity>();
         _logger = logger;
         _notifier = notifier;
     }
 
-    public async Task<T> GetByIdAsync(Guid id)
+    public async Task<TEntity> GetByIdAsync(Guid id)
     {
         try
         {
             _notifier.Handle($"Entity with id {id} was accessed");
-            return await _collection.Find(e => e.Id == id).FirstOrDefaultAsync();
+            return await _dbSet.FindAsync(id);
         }
         catch (Exception ex)
         {
@@ -34,12 +37,12 @@ public class Repository<T> : IRepository<T> where T : EntityModel
         }
     }
 
-    public async Task<IEnumerable<T>> GetAllAsync()
+    public async Task<IEnumerable<TEntity>> GetAllAsync()
     {
         try
         {
             _notifier.Handle("All entities were accessed");
-            return await _collection.Find(e => true).ToListAsync();
+            return await _dbSet.ToListAsync();
         }
         catch (Exception ex)
         {
@@ -48,12 +51,13 @@ public class Repository<T> : IRepository<T> where T : EntityModel
         }
     }
 
-    public async Task<T> AddAsync(T entity)
+    public async Task<TEntity> AddAsync(TEntity entity)
     {
         try
         {
             _notifier.Handle("Entity was added");
-            await _collection.InsertOneAsync(entity);
+            _dbSet.AddAsync(entity);
+            await SaveChanges();
             return entity;
         }
         catch (Exception ex)
@@ -63,12 +67,13 @@ public class Repository<T> : IRepository<T> where T : EntityModel
         }
     }
 
-    public async Task<T> UpdateAsync(T entity)
+    public async Task<TEntity> UpdateAsync(TEntity entity)
     {
         try
         {
             _notifier.Handle($"Entity with id {entity.Id} was updated");
-            await _collection.ReplaceOneAsync(e => e.Id == entity.Id, entity);
+            _dbSet.Update(entity);
+            await SaveChanges();
             return entity;
         }
         catch (Exception ex)
@@ -78,12 +83,29 @@ public class Repository<T> : IRepository<T> where T : EntityModel
         }
     }
 
-    public async Task<T> DeleteAsync(Guid id)
+    public async Task<TEntity> DeleteAsync(Guid id)
     {
         try
         {
             _notifier.Handle($"Entity with id {id} was deleted");
-            return await _collection.FindOneAndDeleteAsync(e => e.Id == id);
+            var entity = await GetByIdAsync(id);
+            _dbSet.Remove(entity);
+            await SaveChanges();
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<int> SaveChanges()
+    {
+        try
+        {
+            _notifier.Handle("Changes were saved");
+            return await _context.SaveChangesAsync();
         }
         catch (Exception ex)
         {

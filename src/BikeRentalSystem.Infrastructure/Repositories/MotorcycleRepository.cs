@@ -2,6 +2,7 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -9,15 +10,13 @@ namespace BikeRentalSystem.Infrastructure.Repositories;
 
 public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepository
 {
-    private readonly IMongoCollection<Motorcycle> _motorcycles;
     private readonly IRentalRepository _rentalRepository;
     private readonly ILogger<MotorcycleRepository> _logger;
     private readonly INotifier _notifier;
 
-    public MotorcycleRepository(MongoDBContext database, IRentalRepository rentalRepository, ILogger<MotorcycleRepository> logger, INotifier notifier)
-        : base(database, "motorcycles", logger, notifier)
+    public MotorcycleRepository(BikeRentalDbContext context, IRentalRepository rentalRepository, ILogger<MotorcycleRepository> logger, INotifier notifier)
+        : base(context, logger, notifier)
     {
-        _motorcycles = database.GetCollection<Motorcycle>("motorcycles");
         _rentalRepository = rentalRepository;
         _logger = logger;
     }
@@ -27,7 +26,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle("All available motorcycles were accessed");
-            return _motorcycles.Find(e => !e.IsRented).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => !m.IsRented).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -41,7 +40,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle("All rented motorcycles were accessed");
-            return _motorcycles.Find(e => e.IsRented).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => m.IsRented).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -55,7 +54,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle($"Motorcycles with brand {brand} were accessed");
-            return _motorcycles.Find(e => e.Brand == brand).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => m.Brand == brand).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -69,7 +68,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle($"Motorcycles with model {model} were accessed");
-            return _motorcycles.Find(e => e.Model == model).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => m.Model == model).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -83,7 +82,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle($"Motorcycles with year {year} were accessed");
-            return _motorcycles.Find(e => e.Year == year).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => m.Year == year).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -97,7 +96,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle($"Motorcycles with color {color} were accessed");
-            return _motorcycles.Find(e => e.Color == color).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => m.Color == color).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -111,7 +110,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle($"Motorcycles with engine size {engineSize} were accessed");
-            return _motorcycles.Find(e => e.EngineSize == engineSize).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => m.EngineSize == engineSize).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -125,7 +124,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle($"Motorcycles with mileage {mileage} were accessed");
-            return _motorcycles.Find(e => e.Mileage == mileage).ToList();
+            return await _context.Motorcycles.AsNoTracking().Where(m => m.Mileage == mileage).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -139,7 +138,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         try
         {
             _notifier.Handle($"Motorcycle with license plate {licensePlate} was accessed");
-            return await _motorcycles.Find(e => e.LicensePlate == licensePlate).FirstOrDefaultAsync();
+            return await _context.Motorcycles.AsNoTracking().FirstOrDefaultAsync(m => m.LicensePlate == licensePlate);
         }
         catch (Exception ex)
         {
@@ -151,7 +150,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
     public async Task<bool> IsLicensePlateUniqueAsync(string licensePlate)
     {
         _notifier.Handle($"Checking if license plate {licensePlate} is unique");
-        var existingMotorcycle = await _motorcycles.Find(m => m.LicensePlate == licensePlate).FirstOrDefaultAsync();
+        var existingMotorcycle = await _context.Motorcycles.AsNoTracking().FirstOrDefaultAsync(m => m.LicensePlate == licensePlate);
         _notifier.Handle($"License plate {licensePlate} is {(existingMotorcycle == null ? "unique" : "not unique")}");
         return existingMotorcycle == null;
     }

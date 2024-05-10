@@ -2,6 +2,7 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Infrastructure.Database;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -9,14 +10,12 @@ namespace BikeRentalSystem.Infrastructure.Repositories;
 
 public class CourierRepository : Repository<Courier>, ICourierRepository
 {
-    private readonly IMongoCollection<Courier> _couriers;
     private readonly ILogger<CourierRepository> _logger;
     private readonly INotifier _notifier;
 
-    public CourierRepository(MongoDBContext database, ILogger<CourierRepository> logger, INotifier notifier)
-        : base(database, "couriers", logger, notifier)
+    public CourierRepository(BikeRentalDbContext context, ILogger<CourierRepository> logger, INotifier notifier)
+        : base(context, logger, notifier)
     {
-        _couriers = database.GetCollection<Courier>("couriers");
         _logger = logger;
     }
 
@@ -25,7 +24,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle("All available couriers were accessed");
-            return _couriers.Find(e => !e.IsAvailable).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.IsAvailable).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -39,7 +38,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle("All unavailable couriers were accessed");
-            return _couriers.Find(e => e.IsAvailable).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => !c.IsAvailable).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -53,7 +52,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with first name {firstName} were accessed");
-            return _couriers.Find(e => e.FirstName == firstName).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.FirstName == firstName).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -67,7 +66,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with last name {lastName} were accessed");
-            return _couriers.Find(e => e.LastName == lastName).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.LastName == lastName).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -81,7 +80,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with CNPJ {cnpj} were accessed");
-            return _couriers.Find(e => e.CNPJ == cnpj).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.CNPJ == cnpj).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -95,7 +94,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with birth date {birthDate} were accessed");
-            return _couriers.Find(e => e.BirthDate == birthDate).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.BirthDate == birthDate).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -109,7 +108,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with driver license number {driverLicenseNumber} were accessed");
-            return _couriers.Find(e => e.DriverLicenseNumber == driverLicenseNumber).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.DriverLicenseNumber == driverLicenseNumber).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -123,7 +122,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with driver license type {driverLicenseType} were accessed");
-            return _couriers.Find(e => e.DriverLicenseType == driverLicenseType).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.DriverLicenseType == driverLicenseType).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -137,7 +136,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with phone number {phoneNumber} were accessed");
-            return _couriers.Find(e => e.PhoneNumber == phoneNumber).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.PhoneNumber == phoneNumber).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -151,7 +150,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with email {email} were accessed");
-            return _couriers.Find(e => e.Email == email).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.Email == email).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -165,7 +164,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Couriers with image URL {imageUrl} were accessed");
-            return _couriers.Find(e => e.ImageUrl == imageUrl).ToList();
+            return await _context.Couriers.AsNoTracking().Where(c => c.ImageUrl == imageUrl).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -179,7 +178,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Checking if courier with CNPJ {cnpj} is unique");
-            return await _couriers.Find(e => e.CNPJ == cnpj).CountDocumentsAsync() == 0;
+            return await _context.Couriers.AsNoTracking().Where(c => c.CNPJ == cnpj).CountAsync() == 0;
         }
         catch (Exception ex)
         {
@@ -193,7 +192,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         try
         {
             _notifier.Handle($"Checking if courier with driver license number {driverLicenseNumber} is unique");
-            return await _couriers.Find(e => e.DriverLicenseNumber == driverLicenseNumber).CountDocumentsAsync() == 0;
+            return await _context.Couriers.AsNoTracking().Where(c => c.DriverLicenseNumber == driverLicenseNumber).CountAsync() == 0;
         }
         catch (Exception ex)
         {

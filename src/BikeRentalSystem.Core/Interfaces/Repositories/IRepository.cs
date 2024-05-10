@@ -2,11 +2,12 @@
 
 namespace BikeRentalSystem.Core.Interfaces.Repositories;
 
-public interface IRepository<T> where T : EntityModel
+public interface IRepository<TEntity> where TEntity : EntityModel
 {
-    Task<T> GetByIdAsync(Guid id);
-    Task<IEnumerable<T>> GetAllAsync();
-    Task<T> AddAsync(T entity);
-    Task<T> UpdateAsync(T entity);
-    Task<T> DeleteAsync(Guid id);
+    Task<TEntity> GetByIdAsync(Guid id);
+    Task<IEnumerable<TEntity>> GetAllAsync();
+    Task<TEntity> AddAsync(TEntity entity);
+    Task<TEntity> UpdateAsync(TEntity entity);
+    Task<TEntity> DeleteAsync(Guid id);
+    Task<int> SaveChanges();
 }

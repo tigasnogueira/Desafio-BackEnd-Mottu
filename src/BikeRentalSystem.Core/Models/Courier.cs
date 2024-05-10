@@ -12,6 +12,7 @@ public class Courier : EntityModel
     public string Email { get; set; }
     public string ImageUrl { get; set; }
     public bool IsAvailable { get; set; }
+    public ICollection<Rental> Rentals { get; set; }
 
     public Courier()
     {

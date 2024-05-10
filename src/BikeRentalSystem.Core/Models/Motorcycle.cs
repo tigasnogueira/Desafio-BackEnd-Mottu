@@ -11,6 +11,7 @@ public class Motorcycle : EntityModel
     public string Color { get; set; }
     public string ImageUrl { get; set; }
     public bool IsRented { get; set; }
+    public ICollection<Rental> Rentals { get; set; }
 
     public Motorcycle()
     {
