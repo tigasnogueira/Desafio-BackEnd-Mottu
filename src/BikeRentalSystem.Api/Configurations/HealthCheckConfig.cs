@@ -9,13 +9,7 @@ public static class HealthCheckConfig
 {
     public static IServiceCollection AddHealthChecksConfiguration(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHealthChecks()
-            .AddMongoDb(
-                configuration.GetConnectionString("MongoDb"),
-        name: "MongoDb",
-                timeout: TimeSpan.FromSeconds(3),
-                tags: new[] { "db", "ready" })
-            .AddCheck("Custom Check", new CustomHealthCheck(), tags: new[] { "custom" });
+        services.AddHealthChecks().AddCheck<CustomHealthCheck>("custom_health_check");
 
         services.AddHealthChecksUI().AddInMemoryStorage();
 

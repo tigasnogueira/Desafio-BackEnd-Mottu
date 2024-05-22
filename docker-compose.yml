@@ -11,26 +11,38 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+    networks:
+      - app-net
 
   postgres:
     image: postgres:13
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: bike_rental
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-net
 
   rabbitmq:
-    image: rabbitmq:management
+    image: rabbitmq:3-management
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "15672:15672"
       - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app-net
 
 volumes:
-  postgres-data:
+  postgres_data:
+  rabbitmq_data:
+
+networks:
+  app-net:

@@ -5,7 +5,7 @@ namespace BikeRentalSystem.Infrastructure.Database;
 
 public class BikeRentalDbContext : DbContext
 {
-    public BikeRentalDbContext(DbContextOptions<BikeRentalDbContext> options) { }
+    public BikeRentalDbContext(DbContextOptions<BikeRentalDbContext> options) : base(options) { }
 
     public DbSet<Courier> Couriers { get; set; }
     public DbSet<Motorcycle> Motorcycles { get; set; }
