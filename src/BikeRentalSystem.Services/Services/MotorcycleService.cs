@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
@@ -41,6 +42,20 @@ public class MotorcycleService : BaseService, IMotorcycleService
         {
             _notifier.Handle("All motorcycles were accessed");
             return await _motorcycleRepository.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<Motorcycle>> GetAllPagedMotorcyclesAsync(int pageNumber, int pageSize)
+    {
+        try
+        {
+            _notifier.Handle("All motorcycles were accessed");
+            return await _motorcycleRepository.GetAllPagedAsync(pageNumber, pageSize);
         }
         catch (Exception ex)
         {

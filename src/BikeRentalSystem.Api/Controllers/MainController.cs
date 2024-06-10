@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Interfaces;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Notifications;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -9,10 +10,21 @@ namespace BikeRentalSystem.Api.Controllers;
 public abstract class MainController : Controller
 {
     private readonly INotifier _notifier;
+    public readonly IUser _appUser;
 
-    protected MainController(INotifier notifier)
+    protected Guid UserId { get; set; }
+    protected bool IsUserAuthenticated { get; set; }
+
+    protected MainController(INotifier notifier, IUser appUser)
     {
         _notifier = notifier;
+        _appUser = appUser;
+
+        if (appUser.IsAuthenticated())
+        {
+            UserId = appUser.GetUserId();
+            IsUserAuthenticated = true;
+        }
     }
 
     protected ActionResult CustomResponse(object result = null, int? statusCode = null)

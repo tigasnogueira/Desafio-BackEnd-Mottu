@@ -1,23 +1,29 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
 using BikeRentalSystem.Api.Dtos;
+using BikeRentalSystem.Api.Extensions;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeRentalSystem.Api.Controllers.V1;
 
-[ApiController]
+[Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/motorcycles")]
 public class MotorcycleController : MainController
 {
     private readonly IMotorcycleService _motorcycleService;
     private readonly ILogger<MotorcycleController> _logger;
     public IMapper _mapper;
 
-    public MotorcycleController(IMotorcycleService motorcycleService, ILogger<MotorcycleController> logger, IMapper mapper, INotifier notifier) : base(notifier)
+    public MotorcycleController(IMotorcycleService motorcycleService, 
+                                ILogger<MotorcycleController> logger, 
+                                IMapper mapper, INotifier notifier, 
+                                IUser user) : base(notifier, user)
     {
         _motorcycleService = motorcycleService;
         _logger = logger;
@@ -25,12 +31,20 @@ public class MotorcycleController : MainController
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<MotorcycleDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<MotorcycleDto>>> GetAll(int? pageNumber, int? pageSize)
     {
         try
         {
-            var motorcycles = await _motorcycleService.GetAllAsync();
-            return CustomResponse(motorcycles);
+            if (pageNumber.HasValue && pageSize.HasValue)
+            {
+                var motorcyclesPaged = await _motorcycleService.GetAllPagedMotorcyclesAsync(pageNumber.Value, pageSize.Value);
+                return CustomResponse(motorcyclesPaged);
+            }
+            else
+            {
+                var motorcycles = await _motorcycleService.GetAllAsync();
+                return CustomResponse(motorcycles);
+            }
         }
         catch (Exception ex)
         {
@@ -56,6 +70,7 @@ public class MotorcycleController : MainController
         }
     }
 
+    [ClaimsAuthorize("Motorcycle", "Add")]
     [HttpPost]
     public async Task<ActionResult<MotorcycleDto>> Add(MotorcycleDto motorcycleDto)
     {
@@ -72,6 +87,7 @@ public class MotorcycleController : MainController
         }
     }
 
+    [ClaimsAuthorize("Motorcycle", "Update")]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<MotorcycleDto>> Update(Guid id, MotorcycleDto motorcycleDto)
     {
@@ -94,6 +110,7 @@ public class MotorcycleController : MainController
         }
     }
 
+    [ClaimsAuthorize("Motorcycle", "Delete")]
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<MotorcycleDto>> Delete(Guid id)
     {
@@ -266,6 +283,7 @@ public class MotorcycleController : MainController
         }
     }
 
+    [ClaimsAuthorize("Motorcycle", "Update")]
     [HttpPut("license-plate/{id:guid}")]
     public async Task<ActionResult<MotorcycleDto>> UpdateMotorcycleLicensePlate(Guid id, string newLicensePlate)
     {

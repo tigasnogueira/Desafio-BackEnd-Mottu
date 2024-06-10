@@ -1,23 +1,29 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
 using BikeRentalSystem.Api.Dtos;
+using BikeRentalSystem.Api.Extensions;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeRentalSystem.Api.Controllers.V1;
 
-[ApiController]
+[Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/couriers")]
 public class CourierController : MainController
 {
     private readonly ICourierService _courierService;
     private readonly ILogger<CourierController> _logger;
     public IMapper _mapper;
 
-    public CourierController(ICourierService courierService, ILogger<CourierController> logger, IMapper mapper, INotifier notifier) : base(notifier)
+    public CourierController(ICourierService courierService, 
+                             ILogger<CourierController> logger, 
+                             IMapper mapper, INotifier notifier, 
+                             IUser user) : base(notifier, user)
     {
         _courierService = courierService;
         _logger = logger;
@@ -25,12 +31,20 @@ public class CourierController : MainController
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CourierDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<CourierDto>>> GetAll(int? pageNumber, int? pageSize)
     {
         try
         {
-            var couriers = await _courierService.GetAllAsync();
-            return CustomResponse(couriers);
+            if (pageNumber.HasValue && pageSize.HasValue)
+            {
+                var couriersPaged = await _courierService.GetAllPagedCouriersAsync(pageNumber.Value, pageSize.Value);
+                return CustomResponse(couriersPaged);
+            }
+            else
+            {
+                var couriers = await _courierService.GetAllAsync();
+                return CustomResponse(couriers);
+            }
         }
         catch (Exception ex)
         {
@@ -56,6 +70,7 @@ public class CourierController : MainController
         }
     }
 
+    [ClaimsAuthorize("Couriers", "Add")]
     [HttpPost]
     public async Task<ActionResult<CourierDto>> Add(CourierDto courierDto)
     {
@@ -72,6 +87,7 @@ public class CourierController : MainController
         }
     }
 
+    [ClaimsAuthorize("Couriers", "Update")]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<CourierDto>> Update(Guid id, CourierDto courierDto)
     {
@@ -94,6 +110,7 @@ public class CourierController : MainController
         }
     }
 
+    [ClaimsAuthorize("Couriers", "Delete")]
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<CourierDto>> Delete(Guid id)
     {

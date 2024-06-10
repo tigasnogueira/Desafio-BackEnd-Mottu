@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Infrastructure.Database;
@@ -43,6 +44,22 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
         {
             _notifier.Handle("All entities were accessed");
             return await _dbSet.ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<TEntity>> GetAllPagedAsync(int page, int pageSize)
+    {
+        try
+        {
+            _notifier.Handle("All entities were accessed");
+            var totalRecords = await _dbSet.CountAsync();
+            var entities = await _dbSet.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            return new PaginatedResponse<TEntity>(entities, totalRecords, page, pageSize);
         }
         catch (Exception ex)
         {

@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Models;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Models;
 
 namespace BikeRentalSystem.Core.Interfaces.Services;
 
@@ -6,6 +7,7 @@ public interface IRentalService
 {
     Task<Rental> GetRentalByIdAsync(Guid id);
     Task<IEnumerable<Rental>> GetAllAsync();
+    Task<PaginatedResponse<Rental>> GetAllPagedRentalsAsync(int pageNumber, int pageSize);
     Task<Rental> AddRentalAsync(Rental entity);
     Task<Rental> UpdateRentalAsync(Rental entity);
     Task<Rental> DeleteRentalAsync(Guid id);

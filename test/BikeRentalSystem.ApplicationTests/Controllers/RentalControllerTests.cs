@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BikeRentalSystem.Api.Controllers.V1;
 using BikeRentalSystem.Api.Dtos;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
@@ -16,11 +17,12 @@ public class RentalControllerTests
     private readonly Mock<ILogger<RentalController>> _mockLogger = new Mock<ILogger<RentalController>>();
     private readonly Mock<IMapper> _mockMapper = new Mock<IMapper>();
     private readonly Mock<INotifier> _mockNotifier = new Mock<INotifier>();
+    private readonly Mock<IUser> _mockUser = new Mock<IUser>();
     private readonly RentalController _controller;
 
     public RentalControllerTests()
     {
-        _controller = new RentalController(_mockService.Object, _mockLogger.Object, _mockMapper.Object, _mockNotifier.Object);
+        _controller = new RentalController(_mockService.Object, _mockLogger.Object, _mockMapper.Object, _mockNotifier.Object, _mockUser.Object);
     }
 
     [Fact]
@@ -34,7 +36,26 @@ public class RentalControllerTests
         _mockMapper.Setup(mapper => mapper.Map<IEnumerable<RentalDto>>(rentals)).Returns(rentalDtos);
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAll(null, null);
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<RentalDto>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+        Assert.Equal(rentalDtos, okResult.Value);
+    }
+
+    [Fact]
+    public async Task GetAll_ReturnsExpectedRentalsPaged()
+    {
+        // Arrange
+        var rentals = new List<Rental> { new Rental { Id = Guid.NewGuid(), StartDate = DateTime.Now } };
+        var rentalDtos = new List<RentalDto> { new RentalDto { Id = rentals[0].Id, StartDate = rentals[0].StartDate } };
+
+        _mockService.Setup(service => service.GetAllAsync()).ReturnsAsync(rentals);
+        _mockMapper.Setup(mapper => mapper.Map<IEnumerable<RentalDto>>(rentals)).Returns(rentalDtos);
+
+        // Act
+        var result = await _controller.GetAll(1, 20);
 
         // Assert
         var actionResult = Assert.IsType<ActionResult<IEnumerable<RentalDto>>>(result);

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BikeRentalSystem.Api.Controllers.V1;
 using BikeRentalSystem.Api.Dtos;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
@@ -16,11 +17,12 @@ public class CourierControllerTests
     private readonly Mock<ILogger<CourierController>> _mockLogger = new Mock<ILogger<CourierController>>();
     private readonly Mock<IMapper> _mockMapper = new Mock<IMapper>();
     private readonly Mock<INotifier> _mockNotifier = new Mock<INotifier>();
+    private readonly Mock<IUser> _mockUser = new Mock<IUser>();
     private readonly CourierController _controller;
 
     public CourierControllerTests()
     {
-        _controller = new CourierController(_mockService.Object, _mockLogger.Object, _mockMapper.Object, _mockNotifier.Object);
+        _controller = new CourierController(_mockService.Object, _mockLogger.Object, _mockMapper.Object, _mockNotifier.Object, _mockUser.Object);
     }
 
     [Fact]
@@ -34,7 +36,26 @@ public class CourierControllerTests
         _mockMapper.Setup(mapper => mapper.Map<IEnumerable<CourierDto>>(couriers)).Returns(courierDtos);
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAll(null, null);
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<CourierDto>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+        Assert.Equal(courierDtos, okResult.Value);
+    }
+
+    [Fact]
+    public async Task GetAll_GetAll_ReturnsExpectedCouriersPaged()
+    {
+        // Arrange
+        var couriers = new List<Courier> { new Courier { Id = Guid.NewGuid(), FirstName = "John" } };
+        var courierDtos = new List<CourierDto> { new CourierDto { Id = couriers[0].Id, FirstName = couriers[0].FirstName } };
+
+        _mockService.Setup(service => service.GetAllAsync()).ReturnsAsync(couriers);
+        _mockMapper.Setup(mapper => mapper.Map<IEnumerable<CourierDto>>(couriers)).Returns(courierDtos);
+
+        // Act
+        var result = await _controller.GetAll(1, 20);
 
         // Assert
         var actionResult = Assert.IsType<ActionResult<IEnumerable<CourierDto>>>(result);

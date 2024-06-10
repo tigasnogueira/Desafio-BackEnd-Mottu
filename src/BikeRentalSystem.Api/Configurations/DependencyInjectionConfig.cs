@@ -25,7 +25,7 @@ public static class DependencyInjectionConfig
         var rabbitMqSettings = configuration.GetSection("RabbitMqSettings");
         services.Configure<RabbitMQSettings>(rabbitMqSettings);
 
-        services.AddIdentityServerConfiguration();
+        services.AddIdentityConfig(configuration);
 
         services.AddSingleton<INotifier, Notifier>();
         services.AddScoped<ICourierRepository, CourierRepository>();
@@ -37,12 +37,4 @@ public static class DependencyInjectionConfig
         services.AddScoped<IMessagePublisher, MessagePublisher>();
     }
 
-    public static void AddIdentityServerConfiguration(this IServiceCollection services)
-    {
-        services.AddIdentityServer()
-            .AddDeveloperSigningCredential() // Use only for development
-            .AddInMemoryIdentityResources(IdentityServerConfig.GetIdentityResources())
-            .AddInMemoryApiScopes(IdentityServerConfig.GetApiScopes())
-            .AddInMemoryClients(IdentityServerConfig.GetClients());
-    }
 }

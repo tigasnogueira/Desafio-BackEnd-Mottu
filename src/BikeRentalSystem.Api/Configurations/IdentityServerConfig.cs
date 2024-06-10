@@ -1,39 +1,54 @@
-﻿using IdentityServer4.Models;
+﻿using BikeRentalSystem.Api.Data;
+using BikeRentalSystem.Api.Extensions;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace BikeRentalSystem.Api.Configurations;
 
-public class IdentityServerConfig
+public static class IdentityServerConfig
 {
-    public static IEnumerable<ApiScope> GetApiScopes()
+    public static IServiceCollection AddIdentityConfig(this IServiceCollection services,
+            IConfiguration configuration)
     {
-        return new List<ApiScope>
-        {
-            new ApiScope("api1", "My API")
-        };
-    }
+        services.AddDbContext<AuthDbContext>(options =>
+            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
-    public static IEnumerable<Client> GetClients()
-    {
-        return new List<Client>
+        services.AddDefaultIdentity<IdentityUser>()
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<AuthDbContext>()
+            .AddErrorDescriber<IdentityMessagesEnglish>()
+            .AddDefaultTokenProviders();
+
+        // JWT
+
+        var appSettingsSection = configuration.GetSection("AppSettings");
+        services.Configure<AppSettings>(appSettingsSection);
+
+        var appSettings = appSettingsSection.Get<AppSettings>();
+        var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+
+        services.AddAuthentication(x =>
         {
-            new Client
+            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(x =>
+        {
+            x.RequireHttpsMetadata = true;
+            x.SaveToken = true;
+            x.TokenValidationParameters = new TokenValidationParameters
             {
-                ClientId = "client",
-                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidAudience = appSettings.ValidAt,
+                ValidIssuer = appSettings.Issuer
+            };
+        });
 
-                ClientSecrets = { new Secret("secret".Sha256()) },
-
-                AllowedScopes = { "api1" }
-            }
-        };
-    }
-
-    public static IEnumerable<IdentityResource> GetIdentityResources()
-    {
-        return new List<IdentityResource>
-        {
-            new IdentityResources.OpenId(),
-            new IdentityResources.Profile(),
-        };
+        return services;
     }
 }

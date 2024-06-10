@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Models;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Models;
 
 namespace BikeRentalSystem.Core.Interfaces.Services;
 
@@ -6,6 +7,7 @@ public interface ICourierService
 {
     Task<Courier> GetCourierByIdAsync(Guid id);
     Task<IEnumerable<Courier>> GetAllAsync();
+    Task<PaginatedResponse<Courier>> GetAllPagedCouriersAsync(int pageNumber, int pageSize);
     Task<Courier> AddCourierAsync(Courier entity);
     Task<Courier> UpdateCourierAsync(Courier entity);
     Task<Courier> DeleteCourierAsync(Guid id);

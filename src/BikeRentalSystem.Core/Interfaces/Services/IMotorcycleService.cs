@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Models;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Models;
 
 namespace BikeRentalSystem.Core.Interfaces.Services;
 
@@ -6,6 +7,7 @@ public interface IMotorcycleService
 {
     Task<Motorcycle> GetMotorcycleByIdAsync(Guid id);
     Task<IEnumerable<Motorcycle>> GetAllAsync();
+    Task<PaginatedResponse<Motorcycle>> GetAllPagedMotorcyclesAsync(int pageNumber, int pageSize);
     Task<Motorcycle> AddMotorcycleAsync(Motorcycle entity);
     Task<Motorcycle> UpdateMotorcycleAsync(Motorcycle entity);
     Task<Motorcycle> DeleteMotorcycleAsync(Guid id);

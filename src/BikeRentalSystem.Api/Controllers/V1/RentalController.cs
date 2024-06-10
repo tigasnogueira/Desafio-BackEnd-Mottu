@@ -1,23 +1,29 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
 using BikeRentalSystem.Api.Dtos;
+using BikeRentalSystem.Api.Extensions;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeRentalSystem.Api.Controllers.V1;
 
-[ApiController]
+[Authorize]
 [ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/v{version:apiVersion}/rentals")]
 public class RentalController : MainController
 {
     private readonly IRentalService _rentalService;
     private readonly ILogger<RentalController> _logger;
     public IMapper _mapper;
 
-    public RentalController(IRentalService rentalService, ILogger<RentalController> logger, IMapper mapper, INotifier notifier) : base(notifier)
+    public RentalController(IRentalService rentalService, 
+                            ILogger<RentalController> logger, 
+                            IMapper mapper, INotifier notifier, 
+                            IUser user) : base(notifier, user)
     {
         _rentalService = rentalService;
         _logger = logger;
@@ -25,12 +31,20 @@ public class RentalController : MainController
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<RentalDto>>> GetAll()
+    public async Task<ActionResult<IEnumerable<RentalDto>>> GetAll(int? pageNumber, int? pageSize)
     {
         try
         {
-            var rentals = await _rentalService.GetAllAsync();
-            return CustomResponse(rentals);
+            if (pageNumber.HasValue && pageSize.HasValue)
+            {
+                var rentals = await _rentalService.GetAllPagedRentalsAsync(pageNumber.Value, pageSize.Value);
+                return CustomResponse(rentals);
+            }
+            else
+            {
+                var rentals = await _rentalService.GetAllAsync();
+                return CustomResponse(rentals);
+            }
         }
         catch (Exception ex)
         {
@@ -56,6 +70,7 @@ public class RentalController : MainController
         }
     }
 
+    [ClaimsAuthorize("Rental", "Add")]
     [HttpPost]
     public async Task<ActionResult<RentalDto>> Add(RentalDto rentalDto)
     {
@@ -73,6 +88,7 @@ public class RentalController : MainController
         }
     }
 
+    [ClaimsAuthorize("Rental", "Update")]
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<RentalDto>> Update(Guid id, RentalDto rentalDto)
     {
@@ -91,6 +107,7 @@ public class RentalController : MainController
         }
     }
 
+    [ClaimsAuthorize("Rental", "Delete")]
     [HttpDelete("{id:guid}")]
     public async Task<ActionResult<RentalDto>> Delete(Guid id)
     {

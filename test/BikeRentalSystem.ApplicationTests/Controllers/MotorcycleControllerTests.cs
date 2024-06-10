@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using BikeRentalSystem.Api.Controllers.V1;
 using BikeRentalSystem.Api.Dtos;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
@@ -16,11 +17,12 @@ public class MotorcycleControllerTests
     private readonly Mock<ILogger<MotorcycleController>> _mockLogger = new Mock<ILogger<MotorcycleController>>();
     private readonly Mock<IMapper> _mockMapper = new Mock<IMapper>();
     private readonly Mock<INotifier> _mockNotifier = new Mock<INotifier>();
+    private readonly Mock<IUser> _mockUser = new Mock<IUser>();
     private readonly MotorcycleController _controller;
 
     public MotorcycleControllerTests()
     {
-        _controller = new MotorcycleController(_mockService.Object, _mockLogger.Object, _mockMapper.Object, _mockNotifier.Object);
+        _controller = new MotorcycleController(_mockService.Object, _mockLogger.Object, _mockMapper.Object, _mockNotifier.Object, _mockUser.Object);
     }
 
     [Fact]
@@ -34,7 +36,26 @@ public class MotorcycleControllerTests
         _mockMapper.Setup(mapper => mapper.Map<IEnumerable<MotorcycleDto>>(motorcycles)).Returns(motorcycleDtos);
 
         // Act
-        var result = await _controller.GetAll();
+        var result = await _controller.GetAll(null, null);
+
+        // Assert
+        var actionResult = Assert.IsType<ActionResult<IEnumerable<MotorcycleDto>>>(result);
+        var okResult = Assert.IsType<OkObjectResult>(actionResult.Result);
+        Assert.Equal(motorcycleDtos, okResult.Value);
+    }
+
+    [Fact]
+    public async Task GetAll_ReturnsExpectedMotorcyclesPaged()
+    {
+        // Arrange
+        var motorcycles = new List<Motorcycle> { new Motorcycle { Id = Guid.NewGuid(), Model = "Model X" } };
+        var motorcycleDtos = new List<MotorcycleDto> { new MotorcycleDto { Id = motorcycles[0].Id, Model = motorcycles[0].Model } };
+
+        _mockService.Setup(service => service.GetAllAsync()).ReturnsAsync(motorcycles);
+        _mockMapper.Setup(mapper => mapper.Map<IEnumerable<MotorcycleDto>>(motorcycles)).Returns(motorcycleDtos);
+
+        // Act
+        var result = await _controller.GetAll(1, 20);
 
         // Assert
         var actionResult = Assert.IsType<ActionResult<IEnumerable<MotorcycleDto>>>(result);
