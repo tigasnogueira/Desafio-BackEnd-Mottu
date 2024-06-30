@@ -13,7 +13,6 @@ public class MotorcycleService : BaseService, IMotorcycleService
     private readonly IMotorcycleRepository _motorcycleRepository;
     private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<MotorcycleService> _logger;
-    private readonly INotifier _notifier;
 
     public MotorcycleService(IMotorcycleRepository motorcycleRepository, IMessagePublisher messagePublisher, ILogger<MotorcycleService> logger, INotifier notifier) : base(notifier)
     {
@@ -32,6 +31,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -46,6 +46,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -60,6 +61,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -68,7 +70,14 @@ public class MotorcycleService : BaseService, IMotorcycleService
     {
         try
         {
-            if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), entity)) return null;
+            var validator = new MotorcycleValidation(_motorcycleRepository);
+
+            var validationResult = await validator.ValidateAsync(entity);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return null;
+            }
 
             _notifier.Handle($"New motorcycle added: {entity.LicensePlate}");
             var addedMotorcycle = await _motorcycleRepository.AddAsync(entity);
@@ -84,6 +93,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -92,7 +102,14 @@ public class MotorcycleService : BaseService, IMotorcycleService
     {
         try
         {
-            if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), entity)) return null;
+            var validator = new MotorcycleValidation(_motorcycleRepository);
+
+            var validationResult = await validator.ValidateAsync(entity);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return null;
+            }
 
             _notifier.Handle($"Motorcycle updated: {entity.LicensePlate}");
             return await _motorcycleRepository.UpdateAsync(entity);
@@ -100,6 +117,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -108,14 +126,13 @@ public class MotorcycleService : BaseService, IMotorcycleService
     {
         try
         {
-            if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), new Motorcycle { Id = id })) return null;
-
             _notifier.Handle($"Motorcycle deleted: {id}");
             return await _motorcycleRepository.DeleteAsync(id);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -130,6 +147,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -144,6 +162,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -158,6 +177,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -172,6 +192,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -186,6 +207,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -200,6 +222,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -214,6 +237,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -228,6 +252,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -242,21 +267,37 @@ public class MotorcycleService : BaseService, IMotorcycleService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
 
     public async Task<Motorcycle> UpdateMotorcycleLicensePlateAsync(Guid id, string newLicensePlate)
     {
-        var motorcycle = await _motorcycleRepository.GetByIdAsync(id);
-        if (motorcycle == null)
-            throw new KeyNotFoundException("Motorcycle not found.");
+        try
+        {
+            var motorcycle = await _motorcycleRepository.GetByIdAsync(id);
+            if (motorcycle == null)
+                throw new KeyNotFoundException("Motorcycle not found.");
 
-        if (!ExecuteValidation(new MotorcycleValidation(_motorcycleRepository), new Motorcycle { LicensePlate = newLicensePlate }))
-            return null;
+            var validator = new MotorcycleValidation(_motorcycleRepository);
 
-        motorcycle.LicensePlate = newLicensePlate;
-        await _motorcycleRepository.UpdateAsync(motorcycle);
-        return motorcycle;
+            var validationResult = await validator.ValidateAsync(motorcycle);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return null;
+            }
+
+            motorcycle.LicensePlate = newLicensePlate;
+            await _motorcycleRepository.UpdateAsync(motorcycle);
+            return motorcycle;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            HandleException(ex);
+            throw;
+        }
     }
 }

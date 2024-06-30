@@ -1,5 +1,6 @@
 ﻿using BikeRentalSystem.Api.Data;
 using BikeRentalSystem.Api.Extensions;
+using IdentityServer4.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -50,5 +51,47 @@ public static class IdentityServerConfig
         });
 
         return services;
+    }
+}
+
+public static class Config
+{
+    public static IEnumerable<Client> GetClients()
+    {
+        return new List<Client>
+        {
+            new Client
+            {
+                ClientId = "client_id",
+                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                ClientSecrets = { new Secret("client_secret".Sha256()) },
+                AllowedScopes = { "api1" }
+            }
+        };
+    }
+
+    public static IEnumerable<ApiResource> GetApiResources()
+    {
+        return new List<ApiResource>
+        {
+            new ApiResource("api1", "My API")
+        };
+    }
+
+    public static IEnumerable<ApiScope> GetApiScopes()
+    {
+        return new List<ApiScope>
+        {
+            new ApiScope("api1", "My API")
+        };
+    }
+
+    public static IEnumerable<IdentityResource> GetIdentityResources()
+    {
+        return new List<IdentityResource>
+        {
+            new IdentityResources.OpenId(),
+            new IdentityResources.Profile()
+        };
     }
 }

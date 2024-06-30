@@ -6,6 +6,7 @@ using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,7 +50,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles.");
+            _notifier.Handle("An error occurred while fetching the motorcycles.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -65,7 +66,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycle.");
+            _notifier.Handle("An error occurred while fetching the motorcycle.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -82,7 +83,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while adding the motorcycle.");
+            _notifier.Handle("An error occurred while adding the motorcycle.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -95,7 +96,7 @@ public class MotorcycleController : MainController
         {
             if (id != motorcycleDto.Id)
             {
-                NotifyError("The id in the request does not match the id in the motorcycle.");
+                _notifier.Handle("The id in the request does not match the id in the motorcycle.", NotificationType.Error);
                 return CustomResponse();
             }
 
@@ -105,7 +106,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while updating the motorcycle.");
+            _notifier.Handle("An error occurred while updating the motorcycle.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -119,7 +120,7 @@ public class MotorcycleController : MainController
             var motorcycle = await _motorcycleService.GetMotorcycleByIdAsync(id);
             if (motorcycle == null)
             {
-                NotifyError("Motorcycle not found.");
+                _notifier.Handle("Motorcycle not found.", NotificationType.Error);
                 return CustomResponse();
             }
 
@@ -129,7 +130,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while deleting the motorcycle.");
+            _notifier.Handle("An error occurred while deleting the motorcycle.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -145,7 +146,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the available motorcycles.");
+            _notifier.Handle("An error occurred while fetching the available motorcycles.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -161,7 +162,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rented motorcycles.");
+            _notifier.Handle("An error occurred while fetching the rented motorcycles.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -177,7 +178,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles by brand.");
+            _notifier.Handle("An error occurred while fetching the motorcycles by brand.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -193,7 +194,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles by model.");
+            _notifier.Handle("An error occurred while fetching the motorcycles by model.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -209,7 +210,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles by year.");
+            _notifier.Handle("An error occurred while fetching the motorcycles by year.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -225,7 +226,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles by color.");
+            _notifier.Handle("An error occurred while fetching the motorcycles by color.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -241,7 +242,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles by engine size.");
+            _notifier.Handle("An error occurred while fetching the motorcycles by engine size.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -257,7 +258,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the motorcycles by mileage.");
+            _notifier.Handle("An error occurred while fetching the motorcycles by mileage.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -270,7 +271,7 @@ public class MotorcycleController : MainController
             var motorcycle = await _motorcycleService.GetMotorcycleByLicensePlateAsync(licensePlate);
             if (motorcycle == null)
             {
-                NotifyError("Motorcycle not found.");
+                _notifier.Handle("Motorcycle not found.", NotificationType.Error);
                 return NotFound();
             }
             return CustomResponse(_mapper.Map<MotorcycleDto>(motorcycle));
@@ -278,7 +279,7 @@ public class MotorcycleController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, "An error occurred while fetching the motorcycle by license plate.");
-            NotifyError(ex.Message);
+            _notifier.Handle(ex.Message, NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -294,13 +295,13 @@ public class MotorcycleController : MainController
         }
         catch (KeyNotFoundException ex)
         {
-            NotifyError(ex.Message);
+            _notifier.Handle(ex.Message, NotificationType.Error);
             return NotFound();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while updating the motorcycle license plate.");
+            _notifier.Handle("An error occurred while updating the motorcycle license plate.", NotificationType.Error);
             return CustomResponse();
         }
     }

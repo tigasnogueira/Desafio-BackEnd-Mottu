@@ -2,6 +2,7 @@
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -13,8 +14,8 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
 {
     protected readonly BikeRentalDbContext _context;
     protected readonly DbSet<TEntity> _dbSet;
-    private readonly ILogger<Repository<TEntity>> _logger;
-    private readonly INotifier _notifier;
+    protected readonly ILogger<Repository<TEntity>> _logger;
+    protected readonly INotifier _notifier;
 
     public Repository(BikeRentalDbContext context, ILogger<Repository<TEntity>> logger, INotifier notifier)
     {
@@ -28,12 +29,13 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
     {
         try
         {
-            _notifier.Handle($"Entity with id {id} was accessed");
+            _notifier.Handle($"{typeof(TEntity).Name} with id {id} was accessed");
             return await _dbSet.FindAsync(id);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"{typeof(TEntity).Name} with id {id} was not found", NotificationType.Error);
             throw;
         }
     }
@@ -42,12 +44,13 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
     {
         try
         {
-            _notifier.Handle("All entities were accessed");
+            _notifier.Handle("All {typeof(TEntity).Name} were accessed");
             return await _dbSet.ToListAsync();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle("{typeof(TEntity).Name} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -56,7 +59,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
     {
         try
         {
-            _notifier.Handle("All entities were accessed");
+            _notifier.Handle($"All {typeof(TEntity).Name} were accessed");
             var totalRecords = await _dbSet.CountAsync();
             var entities = await _dbSet.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
             return new PaginatedResponse<TEntity>(entities, totalRecords, page, pageSize);
@@ -64,6 +67,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"{typeof(TEntity).Name} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -72,7 +76,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
     {
         try
         {
-            _notifier.Handle("Entity was added");
+            _notifier.Handle($"{typeof(TEntity).Name} was added");
             _dbSet.AddAsync(entity);
             await SaveChanges();
             return entity;
@@ -80,6 +84,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"{typeof(TEntity).Name} was not added", NotificationType.Error);
             throw;
         }
     }
@@ -88,7 +93,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
     {
         try
         {
-            _notifier.Handle($"Entity with id {entity.Id} was updated");
+            _notifier.Handle($"{typeof(TEntity).Name} with id {entity.Id} was updated");
             _dbSet.Update(entity);
             await SaveChanges();
             return entity;
@@ -96,6 +101,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"{typeof(TEntity).Name} with id {entity.Id} was not updated", NotificationType.Error);
             throw;
         }
     }
@@ -104,7 +110,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
     {
         try
         {
-            _notifier.Handle($"Entity with id {id} was deleted");
+            _notifier.Handle($"{typeof(TEntity).Name} with id {id} was deleted");
             var entity = await GetByIdAsync(id);
             _dbSet.Remove(entity);
             await SaveChanges();
@@ -113,6 +119,7 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityMo
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"{typeof(TEntity).Name} with id {id} was not deleted", NotificationType.Error);
             throw;
         }
     }

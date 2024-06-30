@@ -1,6 +1,7 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,14 +11,10 @@ namespace BikeRentalSystem.Infrastructure.Repositories;
 
 public class RentalRepository : Repository<Rental>, IRentalRepository
 {
-    private readonly ILogger<RentalRepository> _logger;
-    private readonly INotifier _notifier;
 
     public RentalRepository(BikeRentalDbContext context, ILogger<RentalRepository> logger, INotifier notifier)
         : base(context, logger, notifier)
-    {
-        _logger = logger;
-    }
+    { }
 
     public async Task<IEnumerable<Rental>> GetRentalsByMotorcycleIdAsync(Guid motorcycleId)
     {
@@ -29,6 +26,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with motorcycle id {motorcycleId} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -43,6 +41,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with courier id {courierId} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -57,6 +56,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with start date {startDate} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -71,6 +71,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with end date {endDate} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -85,6 +86,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals in the date range from {startDate} to {endDate} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -99,6 +101,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with price {price} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -113,6 +116,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with price between {minPrice} and {maxPrice} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -127,6 +131,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with paid status {isPaid} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -141,6 +146,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals with finished status {isFinished} were not found", NotificationType.Error);
             throw;
         }
     }

@@ -6,6 +6,7 @@ using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,7 +50,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers.");
+            _notifier.Handle("An error occurred while fetching the couriers.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -65,7 +66,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the courier.");
+            _notifier.Handle("An error occurred while fetching the courier.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -82,7 +83,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while adding the courier.");
+            _notifier.Handle("An error occurred while adding the courier.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -93,7 +94,7 @@ public class CourierController : MainController
     {
         if (id != courierDto.Id)
         {
-            NotifyError("The id in the request does not match the id in the body.");
+            _notifier.Handle("The id in the request does not match the id in the body.", NotificationType.Error);
             return CustomResponse();
         }
 
@@ -105,7 +106,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while updating the courier.");
+            _notifier.Handle("An error occurred while updating the courier.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -122,7 +123,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while deleting the courier.");
+            _notifier.Handle("An error occurred while deleting the courier.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -138,7 +139,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the available couriers.");
+            _notifier.Handle("An error occurred while fetching the available couriers.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -154,7 +155,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the unavailable couriers.");
+            _notifier.Handle("An error occurred while fetching the unavailable couriers.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -170,7 +171,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by first name.");
+            _notifier.Handle("An error occurred while fetching the couriers by first name.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -186,7 +187,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by last name.");
+            _notifier.Handle("An error occurred while fetching the couriers by last name.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -202,7 +203,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by CNPJ.");
+            _notifier.Handle("An error occurred while fetching the couriers by CNPJ.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -218,7 +219,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by birth date.");
+            _notifier.Handle("An error occurred while fetching the couriers by birth date.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -234,7 +235,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by driver license number.");
+            _notifier.Handle("An error occurred while fetching the couriers by driver license number.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -250,7 +251,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by driver license type.");
+            _notifier.Handle("An error occurred while fetching the couriers by driver license type.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -266,7 +267,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by phone number.");
+            _notifier.Handle("An error occurred while fetching the couriers by phone number.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -282,7 +283,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by email.");
+            _notifier.Handle("An error occurred while fetching the couriers by email.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -298,7 +299,7 @@ public class CourierController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the couriers by image URL.");
+            _notifier.Handle("An error occurred while fetching the couriers by image URL.", NotificationType.Error);
             return CustomResponse();
         }
     }

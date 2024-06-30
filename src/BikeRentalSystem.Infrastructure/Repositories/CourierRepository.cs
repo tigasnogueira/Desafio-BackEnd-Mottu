@@ -1,6 +1,7 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,14 +11,9 @@ namespace BikeRentalSystem.Infrastructure.Repositories;
 
 public class CourierRepository : Repository<Courier>, ICourierRepository
 {
-    private readonly ILogger<CourierRepository> _logger;
-    private readonly INotifier _notifier;
-
     public CourierRepository(BikeRentalDbContext context, ILogger<CourierRepository> logger, INotifier notifier)
         : base(context, logger, notifier)
-    {
-        _logger = logger;
-    }
+    { }
 
     public async Task<IEnumerable<Courier>> GetAvailableCouriersAsync()
     {
@@ -29,6 +25,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle("Available couriers were not found", NotificationType.Error);
             throw;
         }
     }
@@ -43,6 +40,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle("Unavailable couriers were not found", NotificationType.Error);
             throw;
         }
     }
@@ -57,6 +55,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with first name {firstName} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -71,6 +70,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with last name {lastName} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -85,6 +85,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with CNPJ {cnpj} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -99,6 +100,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with birth date {birthDate} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -113,6 +115,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with driver license number {driverLicenseNumber} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -127,6 +130,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with driver license type {driverLicenseType} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -141,6 +145,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with phone number {phoneNumber} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -155,6 +160,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with email {email} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -169,6 +175,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Couriers with image URL {imageUrl} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -183,6 +190,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Courier with CNPJ {cnpj} was not found", NotificationType.Error);
             throw;
         }
     }
@@ -197,6 +205,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Courier with driver license number {driverLicenseNumber} was not found", NotificationType.Error);
             throw;
         }
     }

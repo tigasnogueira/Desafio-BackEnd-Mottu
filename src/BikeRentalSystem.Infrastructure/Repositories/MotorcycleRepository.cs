@@ -1,6 +1,7 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Infrastructure.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,14 +12,11 @@ namespace BikeRentalSystem.Infrastructure.Repositories;
 public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepository
 {
     private readonly IRentalRepository _rentalRepository;
-    private readonly ILogger<MotorcycleRepository> _logger;
-    private readonly INotifier _notifier;
 
     public MotorcycleRepository(BikeRentalDbContext context, IRentalRepository rentalRepository, ILogger<MotorcycleRepository> logger, INotifier notifier)
         : base(context, logger, notifier)
     {
         _rentalRepository = rentalRepository;
-        _logger = logger;
     }
 
     public async Task<IEnumerable<Motorcycle>> GetAvailableMotorcyclesAsync()
@@ -31,6 +29,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle("Available motorcycles were not found", NotificationType.Error);
             throw;
         }
     }
@@ -45,6 +44,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle("Rented motorcycles were not found", NotificationType.Error);
             throw;
         }
     }
@@ -59,6 +59,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Motorcycles with brand {brand} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -73,6 +74,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Motorcycles with model {model} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -87,6 +89,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Motorcycles with year {year} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -101,6 +104,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Motorcycles with color {color} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -115,6 +119,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Motorcycles with engine size {engineSize} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -129,6 +134,7 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Motorcycles with mileage {mileage} were not found", NotificationType.Error);
             throw;
         }
     }
@@ -143,21 +149,40 @@ public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepositor
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Motorcycle with license plate {licensePlate} was not found", NotificationType.Error);
             throw;
         }
     }
 
     public async Task<bool> IsLicensePlateUniqueAsync(string licensePlate)
     {
-        _notifier.Handle($"Checking if license plate {licensePlate} is unique");
-        var existingMotorcycle = await _context.Motorcycles.AsNoTracking().FirstOrDefaultAsync(m => m.LicensePlate == licensePlate);
-        _notifier.Handle($"License plate {licensePlate} is {(existingMotorcycle == null ? "unique" : "not unique")}");
-        return existingMotorcycle == null;
+        try
+        {
+            _notifier.Handle($"Checking if license plate {licensePlate} is unique");
+            var existingMotorcycle = await _context.Motorcycles.AsNoTracking().FirstOrDefaultAsync(m => m.LicensePlate == licensePlate);
+            _notifier.Handle($"License plate {licensePlate} is {(existingMotorcycle == null ? "unique" : "not unique")}");
+            return existingMotorcycle == null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"License plate {licensePlate} was not found", NotificationType.Error);
+            throw;
+        }
     }
 
     public async Task<bool> MotorcycleHasRentalsAsync(Guid motorcycleId)
     {
-        var rentals = await _rentalRepository.GetRentalsByMotorcycleIdAsync(motorcycleId);
-        return rentals.Any();
+        try
+        {
+            var rentals = await _rentalRepository.GetRentalsByMotorcycleIdAsync(motorcycleId);
+            return rentals.Any();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, ex.Message);
+            _notifier.Handle($"Rentals for motorcycle with id {motorcycleId} were not found", NotificationType.Error);
+            throw;
+        }
     }
 }

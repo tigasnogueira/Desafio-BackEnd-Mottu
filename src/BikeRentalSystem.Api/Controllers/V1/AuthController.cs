@@ -3,6 +3,7 @@ using BikeRentalSystem.Api.Dtos;
 using BikeRentalSystem.Api.Extensions;
 using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
+using BikeRentalSystem.Core.Notifications;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -57,7 +58,7 @@ public class AuthController : MainController
 
         foreach (var error in result.Errors)
         {
-            NotifyError(error.Description);
+            _notifier.Handle(error.Description, NotificationType.Error);
         }
 
         return CustomResponse();
@@ -78,11 +79,11 @@ public class AuthController : MainController
 
         if (result.IsLockedOut)
         {
-            NotifyError("User temporarily blocked after multiple failed attempts.");
+            _notifier.Handle("User temporarily blocked after multiple failed attempts.", NotificationType.Error);
             return CustomResponse();
         }
 
-        NotifyError("Invalid user or password.");
+        _notifier.Handle("Invalid user or password.", NotificationType.Error);
         return CustomResponse();
     }
 

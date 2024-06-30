@@ -6,6 +6,7 @@ using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Notifications;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -49,7 +50,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -65,7 +66,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rental.");
+            _notifier.Handle("An error occurred while fetching the rental.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -83,7 +84,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while adding the rental.");
+            _notifier.Handle("An error occurred while adding the rental.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -102,7 +103,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while updating the rental.");
+            _notifier.Handle("An error occurred while updating the rental.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -119,7 +120,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while deleting the rental.");
+            _notifier.Handle("An error occurred while deleting the rental.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -135,7 +136,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -151,7 +152,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -167,7 +168,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -183,7 +184,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -199,7 +200,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -215,7 +216,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -231,7 +232,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -247,7 +248,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }
@@ -263,7 +264,7 @@ public class RentalController : MainController
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
-            NotifyError("An error occurred while fetching the rentals.");
+            _notifier.Handle("An error occurred while fetching the rentals.", NotificationType.Error);
             return CustomResponse();
         }
     }

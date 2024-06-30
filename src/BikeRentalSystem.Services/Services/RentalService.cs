@@ -13,7 +13,6 @@ public class RentalService : BaseService, IRentalService
     private readonly IRentalRepository _rentalRepository;
     private readonly IMessagePublisher _messagePublisher;
     private readonly ILogger<RentalService> _logger;
-    private readonly INotifier _notifier;
 
     public RentalService(IRentalRepository rentalRepository, IMessagePublisher messagePublisher, ILogger<RentalService> logger, INotifier notifier) : base(notifier)
     {
@@ -32,6 +31,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -46,6 +46,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -60,6 +61,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -68,7 +70,14 @@ public class RentalService : BaseService, IRentalService
     {
         try
         {
-            if (!ExecuteValidation(new RentalValidation(), entity)) return null;
+            var validator = new RentalValidation(_rentalRepository);
+
+            var validationResult = await validator.ValidateAsync(entity);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return null;
+            }
 
             _notifier.Handle("Rental was added");
             return await _rentalRepository.AddAsync(entity);
@@ -76,6 +85,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -84,7 +94,14 @@ public class RentalService : BaseService, IRentalService
     {
         try
         {
-            if (!ExecuteValidation(new RentalValidation(), entity)) return null;
+            var validator = new RentalValidation(_rentalRepository);
+
+            var validationResult = await validator.ValidateAsync(entity);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return null;
+            }
 
             _notifier.Handle($"Rental with id {entity.Id} was updated");
             return await _rentalRepository.UpdateAsync(entity);
@@ -92,6 +109,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -106,6 +124,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -120,6 +139,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -134,6 +154,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -148,6 +169,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -162,6 +184,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -176,6 +199,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -190,6 +214,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -204,6 +229,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -218,6 +244,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }
@@ -232,6 +259,7 @@ public class RentalService : BaseService, IRentalService
         catch (Exception ex)
         {
             _logger.LogError(ex, ex.Message);
+            HandleException(ex);
             throw;
         }
     }

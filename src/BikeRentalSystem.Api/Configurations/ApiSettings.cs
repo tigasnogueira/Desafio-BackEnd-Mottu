@@ -13,6 +13,14 @@ public class ApiSettings
         services.AddSwaggerConfiguration();
         services.AddHealthChecksConfiguration(configuration);
         services.AddAutoMapper(typeof(AutomapperConfig));
+
+        services.AddIdentityServer()
+            .AddInMemoryClients(Config.GetClients())
+            .AddInMemoryApiResources(Config.GetApiResources())
+            .AddInMemoryApiScopes(Config.GetApiScopes())
+            .AddInMemoryIdentityResources(Config.GetIdentityResources())
+            .AddInMemoryPersistedGrants()
+            .AddDeveloperSigningCredential();
     }
 
     public void ConfigurePipeline(IApplicationBuilder app, IWebHostEnvironment env)

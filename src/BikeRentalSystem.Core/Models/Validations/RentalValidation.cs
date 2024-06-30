@@ -1,10 +1,11 @@
-﻿using FluentValidation;
+﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+using FluentValidation;
 
 namespace BikeRentalSystem.Core.Models.Validations;
 
 public class RentalValidation : AbstractValidator<Rental>
 {
-    public RentalValidation()
+    public RentalValidation(IRentalRepository rentalRepository)
     {
         RuleFor(r => r.StartDate)
             .LessThanOrEqualTo(r => r.EndDate)

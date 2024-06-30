@@ -9,8 +9,8 @@ namespace BikeRentalSystem.Api.Controllers;
 [ApiController]
 public abstract class MainController : Controller
 {
-    private readonly INotifier _notifier;
-    public readonly IUser _appUser;
+    protected readonly INotifier _notifier;
+    protected readonly IUser _appUser;
 
     protected Guid UserId { get; set; }
     protected bool IsUserAuthenticated { get; set; }
@@ -29,17 +29,28 @@ public abstract class MainController : Controller
 
     protected ActionResult CustomResponse(object result = null, int? statusCode = null)
     {
-        if (ValidOperation())
-        {
-            if (statusCode.HasValue)
-            {
-                return StatusCode(statusCode.Value, new { success = true, data = result });
-            }
+        if (!ValidOperation())
+            return HandleErrorResponse();
 
-            return result == null ? NoContent() : Ok(new { success = true, data = result });
+        if (statusCode.HasValue)
+        {
+            return StatusCode(statusCode.Value, new { success = true, data = result });
         }
 
-        return HandleErrorResponse();
+        switch (HttpContext.Request.Method)
+        {
+            case "GET":
+                return result == null ? NotFound(new { success = false, errors = "Resource not found" }) : Ok(new { success = true, data = result });
+            case "POST":
+                return result == null ? Conflict(new { success = false, errors = "Resource conflict" }) : StatusCode(201, new { success = true, data = result });
+            case "PUT":
+            case "PATCH":
+                return result == null ? NotFound(new { success = false, errors = "Resource not found" }) : Ok(new { success = true, data = result });
+            case "DELETE":
+                return NoContent();
+            default:
+                return Ok(new { success = true, data = result });
+        }
     }
 
     protected ActionResult CustomResponse(ModelStateDictionary modelState)
@@ -52,41 +63,45 @@ public abstract class MainController : Controller
         return CustomResponse();
     }
 
-    protected bool ValidOperation() => !_notifier.HasNotification();
+    protected bool ValidOperation() => !_notifier.GetNotifications().Any(n => n.Type == NotificationType.Error);
 
-    protected void NotifyErrorInvalidModel(ModelStateDictionary modelState)
+    private void NotifyErrorInvalidModel(ModelStateDictionary modelState)
     {
         var errors = modelState.Values.SelectMany(e => e.Errors);
         foreach (var error in errors)
         {
             var errorMsg = error.Exception == null ? error.ErrorMessage : error.Exception.Message;
-            NotifyError(errorMsg);
+            var errorType = NotificationType.Error;
+            NotifyError(errorMsg, errorType);
         }
     }
 
-    protected void NotifyError(string message) => _notifier.Handle(new Notification(message));
+    protected void NotifyError(string message, NotificationType type) => _notifier.Handle(new Notification(message, type));
 
-    protected ActionResult HandleErrorResponse()
+    protected void HandleException(Exception exception) => _notifier.HandleException(exception);
+
+    private ActionResult HandleErrorResponse()
     {
-        var errors = _notifier.GetNotifications().Select(n => n.Message);
+        var errors = _notifier.GetNotifications()
+            .Where(n => n.Type == NotificationType.Error)
+            .Select(n => n.Message)
+            .ToList();
 
         if (IsNotFoundError(errors))
         {
             return NotFound(new { success = false, errors });
         }
 
-        if (IsBadRequestError(errors))
-        {
-            return BadRequest(new { success = false, errors });
-        }
-
-        // Fallback para outros tipos de erro
-        return StatusCode(500, new { success = false, errors, message = "An unexpected error occurred." });
+        return IsBadRequestError(errors)
+            ? BadRequest(new { success = false, errors })
+            : StatusCode(500, new { success = false, errors, message = "An unexpected error occurred." });
     }
 
-    protected static bool IsNotFoundError(IEnumerable<string> errors) =>
+    private static bool IsNotFoundError(IEnumerable<string> errors) =>
         errors.Any(e => e.Contains("not found", StringComparison.OrdinalIgnoreCase));
 
-    protected static bool IsBadRequestError(IEnumerable<string> errors) =>
-        errors.Any(e => e.Contains("invalid", StringComparison.OrdinalIgnoreCase) || e.Contains("cannot", StringComparison.OrdinalIgnoreCase));
+    private static bool IsBadRequestError(IEnumerable<string> errors) =>
+        errors.Any(e =>
+            e.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
+            e.Contains("cannot", StringComparison.OrdinalIgnoreCase));
 }
