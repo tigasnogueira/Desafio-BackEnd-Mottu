@@ -2,6 +2,7 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Models.Validations;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
@@ -67,6 +68,15 @@ public class CourierService(ICourierRepository _courierRepository, INotifier _no
     {
         try
         {
+            var validator = new CourierValidation(_courierRepository);
+
+            var validationResult = await validator.ValidateAsync(courier);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return;
+            }
+
             _notifier.Handle("Adding courier");
             await _courierRepository.Add(courier);
         }
@@ -81,6 +91,15 @@ public class CourierService(ICourierRepository _courierRepository, INotifier _no
     {
         try
         {
+            var validator = new CourierValidation(_courierRepository);
+
+            var validationResult = await validator.ValidateAsync(courier);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return;
+            }
+
             _notifier.Handle("Updating courier");
             await _courierRepository.Update(courier, 0);
         }

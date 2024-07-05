@@ -2,6 +2,7 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Models.Validations;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
@@ -67,6 +68,15 @@ public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INot
     {
         try
         {
+            var validator = new MotorcycleValidation(_motorcycleRepository);
+
+            var validationResult = await validator.ValidateAsync(motorcycle);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return;
+            }
+
             _notifier.Handle("Adding motorcycle");
             await _motorcycleRepository.Add(motorcycle);
         }
@@ -81,6 +91,15 @@ public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INot
     {
         try
         {
+            var validator = new MotorcycleValidation(_motorcycleRepository);
+
+            var validationResult = await validator.ValidateAsync(motorcycle);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return;
+            }
+
             _notifier.Handle("Updating motorcycle");
             await _motorcycleRepository.Update(motorcycle, 0);
         }

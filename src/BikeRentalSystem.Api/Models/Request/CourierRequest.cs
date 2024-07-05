@@ -1,8 +1,7 @@
-﻿namespace BikeRentalSystem.Api.Models.Dtos;
+﻿namespace BikeRentalSystem.Api.Models.Request;
 
-public class CourierDto
+public class CourierRequest
 {
-    public Guid Id { get; set; }
     public string Identifier { get; set; }
     public string Name { get; set; }
     public string Cnpj { get; set; }
@@ -10,7 +9,4 @@ public class CourierDto
     public string CnhNumber { get; set; }
     public string CnhType { get; set; }
     public string CnhImage { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; }
 }

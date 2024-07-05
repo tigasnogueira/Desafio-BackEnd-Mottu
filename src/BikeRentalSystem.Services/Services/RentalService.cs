@@ -2,6 +2,7 @@
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Core.Models.Validations;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
@@ -95,6 +96,15 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
     {
         try
         {
+            var validator = new RentalValidation();
+
+            var validationResult = await validator.ValidateAsync(rental);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return;
+            }
+
             _notifier.Handle("Adding rental");
             await _rentalRepository.Add(rental);
         }
@@ -109,6 +119,15 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
     {
         try
         {
+            var validator = new RentalValidation();
+
+            var validationResult = await validator.ValidateAsync(rental);
+            if (!validationResult.IsValid)
+            {
+                _notifier.NotifyValidationErrors(validationResult);
+                return;
+            }
+
             _notifier.Handle("Updating rental");
             await _rentalRepository.Update(rental, 0);
         }

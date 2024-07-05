@@ -17,6 +17,10 @@
     <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="8.0.1" />
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.6">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="8.0.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
@@ -25,10 +29,6 @@
   <ItemGroup>
     <ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.Services\BikeRentalSystem.RentalServices.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Mappers\" />
   </ItemGroup>
 
 </Project>
