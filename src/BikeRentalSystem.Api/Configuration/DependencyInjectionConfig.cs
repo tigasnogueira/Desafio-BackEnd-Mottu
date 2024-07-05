@@ -31,5 +31,7 @@ public static class DependencyInjectionConfig
         services.AddScoped<IValidator<Motorcycle>, MotorcycleValidation>();
         services.AddScoped<IValidator<Courier>, CourierValidation>();
         services.AddScoped<IValidator<Rental>, RentalValidation>();
+
+        services.AddScoped<CustomJwtBearerEvents>();
     }
 }

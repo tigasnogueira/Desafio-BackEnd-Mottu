@@ -5,15 +5,8 @@ using BikeRentalSystem.Core.Models;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class MotorcycleService : BaseService, IMotorcycleService
+public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INotifier _notifier) : BaseService(_notifier), IMotorcycleService
 {
-    private readonly IMotorcycleRepository _motorcycleRepository;
-
-    public MotorcycleService(IMotorcycleRepository motorcycleRepository, INotifier notifier) : base(notifier)
-    {
-        _motorcycleRepository = motorcycleRepository;
-    }
-
     public async Task<Motorcycle> GetById(Guid id)
     {
         try

@@ -10,18 +10,9 @@ using System.Reflection;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
 
-public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : EntityBase, new()
+public abstract class Repository<TEntity>(DataContext _dataContext, INotifier _notifier) : IRepository<TEntity> where TEntity : EntityBase, new()
 {
-    protected readonly DataContext _dataContext;
-    protected readonly DbSet<TEntity> _dbSet;
-    protected readonly INotifier _notifier;
-
-    protected Repository(DataContext dataContext, INotifier notifier)
-    {
-        _dataContext = dataContext;
-        _dbSet = dataContext.Set<TEntity>();
-        _notifier = notifier;
-    }
+    protected readonly DbSet<TEntity> _dbSet = _dataContext.Set<TEntity>();
 
     public virtual async Task<TEntity> GetById(Guid id)
     {

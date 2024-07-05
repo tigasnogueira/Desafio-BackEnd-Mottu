@@ -5,15 +5,8 @@ using BikeRentalSystem.Core.Models;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class RentalService : BaseService, IRentalService
+public class RentalService(IRentalRepository _rentalRepository, INotifier _notifier) : BaseService(_notifier), IRentalService
 {
-    private readonly IRentalRepository _rentalRepository;
-
-    public RentalService(IRentalRepository rentalRepository, INotifier notifier) : base(notifier)
-    {
-        _rentalRepository = rentalRepository;
-    }
-
     public async Task<Rental> GetById(Guid id)
     {
         try

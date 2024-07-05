@@ -5,15 +5,8 @@ using BikeRentalSystem.Core.Models;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class CourierService : BaseService, ICourierService
+public class CourierService(ICourierRepository _courierRepository, INotifier _notifier) : BaseService(_notifier), ICourierService
 {
-    private readonly ICourierRepository _courierRepository;
-
-    public CourierService(ICourierRepository courierRepository, INotifier notifier) : base(notifier)
-    {
-        _courierRepository = courierRepository;
-    }
-
     public async Task<Courier> GetById(Guid id)
     {
         try
