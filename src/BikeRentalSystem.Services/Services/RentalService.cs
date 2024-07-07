@@ -3,17 +3,18 @@ using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
+using BikeRentalSystem.Core.Notifications;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class RentalService(IRentalRepository _rentalRepository, INotifier _notifier) : BaseService(_notifier), IRentalService
+public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseService(_notifier), IRentalService
 {
     public async Task<Rental> GetById(Guid id)
     {
         try
         {
             _notifier.Handle("Getting rental by ID");
-            return await _rentalRepository.GetById(id);
+            return await _unitOfWork.Rentals.GetById(id);
         }
         catch (Exception ex)
         {
@@ -27,7 +28,7 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
         try
         {
             _notifier.Handle("Getting all rentals");
-            return await _rentalRepository.GetAll();
+            return await _unitOfWork.Rentals.GetAll();
         }
         catch (Exception ex)
         {
@@ -41,7 +42,7 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
         try
         {
             _notifier.Handle("Getting rentals by courier ID");
-            return await _rentalRepository.GetByCourierId(courierId);
+            return await _unitOfWork.Rentals.GetByCourierId(courierId);
         }
         catch (Exception ex)
         {
@@ -55,7 +56,7 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
         try
         {
             _notifier.Handle("Getting rentals by motorcycle ID");
-            return await _rentalRepository.GetByMotorcycleId(motorcycleId);
+            return await _unitOfWork.Rentals.GetByMotorcycleId(motorcycleId);
         }
         catch (Exception ex)
         {
@@ -69,7 +70,7 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
         try
         {
             _notifier.Handle("Getting active rentals");
-            return await _rentalRepository.GetActiveRentals();
+            return await _unitOfWork.Rentals.GetActiveRentals();
         }
         catch (Exception ex)
         {
@@ -83,7 +84,7 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
         try
         {
             _notifier.Handle("Calculating rental cost");
-            return await _rentalRepository.CalculateRentalCost(rentalId);
+            return await _unitOfWork.Rentals.CalculateRentalCost(rentalId);
         }
         catch (Exception ex)
         {
@@ -92,68 +93,163 @@ public class RentalService(IRentalRepository _rentalRepository, INotifier _notif
         }
     }
 
-    public async Task Add(Rental rental)
+    public async Task<bool> Add(Rental rental)
     {
-        try
+        if (rental == null)
         {
-            var validator = new RentalValidation();
-
-            var validationResult = await validator.ValidateAsync(rental);
-            if (!validationResult.IsValid)
-            {
-                _notifier.NotifyValidationErrors(validationResult);
-                return;
-            }
-
-            _notifier.Handle("Adding rental");
-            await _rentalRepository.Add(rental);
+            _notifier.Handle("Rental details cannot be null", NotificationType.Error);
+            return false;
         }
-        catch (Exception ex)
+
+        var validator = new RentalValidation(_unitOfWork);
+        var validationResult = await validator.ValidateAsync(rental);
+        if (!validationResult.IsValid)
         {
-            HandleException(ex);
-            throw;
+            _notifier.NotifyValidationErrors(validationResult);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
+            {
+                await _unitOfWork.Rentals.Add(rental);
+                var result = await _unitOfWork.SaveAsync();
+
+                if (result > 0)
+                {
+                    await transaction.CommitAsync();
+                    _notifier.Handle("Rental added successfully");
+                    return true;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    _notifier.Handle("Failed to add rental, rolling back transaction", NotificationType.Error);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
         }
     }
 
-    public async Task Update(Rental rental)
+    public async Task<bool> Update(Rental rental)
     {
-        try
+        if (rental == null)
         {
-            var validator = new RentalValidation();
-
-            var validationResult = await validator.ValidateAsync(rental);
-            if (!validationResult.IsValid)
-            {
-                _notifier.NotifyValidationErrors(validationResult);
-                return;
-            }
-
-            _notifier.Handle("Updating rental");
-            await _rentalRepository.Update(rental, 0);
+            _notifier.Handle("Rental details cannot be null", NotificationType.Error);
+            return false;
         }
-        catch (Exception ex)
+
+        var existingRental = await _unitOfWork.Rentals.GetById(rental.Id);
+        if (existingRental == null)
         {
-            HandleException(ex);
-            throw;
+            _notifier.Handle("Rental not found", NotificationType.Error);
+            return false;
+        }
+
+        var validator = new RentalValidation(_unitOfWork);
+        var validationResult = await validator.ValidateAsync(rental);
+        if (!validationResult.IsValid)
+        {
+            _notifier.NotifyValidationErrors(validationResult);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
+            {
+                existingRental.CourierId = rental.CourierId;
+                existingRental.MotorcycleId = rental.MotorcycleId;
+                existingRental.StartDate = rental.StartDate;
+                existingRental.EndDate = rental.EndDate;
+                existingRental.ExpectedEndDate = rental.ExpectedEndDate;
+                existingRental.DailyRate = rental.DailyRate;
+                existingRental.TotalCost = rental.TotalCost;
+                existingRental.Plan = rental.Plan;
+                existingRental.Update();
+
+                _unitOfWork.Rentals.Update(existingRental, 0);
+                var result = await _unitOfWork.SaveAsync();
+
+                if (result > 0)
+                {
+                    await transaction.CommitAsync();
+                    _notifier.Handle("Rental updated successfully");
+                    return true;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    _notifier.Handle("Failed to update rental, rolling back transaction", NotificationType.Error);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
         }
     }
 
-    public async Task SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id)
     {
         try
         {
-            _notifier.Handle("Soft deleting rental");
-            var rental = await _rentalRepository.GetById(id);
-            if (rental != null)
+            if (id == Guid.Empty)
             {
-                rental.IsDeletedToggle();
-                await _rentalRepository.Update(rental, 0);
+                _notifier.Handle("Invalid rental ID", NotificationType.Error);
+                return false;
+            }
+
+            var rental = await _unitOfWork.Rentals.GetById(id);
+            if (rental == null)
+            {
+                _notifier.Handle("Rental not found", NotificationType.Error);
+                return false;
+            }
+
+            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            {
+                try
+                {
+                    rental.IsDeletedToggle();
+                    await _unitOfWork.Rentals.Update(rental, 0);
+                    var result = await _unitOfWork.SaveAsync();
+
+                    if (result > 0)
+                    {
+                        await transaction.CommitAsync();
+                        _notifier.Handle("Rental soft deleted successfully");
+                        return true;
+                    }
+                    else
+                    {
+                        await transaction.RollbackAsync();
+                        _notifier.Handle("Failed to soft delete rental, rolling back transaction", NotificationType.Error);
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    HandleException(ex);
+                    return false;
+                }
             }
         }
         catch (Exception ex)
         {
             HandleException(ex);
-            throw;
+            return false;
         }
     }
 }

@@ -20,6 +20,8 @@ public static class DependencyInjectionConfig
         services.AddDbContext<DataContext>(options =>
             options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         services.AddScoped<IMotorcycleRepository, MotorcycleRepository>();
         services.AddScoped<ICourierRepository, CourierRepository>();
         services.AddScoped<IRentalRepository, RentalRepository>();

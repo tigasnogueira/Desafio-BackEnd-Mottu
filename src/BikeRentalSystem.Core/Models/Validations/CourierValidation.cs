@@ -5,11 +5,11 @@ namespace BikeRentalSystem.Core.Models.Validations;
 
 public class CourierValidation : AbstractValidator<Courier>
 {
-    private readonly ICourierRepository _courierRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public CourierValidation(ICourierRepository courierRepository)
+    public CourierValidation(IUnitOfWork unitOfWork)
     {
-        _courierRepository = courierRepository;
+        _unitOfWork = unitOfWork;
 
         RuleFor(c => c.Identifier)
             .NotEmpty().WithMessage("The Identifier cannot be empty.");
@@ -21,7 +21,11 @@ public class CourierValidation : AbstractValidator<Courier>
         RuleFor(c => c.Cnpj)
             .NotEmpty().WithMessage("The CNPJ cannot be empty.")
             .Length(14).WithMessage("The CNPJ must be 14 characters long.")
-            .MustAsync(async (cnpj, cancellation) => await CNPJIsUnique(cnpj)).WithMessage("The CNPJ already exists.");
+            .MustAsync(async (cnpj, cancellation) =>
+            {
+                var existingCourier = await _unitOfWork.Couriers.Find(c => c.Cnpj == cnpj);
+                return !existingCourier.Any();
+            }).WithMessage("The CNPJ already exists.");
 
         RuleFor(c => c.BirthDate)
             .NotEmpty().WithMessage("The Date of Birth cannot be empty.")
@@ -29,7 +33,10 @@ public class CourierValidation : AbstractValidator<Courier>
 
         RuleFor(c => c.CnhNumber)
             .NotEmpty().WithMessage("The CNH Number cannot be empty.")
-            .MustAsync(async (cnh, cancellation) => await CNHIsUnique(cnh)).WithMessage("The CNH Number already exists.");
+            .MustAsync(async (cnh, cancellation) => {
+                var existingCourier = await _unitOfWork.Couriers.Find(c => c.CnhNumber == cnh);
+                return !existingCourier.Any();
+            }).WithMessage("The CNH Number already exists.");
 
         RuleFor(c => c.CnhType)
             .NotEmpty().WithMessage("The CNH Type cannot be empty.")
@@ -38,17 +45,5 @@ public class CourierValidation : AbstractValidator<Courier>
         RuleFor(c => c.CnhImage)
             .NotEmpty().WithMessage("The CNH Image cannot be empty.")
             .Must(image => image.EndsWith(".png") || image.EndsWith(".bmp")).WithMessage("The CNH Image must be a PNG or BMP file.");
-    }
-
-    private async Task<bool> CNPJIsUnique(string cnpj)
-    {
-        var existingCourier = await _courierRepository.Find(c => c.Cnpj == cnpj);
-        return existingCourier == null;
-    }
-
-    private async Task<bool> CNHIsUnique(string cnh)
-    {
-        var existingCourier = await _courierRepository.Find(c => c.CnhNumber == cnh);
-        return existingCourier == null;
     }
 }

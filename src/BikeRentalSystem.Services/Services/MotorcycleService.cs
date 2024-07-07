@@ -3,17 +3,18 @@ using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
+using BikeRentalSystem.Core.Notifications;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INotifier _notifier) : BaseService(_notifier), IMotorcycleService
+public class MotorcycleService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseService(_notifier), IMotorcycleService
 {
     public async Task<Motorcycle> GetById(Guid id)
     {
         try
         {
             _notifier.Handle("Getting motorcycle by ID");
-            return await _motorcycleRepository.GetById(id);
+            return await _unitOfWork.Motorcycles.GetById(id);
         }
         catch (Exception ex)
         {
@@ -27,7 +28,7 @@ public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INot
         try
         {
             _notifier.Handle("Getting all motorcycles");
-            return await _motorcycleRepository.GetAll();
+            return await _unitOfWork.Motorcycles.GetAll();
         }
         catch (Exception ex)
         {
@@ -41,7 +42,7 @@ public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INot
         try
         {
             _notifier.Handle("Getting motorcycle by plate");
-            return await _motorcycleRepository.GetByPlate(plate);
+            return await _unitOfWork.Motorcycles.GetByPlate(plate);
         }
         catch (Exception ex)
         {
@@ -55,7 +56,7 @@ public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INot
         try
         {
             _notifier.Handle("Getting all motorcycles by year");
-            return await _motorcycleRepository.GetAllByYear(year);
+            return await _unitOfWork.Motorcycles.GetAllByYear(year);
         }
         catch (Exception ex)
         {
@@ -64,68 +65,159 @@ public class MotorcycleService(IMotorcycleRepository _motorcycleRepository, INot
         }
     }
 
-    public async Task Add(Motorcycle motorcycle)
+    public async Task<bool> Add(Motorcycle motorcycle)
     {
-        try
+        if (motorcycle == null)
         {
-            var validator = new MotorcycleValidation(_motorcycleRepository);
-
-            var validationResult = await validator.ValidateAsync(motorcycle);
-            if (!validationResult.IsValid)
-            {
-                _notifier.NotifyValidationErrors(validationResult);
-                return;
-            }
-
-            _notifier.Handle("Adding motorcycle");
-            await _motorcycleRepository.Add(motorcycle);
+            _notifier.Handle("Motorcycle details cannot be null", NotificationType.Error);
+            return false;
         }
-        catch (Exception ex)
+
+        var validator = new MotorcycleValidation(_unitOfWork);
+        var validationResult = await validator.ValidateAsync(motorcycle);
+        if (!validationResult.IsValid)
         {
-            HandleException(ex);
-            throw;
+            _notifier.NotifyValidationErrors(validationResult);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
+            {
+                await _unitOfWork.Motorcycles.Add(motorcycle);
+                var result = await _unitOfWork.SaveAsync();
+
+                if (result > 0)
+                {
+                    await transaction.CommitAsync();
+                    _notifier.Handle("Motorcycle added successfully");
+                    return true;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    _notifier.Handle("Failed to add motorcycle, rolling back transaction", NotificationType.Error);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
         }
     }
 
-    public async Task Update(Motorcycle motorcycle)
+    public async Task<bool> Update(Motorcycle motorcycle)
     {
-        try
+        if (motorcycle == null)
         {
-            var validator = new MotorcycleValidation(_motorcycleRepository);
-
-            var validationResult = await validator.ValidateAsync(motorcycle);
-            if (!validationResult.IsValid)
-            {
-                _notifier.NotifyValidationErrors(validationResult);
-                return;
-            }
-
-            _notifier.Handle("Updating motorcycle");
-            await _motorcycleRepository.Update(motorcycle, 0);
+            _notifier.Handle("Motorcycle details cannot be null", NotificationType.Error);
+            return false;
         }
-        catch (Exception ex)
+
+        var existingMotorcycle = await _unitOfWork.Motorcycles.GetById(motorcycle.Id);
+        if (existingMotorcycle == null)
         {
-            HandleException(ex);
-            throw;
+            _notifier.Handle("Motorcycle not found", NotificationType.Error);
+            return false;
+        }
+
+        var validator = new MotorcycleValidation(_unitOfWork);
+        var validationResult = await validator.ValidateAsync(motorcycle);
+        if (!validationResult.IsValid)
+        {
+            _notifier.NotifyValidationErrors(validationResult);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
+            {
+                existingMotorcycle.Identifier = motorcycle.Identifier;
+                existingMotorcycle.Year = motorcycle.Year;
+                existingMotorcycle.Model = motorcycle.Model;
+                existingMotorcycle.Plate = motorcycle.Plate;
+                existingMotorcycle.Update();
+
+                _unitOfWork.Motorcycles.Update(existingMotorcycle, 0);
+                var result = await _unitOfWork.SaveAsync();
+
+                if (result > 0)
+                {
+                    await transaction.CommitAsync();
+                    _notifier.Handle("Motorcycle updated successfully");
+                    return true;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    _notifier.Handle("Failed to update motorcycle, rolling back transaction", NotificationType.Error);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
         }
     }
 
-    public async Task SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id)
     {
         try
         {
-            _notifier.Handle("Soft deleting motorcycle");
-            var motorcycle = await _motorcycleRepository.GetById(id);
-            if (motorcycle != null)
+            if (id == Guid.Empty)
             {
-                motorcycle.IsDeletedToggle();
-                await _motorcycleRepository.Update(motorcycle, 0);
+                _notifier.Handle("Invalid motorcycle ID", NotificationType.Error);
+                return false;
+            }
+
+            var motorcycle = await _unitOfWork.Motorcycles.GetById(id);
+            if (motorcycle == null)
+            {
+                _notifier.Handle("Motorcycle not found", NotificationType.Error);
+                return false;
+            }
+
+            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            {
+                try
+                {
+                    motorcycle.IsDeletedToggle();
+                    await _unitOfWork.Motorcycles.Update(motorcycle, 0);
+                    var result = await _unitOfWork.SaveAsync();
+
+                    if (result > 0)
+                    {
+                        await transaction.CommitAsync();
+                        _notifier.Handle("Motorcycle soft deleted successfully");
+                        return true;
+                    }
+                    else
+                    {
+                        await transaction.RollbackAsync();
+                        _notifier.Handle("Failed to soft delete motorcycle, rolling back transaction", NotificationType.Error);
+                        return false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    HandleException(ex);
+                    return false;
+                }
             }
         }
         catch (Exception ex)
         {
             HandleException(ex);
-            throw;
+            return false;
         }
     }
 }

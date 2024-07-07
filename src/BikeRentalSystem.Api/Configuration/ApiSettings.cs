@@ -12,7 +12,7 @@ public class ApiSettings
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
     {
         services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+            options.UseNpgsql(configuration.GetSection("DatabaseSettings:DefaultConnection").Value));
 
         services.AddControllers()
             .AddJsonOptions(options =>

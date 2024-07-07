@@ -1,11 +1,16 @@
-﻿using FluentValidation;
+﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+using FluentValidation;
 
 namespace BikeRentalSystem.Core.Models.Validations;
 
 public class RentalValidation : AbstractValidator<Rental>
 {
-    public RentalValidation()
+    private readonly IUnitOfWork _unitOfWork;
+
+    public RentalValidation(IUnitOfWork unitOfWork)
     {
+        _unitOfWork = unitOfWork;
+
         RuleFor(r => r.CourierId)
             .NotEmpty().WithMessage("The Courier ID cannot be empty.");
 

@@ -4,7 +4,6 @@ using BikeRentalSystem.Api.Models.Dtos;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
-using BikeRentalSystem.Core.Notifications;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeRentalSystem.Api.Controllers.V1;
@@ -37,8 +36,7 @@ public class MotorcycleController : MainController
         }
         catch (Exception ex)
         {
-            NotifyError($"Error getting motorcycle by ID: {ex.Message}", NotificationType.Error);
-            return CustomResponse();
+            return CustomResponse(ex.Message);
         }
     }
 
@@ -56,8 +54,7 @@ public class MotorcycleController : MainController
         }
         catch (Exception ex)
         {
-            NotifyError($"Error getting all motorcycles: {ex.Message}", NotificationType.Error);
-            return CustomResponse();
+            return CustomResponse(ex.Message);
         }
     }
 
@@ -76,8 +73,7 @@ public class MotorcycleController : MainController
         }
         catch (Exception ex)
         {
-            NotifyError($"Error creating motorcycle: {ex.Message}", NotificationType.Error);
-            return CustomResponse();
+            return CustomResponse(ex.Message);
         }
     }
 
@@ -96,8 +92,7 @@ public class MotorcycleController : MainController
         }
         catch (Exception ex)
         {
-            NotifyError($"Error updating motorcycle: {ex.Message}", NotificationType.Error);
-            return CustomResponse();
+            return CustomResponse(ex.Message);
         }
     }
 
@@ -114,8 +109,7 @@ public class MotorcycleController : MainController
         }
         catch (Exception ex)
         {
-            NotifyError($"Error deleting motorcycle: {ex.Message}", NotificationType.Error);
-            return CustomResponse();
+            return CustomResponse(ex.Message);
         }
     }
 }

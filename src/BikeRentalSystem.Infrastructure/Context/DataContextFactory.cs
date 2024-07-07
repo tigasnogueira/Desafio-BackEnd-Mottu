@@ -8,14 +8,23 @@ public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
 {
     public DataContext CreateDbContext(string[] args)
     {
+        var basePath = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
+        var apiProjectPath = Path.Combine(basePath, "BikeRentalSystem.Api");
+
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "../BikeRentalSystem.Api"))
+            .SetBasePath(apiProjectPath)
             .AddJsonFile("appsettings.json")
             .Build();
 
-        var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetSection("DatabaseSettings:DefaultConnection").Value;
+        Console.WriteLine($"Connection string: {connectionString}");
 
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new ArgumentException("The connection string 'DefaultConnection' was not found.");
+        }
+
+        var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
         optionsBuilder.UseNpgsql(connectionString);
 
         return new DataContext(optionsBuilder.Options);

@@ -8,7 +8,7 @@ public interface IMotorcycleService
     Task<IEnumerable<Motorcycle>> GetAll();
     Task<Motorcycle> GetByPlate(string plate);
     Task<IEnumerable<Motorcycle>> GetAllByYear(int year);
-    Task Add(Motorcycle motorcycle);
-    Task Update(Motorcycle motorcycle);
-    Task SoftDelete(Guid id);
+    Task<bool> Add(Motorcycle motorcycle);
+    Task<bool> Update(Motorcycle motorcycle);
+    Task<bool> SoftDelete(Guid id);
 }
