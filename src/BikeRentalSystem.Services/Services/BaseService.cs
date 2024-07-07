@@ -19,13 +19,14 @@ public class BaseService(INotifier _notifier)
         if (validator.Result.IsValid) return errors;
 
         foreach (var error in validator.Result.Errors)
-        {
+    {
             var errorMessage = $"Property: {error.PropertyName} - Error: {error.ErrorMessage}";
             _notifier.Handle(errorMessage);
             errors.Add(errorMessage);
-        }
+    }
 
         return errors;
+        }
     }
 
     protected void HandleException(Exception exception)

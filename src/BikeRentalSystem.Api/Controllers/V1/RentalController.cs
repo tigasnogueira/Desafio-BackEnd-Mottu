@@ -19,6 +19,7 @@ public class RentalController : MainController
     public RentalController(IRentalService rentalService, IMapper mapper, INotifier notifier) : base(notifier)
     {
         _rentalService = rentalService;
+        _logger = logger;
         _mapper = mapper;
     }
 

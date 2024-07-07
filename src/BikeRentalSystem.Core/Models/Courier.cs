@@ -12,6 +12,12 @@ public class Courier : EntityBase
 
     public Courier()
     {
+        IsAvailable = true;
+    }
+
+    public void SetAvailable()
+    {
+        IsAvailable = true;
     }
 
     public Courier(string identifier, string name, string cnpj, DateTime birthDate, string cnhNumber, string cnhType, string cnhImage)

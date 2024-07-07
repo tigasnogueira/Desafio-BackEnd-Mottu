@@ -11,6 +11,12 @@ public class CourierRepository(DataContext _dataContext, INotifier _notifier) : 
 {
     public async Task<Courier> GetByCnpj(string cnpj)
     {
+        _couriers = database.GetCollection<Courier>("couriers");
+        _logger = logger;
+    }
+
+    public async Task<IEnumerable<Courier>> GetAvailableCouriersAsync()
+    {
         try
         {
             _notifier.Handle($"Getting {nameof(Courier)} by CNPJ {cnpj}.");

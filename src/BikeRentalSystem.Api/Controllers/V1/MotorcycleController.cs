@@ -19,6 +19,7 @@ public class MotorcycleController : MainController
     public MotorcycleController(IMotorcycleService motorcycleService, IMapper mapper, INotifier notifier) : base(notifier)
     {
         _motorcycleService = motorcycleService;
+        _logger = logger;
         _mapper = mapper;
     }
 
@@ -89,6 +90,10 @@ public class MotorcycleController : MainController
             motorcycle.Id = id;
             await _motorcycleService.Update(motorcycle);
             return CustomResponse(StatusCodes.Status204NoContent);
+            }
+
+            var motorcycle = await _motorcycleService.UpdateMotorcycleAsync(_mapper.Map<Motorcycle>(motorcycleDto));
+            return CustomResponse(motorcycle);
         }
         catch (Exception ex)
         {
@@ -106,6 +111,10 @@ public class MotorcycleController : MainController
         {
             await _motorcycleService.SoftDelete(id);
             return CustomResponse(StatusCodes.Status204NoContent);
+            }
+
+            motorcycle = await _motorcycleService.DeleteMotorcycleAsync(id);
+            return CustomResponse(motorcycle);
         }
         catch (Exception ex)
         {

@@ -18,12 +18,23 @@ public class Rental : EntityBase
 
     public Rental()
     {
+        IsPaid = false;
+        IsFinished = false;
     }
 
     public Rental(Guid courierId, Guid motorcycleId, DateTime startDate, DateTime endDate, DateTime expectedEndDate, decimal dailyRate, RentalPlan plan)
     {
         CourierId = courierId;
         MotorcycleId = motorcycleId;
+    }
+
+    public void SetCourier(Guid courierId)
+    {
+        CourierId = courierId;
+    }
+
+    public void SetDates(DateTime startDate, DateTime endDate)
+    {
         StartDate = startDate;
         EndDate = endDate;
         ExpectedEndDate = expectedEndDate;
@@ -35,7 +46,7 @@ public class Rental : EntityBase
     private decimal CalculateTotalCost()
     {
         return Plan switch
-        {
+    {
             RentalPlan.SevenDays => 7 * DailyRate,
             RentalPlan.FifteenDays => 15 * DailyRate,
             RentalPlan.ThirtyDays => 30 * DailyRate,

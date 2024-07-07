@@ -11,6 +11,13 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
 {
     public async Task<Rental> GetById(Guid id)
     {
+        _rentalRepository = rentalRepository;
+        _messagePublisher = messagePublisher;
+        _logger = logger;
+    }
+
+    public async Task<Rental> GetRentalByIdAsync(Guid id)
+    {
         try
         {
             _notifier.Handle("Getting rental by ID");
@@ -108,11 +115,12 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
             _notifier.NotifyValidationErrors(validationResult);
             return false;
         }
+    }
 
         using (var transaction = await _unitOfWork.BeginTransactionAsync())
+    {
+        try
         {
-            try
-            {
                 await _unitOfWork.Rentals.Add(rental);
                 var result = await _unitOfWork.SaveAsync();
 
@@ -121,7 +129,7 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental added successfully");
                     return true;
-                }
+        }
                 else
                 {
                     await transaction.RollbackAsync();
@@ -129,13 +137,13 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                     return false;
                 }
             }
-            catch (Exception ex)
-            {
+        catch (Exception ex)
+        {
                 await transaction.RollbackAsync();
                 HandleException(ex);
                 return false;
-            }
         }
+    }
     }
 
     public async Task<bool> Update(Rental rental)
@@ -159,12 +167,12 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
         {
             _notifier.NotifyValidationErrors(validationResult);
             return false;
-        }
+    }
 
         using (var transaction = await _unitOfWork.BeginTransactionAsync())
+    {
+        try
         {
-            try
-            {
                 existingRental.CourierId = rental.CourierId;
                 existingRental.MotorcycleId = rental.MotorcycleId;
                 existingRental.StartDate = rental.StartDate;
@@ -190,9 +198,9 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                     _notifier.Handle("Failed to update rental, rolling back transaction", NotificationType.Error);
                     return false;
                 }
-            }
-            catch (Exception ex)
-            {
+        }
+        catch (Exception ex)
+        {
                 await transaction.RollbackAsync();
                 HandleException(ex);
                 return false;
@@ -208,19 +216,19 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
             {
                 _notifier.Handle("Invalid rental ID", NotificationType.Error);
                 return false;
-            }
+        }
 
             var rental = await _unitOfWork.Rentals.GetById(id);
             if (rental == null)
-            {
+        {
                 _notifier.Handle("Rental not found", NotificationType.Error);
                 return false;
-            }
+    }
 
             using (var transaction = await _unitOfWork.BeginTransactionAsync())
-            {
-                try
-                {
+    {
+        try
+        {
                     rental.IsDeletedToggle();
                     await _unitOfWork.Rentals.Update(rental, 0);
                     var result = await _unitOfWork.SaveAsync();
@@ -230,21 +238,35 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                         await transaction.CommitAsync();
                         _notifier.Handle("Rental soft deleted successfully");
                         return true;
-                    }
+        }
                     else
-                    {
+        {
                         await transaction.RollbackAsync();
                         _notifier.Handle("Failed to soft delete rental, rolling back transaction", NotificationType.Error);
                         return false;
-                    }
-                }
-                catch (Exception ex)
-                {
+    }
+
+    public async Task<IEnumerable<Rental>> GetRentalsByPaidStatusAsync(bool isPaid)
+    {
+        try
+        {
+            _notifier.Handle($"Rentals with paid status {isPaid} were accessed");
+            return await _rentalRepository.GetRentalsByPaidStatusAsync(isPaid);
+        }
+        catch (Exception ex)
+        {
                     await transaction.RollbackAsync();
                     HandleException(ex);
                     return false;
-                }
-            }
+        }
+    }
+
+    public async Task<IEnumerable<Rental>> GetRentalsByFinishedStatusAsync(bool isFinished)
+    {
+        try
+        {
+            _notifier.Handle($"Rentals with finished status {isFinished} were accessed");
+            return await _rentalRepository.GetRentalsByFinishedStatusAsync(isFinished);
         }
         catch (Exception ex)
         {

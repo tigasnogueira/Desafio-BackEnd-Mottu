@@ -19,6 +19,7 @@ public class CourierController : MainController
     public CourierController(ICourierService courierService, IMapper mapper, INotifier notifier) : base(notifier)
     {
         _courierService = courierService;
+        _logger = logger;
         _mapper = mapper;
     }
 
@@ -83,6 +84,12 @@ public class CourierController : MainController
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateCourier(Guid id, CourierDto courierDto)
     {
+        if (id != courierDto.Id)
+        {
+            NotifyError("The id in the request does not match the id in the body.");
+            return CustomResponse();
+        }
+
         try
         {
             var courier = _mapper.Map<Courier>(courierDto);

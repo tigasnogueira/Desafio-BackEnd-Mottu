@@ -21,7 +21,7 @@ public class CourierValidation : AbstractValidator<Courier>
         RuleFor(c => c.Cnpj)
             .NotEmpty().WithMessage("The CNPJ cannot be empty.")
             .Length(14).WithMessage("The CNPJ must be 14 characters long.")
-            .MustAsync(async (cnpj, cancellation) =>
+        .MustAsync(async (cnpj, cancellation) =>
             {
                 var existingCourier = await _unitOfWork.Couriers.Find(c => c.Cnpj == cnpj);
                 return !existingCourier.Any();

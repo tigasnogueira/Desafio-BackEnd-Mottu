@@ -9,6 +9,7 @@ public class Motorcycle : EntityBase
 
     public Motorcycle()
     {
+        IsRented = false;
     }
 
     public Motorcycle(string identifier, int year, string model, string plate)

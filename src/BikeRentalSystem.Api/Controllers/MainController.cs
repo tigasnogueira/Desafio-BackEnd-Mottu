@@ -22,10 +22,10 @@ public abstract class MainController : Controller
         if (!ValidOperation())
             return HandleErrorResponse();
 
-        if (statusCode.HasValue)
-        {
-            return StatusCode(statusCode.Value, new { success = true, data = result });
-        }
+            if (statusCode.HasValue)
+            {
+                return StatusCode(statusCode.Value, new { success = true, data = result });
+            }
 
         switch (HttpContext.Request.Method)
         {
@@ -41,6 +41,8 @@ public abstract class MainController : Controller
             default:
                 return Ok(new { success = true, data = result });
         }
+
+        return HandleErrorResponse();
     }
 
     protected ActionResult CustomResponse(ModelStateDictionary modelState)

@@ -100,7 +100,7 @@ public abstract class Repository<TEntity>(DataContext _dataContext, INotifier _n
             return await _dbSet.Where(predicate).ToListAsync();
         }
         catch (Exception ex)
-        {
+{
             _notifier.Handle($"Error finding {typeof(TEntity).Name}: {ex.Message}", NotificationType.Error);
             throw;
         }
@@ -114,7 +114,7 @@ public abstract class Repository<TEntity>(DataContext _dataContext, INotifier _n
             await _dbSet.AddAsync(entity);
         }
         catch (Exception ex)
-        {
+    {
             _notifier.Handle($"Error adding {typeof(TEntity).Name}: {ex.Message}", NotificationType.Error);
             throw;
         }

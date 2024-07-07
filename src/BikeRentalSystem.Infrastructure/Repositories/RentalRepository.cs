@@ -11,6 +11,12 @@ public class RentalRepository(DataContext _dataContext, INotifier _notifier) : R
 {
     public async Task<IEnumerable<Rental>> GetByCourierId(Guid courierId)
     {
+        _rentals = database.GetCollection<Rental>("rentals");
+        _logger = logger;
+    }
+
+    public async Task<IEnumerable<Rental>> GetRentalsByMotorcycleIdAsync(Guid motorcycleId)
+    {
         try
         {
             _notifier.Handle($"Getting {nameof(Rental)} by Courier ID {courierId}.");
@@ -63,15 +69,15 @@ public class RentalRepository(DataContext _dataContext, INotifier _notifier) : R
             var cost = daysRented * rental.DailyRate;
 
             if (rental.EndDate < rental.ExpectedEndDate)
-            {
+        {
                 var penaltyRate = rental.DailyRate * 0.20m;
                 cost += penaltyRate * (rental.ExpectedEndDate - rental.EndDate).Days;
-            }
+        }
             else if (rental.EndDate > rental.ExpectedEndDate)
-            {
+        {
                 var additionalDays = (rental.EndDate - rental.ExpectedEndDate).Days;
                 cost += additionalDays * 50;
-            }
+    }
 
             return cost;
         }
