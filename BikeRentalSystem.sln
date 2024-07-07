@@ -27,17 +27,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DomainTests", "DomainTests"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InfrastructureTests", "InfrastructureTests", "{09230192-4192-42CA-B0C2-09D656CB20F9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Api", "src\BikeRentalSystem.Api\BikeRentalSystem.Api.csproj", "{77562329-0470-478B-909E-8DB942CA846B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Api", "src\BikeRentalSystem.Api\BikeRentalSystem.Api.csproj", "{77562329-0470-478B-909E-8DB942CA846B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Core", "src\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj", "{7A66CE93-EFFB-4860-A645-84922548E29A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Core", "src\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj", "{7A66CE93-EFFB-4860-A645-84922548E29A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Infrastructure", "src\BikeRentalSystem.Infrastructure\BikeRentalSystem.Infrastructure.csproj", "{33BC6A54-ACEB-49D8-9873-9A0F9E484A12}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Infrastructure", "src\BikeRentalSystem.Infrastructure\BikeRentalSystem.Infrastructure.csproj", "{33BC6A54-ACEB-49D8-9873-9A0F9E484A12}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "03 - Service", "03 - Service", "{9670A7B4-9849-41AC-860D-6B0CDD7D8011}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Services", "src\BikeRentalSystem.Services\BikeRentalSystem.Services.csproj", "{9A51E491-69E4-42DA-890F-82FCBA22A8AB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Services", "src\BikeRentalSystem.Services\BikeRentalSystem.Services.csproj", "{9A51E491-69E4-42DA-890F-82FCBA22A8AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Messaging", "src\BikeRentalSystem.Messaging\BikeRentalSystem.Messaging.csproj", "{5F5A59A8-460D-470F-B0A7-8043DEFC5930}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Messaging", "src\BikeRentalSystem.Messaging\BikeRentalSystem.Messaging.csproj", "{5F5A59A8-460D-470F-B0A7-8043DEFC5930}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
