@@ -28,7 +28,7 @@ public class MotorcycleController : MainController
     }
 
     [HttpGet("{id:guid}")]
-    //[ClaimsAuthorize("Motorcycle", "Get")]
+    [ClaimsAuthorize("Motorcycle", "Get")]
     public async Task<IActionResult> GetMotorcycleById(Guid id)
     {
         try

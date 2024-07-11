@@ -10,8 +10,17 @@ using BikeRentalSystem.Messaging.Interfaces;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class RentalService(IUnitOfWork _unitOfWork, IMessageProducer _messageProducer, INotifier _notifier) : BaseService(_notifier), IRentalService
+public class RentalService : BaseService, IRentalService
 {
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMessageProducer _messageProducer;
+
+    public RentalService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
+    {
+        _unitOfWork = unitOfWork;
+        _messageProducer = messageProducer;
+    }
+
     public async Task<Rental> GetById(Guid id)
     {
         try

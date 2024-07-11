@@ -7,8 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
 
-public class RentalRepository(DataContext _dataContext, INotifier _notifier) : Repository<Rental>(_dataContext, _notifier), IRentalRepository
+public class RentalRepository : Repository<Rental>, IRentalRepository
 {
+    public RentalRepository(DataContext dataContext, INotifier notifier) : base(dataContext, notifier)
+    {
+    }
+
     public async Task<IEnumerable<Rental>> GetByCourierId(Guid courierId)
     {
         try

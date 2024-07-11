@@ -10,8 +10,17 @@ using BikeRentalSystem.Messaging.Interfaces;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class CourierService(IUnitOfWork _unitOfWork, IMessageProducer _messageProducer, INotifier _notifier) : BaseService(_notifier), ICourierService
+public class CourierService : BaseService, ICourierService
 {
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMessageProducer _messageProducer;
+
+    public CourierService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
+    {
+        _unitOfWork = unitOfWork;
+        _messageProducer = messageProducer;
+    }
+
     public async Task<Courier> GetById(Guid id)
     {
         try

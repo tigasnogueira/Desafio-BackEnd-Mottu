@@ -7,8 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
 
-public class CourierRepository(DataContext _dataContext, INotifier _notifier) : Repository<Courier>(_dataContext, _notifier), ICourierRepository
+public class CourierRepository : Repository<Courier>, ICourierRepository
 {
+    public CourierRepository(DataContext dataContext, INotifier notifier) : base(dataContext, notifier)
+    {
+    }
+
     public async Task<Courier> GetByCnpj(string cnpj)
     {
         try
