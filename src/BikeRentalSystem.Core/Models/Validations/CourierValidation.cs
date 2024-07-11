@@ -11,9 +11,6 @@ public class CourierValidation : AbstractValidator<Courier>
     {
         _unitOfWork = unitOfWork;
 
-        RuleFor(c => c.Identifier)
-            .NotEmpty().WithMessage("The Identifier cannot be empty.");
-
         RuleFor(c => c.Name)
             .NotEmpty().WithMessage("The Name cannot be empty.")
             .Length(1, 100).WithMessage("The Name must be between 1 and 100 characters.");

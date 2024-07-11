@@ -3,7 +3,6 @@
 public class CourierDto
 {
     public Guid Id { get; set; }
-    public string Identifier { get; set; }
     public string Name { get; set; }
     public string Cnpj { get; set; }
     public DateTime BirthDate { get; set; }

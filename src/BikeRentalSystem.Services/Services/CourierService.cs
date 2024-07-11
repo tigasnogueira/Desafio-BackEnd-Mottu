@@ -1,13 +1,16 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
+using BikeRentalSystem.Messaging.Events;
+using BikeRentalSystem.Messaging.Interfaces;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class CourierService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseService(_notifier), ICourierService
+public class CourierService(IUnitOfWork _unitOfWork, IMessageProducer _messageProducer, INotifier _notifier) : BaseService(_notifier), ICourierService
 {
     public async Task<Courier> GetById(Guid id)
     {
@@ -29,6 +32,20 @@ public class CourierService(IUnitOfWork _unitOfWork, INotifier _notifier) : Base
         {
             _notifier.Handle("Getting all couriers");
             return await _unitOfWork.Couriers.GetAll();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<Courier>> GetAllPaged(int page, int pageSize)
+    {
+        try
+        {
+            _notifier.Handle("Getting paged couriers");
+            return await _unitOfWork.Couriers.GetAllPaged(page, pageSize);
         }
         catch (Exception ex)
         {
@@ -92,6 +109,22 @@ public class CourierService(IUnitOfWork _unitOfWork, INotifier _notifier) : Base
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier added successfully");
+
+                    var courierRegisteredEvent = new CourierRegistered
+                    {
+                        Id = courier.Id,
+                        Name = courier.Name,
+                        Cnpj = courier.Cnpj,
+                        BirthDate = courier.BirthDate,
+                        CnhNumber = courier.CnhNumber,
+                        CnhType = courier.CnhType,
+                        CnhImage = courier.CnhImage,
+                        CreatedAt = courier.CreatedAt,
+                        UpdatedAt = courier.UpdatedAt,
+                        IsDeleted = courier.IsDeleted
+                    };
+                    _messageProducer.Publish(courierRegisteredEvent, "exchange_name", "routing_key");
+
                     return true;
                 }
                 else
@@ -137,7 +170,6 @@ public class CourierService(IUnitOfWork _unitOfWork, INotifier _notifier) : Base
         {
             try
             {
-                existingCourier.Identifier = courier.Identifier;
                 existingCourier.Name = courier.Name;
                 existingCourier.Cnpj = courier.Cnpj;
                 existingCourier.BirthDate = courier.BirthDate;
@@ -153,6 +185,22 @@ public class CourierService(IUnitOfWork _unitOfWork, INotifier _notifier) : Base
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier updated successfully");
+
+                    var courierRegisteredEvent = new CourierRegistered
+                    {
+                        Id = courier.Id,
+                        Name = courier.Name,
+                        Cnpj = courier.Cnpj,
+                        BirthDate = courier.BirthDate,
+                        CnhNumber = courier.CnhNumber,
+                        CnhType = courier.CnhType,
+                        CnhImage = courier.CnhImage,
+                        CreatedAt = courier.CreatedAt,
+                        UpdatedAt = courier.UpdatedAt,
+                        IsDeleted = courier.IsDeleted
+                    };
+                    _messageProducer.Publish(courierRegisteredEvent, "exchange_name", "routing_key");
+
                     return true;
                 }
                 else

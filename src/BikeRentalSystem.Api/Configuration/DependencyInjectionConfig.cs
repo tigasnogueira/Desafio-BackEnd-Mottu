@@ -1,4 +1,6 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Api.Extensions;
+using BikeRentalSystem.Core.Interfaces;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
@@ -6,8 +8,13 @@ using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Infrastructure.Context;
 using BikeRentalSystem.Infrastructure.Repositories;
+using BikeRentalSystem.Messaging.Configurations;
+using BikeRentalSystem.Messaging.Consumers;
+using BikeRentalSystem.Messaging.Interfaces;
+using BikeRentalSystem.Messaging.Services;
 using BikeRentalSystem.RentalServices.Services;
 using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace BikeRentalSystem.Api.Configuration;
@@ -34,6 +41,15 @@ public static class DependencyInjectionConfig
         services.AddScoped<IValidator<Courier>, CourierValidation>();
         services.AddScoped<IValidator<Rental>, RentalValidation>();
 
-        services.AddScoped<CustomJwtBearerEvents>();
+        services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+        services.AddScoped<IUser, AspNetUser>();
+        services.AddScoped<RoleManager<IdentityRole>>();
+        services.AddAuthorization();
+
+        services.AddRabbitMQ(configuration);
+        services.AddSingleton<IMessageProducer, RabbitMQProducer>();
+        services.AddSingleton<IMessageConsumer, MotorcycleRegisteredConsumer>();
+        services.AddSingleton<IMessageConsumer, CourierRegisteredConsumer>();
+        services.AddSingleton<IMessageConsumer, RentalRegisteredConsumer>();
     }
 }

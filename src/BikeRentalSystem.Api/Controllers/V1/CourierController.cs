@@ -1,14 +1,19 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
+using BikeRentalSystem.Api.Extensions;
 using BikeRentalSystem.Api.Models.Dtos;
+using BikeRentalSystem.Api.Models.Request;
+using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeRentalSystem.Api.Controllers.V1;
 
-[ApiController]
+[Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/couriers")]
 public class CourierController : MainController
@@ -16,16 +21,14 @@ public class CourierController : MainController
     private readonly ICourierService _courierService;
     private readonly IMapper _mapper;
 
-    public CourierController(ICourierService courierService, IMapper mapper, INotifier notifier) : base(notifier)
+    public CourierController(ICourierService courierService, IMapper mapper, INotifier notifier, IUser user) : base(notifier, user)
     {
         _courierService = courierService;
         _mapper = mapper;
     }
 
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(CourierDto))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ClaimsAuthorize("Courier", "Get")]
     public async Task<IActionResult> GetCourierById(Guid id)
     {
         try
@@ -40,17 +43,24 @@ public class CourierController : MainController
         }
     }
 
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<CourierDto>))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAllCouriers()
+    [AllowAnonymous]
+    [HttpGet("list")]
+    public async Task<IActionResult> GetAllCouriers([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         try
         {
-            var couriers = await _courierService.GetAll();
-            var courierDtos = _mapper.Map<IEnumerable<CourierDto>>(couriers);
-            return CustomResponse(courierDtos);
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var couriers = await _courierService.GetAllPaged(page.Value, pageSize.Value);
+                var courierDtos = _mapper.Map<PaginatedResponse<CourierDto>>(couriers);
+                return CustomResponse(courierDtos);
+            }
+            else
+            {
+                var couriers = await _courierService.GetAll();
+                var courierDtos = _mapper.Map<IEnumerable<CourierDto>>(couriers);
+                return CustomResponse(courierDtos);
+            }
         }
         catch (Exception ex)
         {
@@ -59,10 +69,8 @@ public class CourierController : MainController
     }
 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateCourier(CourierDto courierDto)
+    [ClaimsAuthorize("Courier", "Add")]
+    public async Task<IActionResult> CreateCourier(CourierRequest courierDto)
     {
         try
         {
@@ -78,10 +86,8 @@ public class CourierController : MainController
     }
 
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateCourier(Guid id, CourierDto courierDto)
+    [ClaimsAuthorize("Courier", "Update")]
+    public async Task<IActionResult> UpdateCourier(Guid id, CourierUpdateRequest courierDto)
     {
         try
         {
@@ -96,10 +102,8 @@ public class CourierController : MainController
         }
     }
 
-    [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [HttpPatch("{id:guid}")]
+    [ClaimsAuthorize("Courier", "Delete")]
     public async Task<IActionResult> SoftDeleteCourier(Guid id)
     {
         try

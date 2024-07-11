@@ -1,13 +1,16 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
+using BikeRentalSystem.Messaging.Events;
+using BikeRentalSystem.Messaging.Interfaces;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseService(_notifier), IRentalService
+public class RentalService(IUnitOfWork _unitOfWork, IMessageProducer _messageProducer, INotifier _notifier) : BaseService(_notifier), IRentalService
 {
     public async Task<Rental> GetById(Guid id)
     {
@@ -29,6 +32,20 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
         {
             _notifier.Handle("Getting all rentals");
             return await _unitOfWork.Rentals.GetAll();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<Rental>> GetAllPaged(int page, int pageSize)
+    {
+        try
+        {
+            _notifier.Handle("Getting paged rentals");
+            return await _unitOfWork.Rentals.GetAllPaged(page, pageSize);
         }
         catch (Exception ex)
         {
@@ -113,6 +130,11 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
         {
             try
             {
+                var (motorcycles, couriers) = await GetForeignEntities(rental.MotorcycleId, rental.CourierId);
+
+                rental.Motorcycle = motorcycles;
+                rental.Courier = couriers;
+
                 await _unitOfWork.Rentals.Add(rental);
                 var result = await _unitOfWork.SaveAsync();
 
@@ -120,6 +142,24 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental added successfully");
+
+                    var rentalRegisteredEvent = new RentalRegistered
+                    {
+                        Id = rental.Id,
+                        CourierId = rental.CourierId,
+                        MotorcycleId = rental.MotorcycleId,
+                        StartDate = rental.StartDate,
+                        EndDate = rental.EndDate,
+                        ExpectedEndDate = rental.ExpectedEndDate,
+                        DailyRate = rental.DailyRate,
+                        TotalCost = rental.TotalCost,
+                        Plan = rental.Plan,
+                        CreatedAt = rental.CreatedAt,
+                        UpdatedAt = rental.UpdatedAt,
+                        IsDeleted = rental.IsDeleted
+                    };
+                    _messageProducer.Publish(rentalRegisteredEvent, "exchange_name", "routing_key");
+
                     return true;
                 }
                 else
@@ -182,6 +222,24 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental updated successfully");
+
+                    var rentalRegisteredEvent = new RentalRegistered
+                    {
+                        Id = rental.Id,
+                        CourierId = rental.CourierId,
+                        MotorcycleId = rental.MotorcycleId,
+                        StartDate = rental.StartDate,
+                        EndDate = rental.EndDate,
+                        ExpectedEndDate = rental.ExpectedEndDate,
+                        DailyRate = rental.DailyRate,
+                        TotalCost = rental.TotalCost,
+                        Plan = rental.Plan,
+                        CreatedAt = rental.CreatedAt,
+                        UpdatedAt = rental.UpdatedAt,
+                        IsDeleted = rental.IsDeleted
+                    };
+                    _messageProducer.Publish(rentalRegisteredEvent, "exchange_name", "routing_key");
+
                     return true;
                 }
                 else
@@ -251,5 +309,13 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
             HandleException(ex);
             return false;
         }
+    }
+
+    private async Task<(Motorcycle, Courier)> GetForeignEntities(Guid motorcycleId, Guid courierId)
+    {
+        var motorcycle = await _unitOfWork.Motorcycles.GetById(motorcycleId);
+        var courier = await _unitOfWork.Couriers.GetById(courierId);
+
+        return (motorcycle, courier);
     }
 }

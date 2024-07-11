@@ -12,10 +12,6 @@ public class MotorcycleMapping : IEntityTypeConfiguration<Motorcycle>
 
         builder.HasKey(m => m.Id);
 
-        builder.Property(m => m.Identifier)
-            .IsRequired()
-            .HasMaxLength(50);
-
         builder.Property(m => m.Year)
             .IsRequired();
 

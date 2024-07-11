@@ -1,13 +1,16 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
+using BikeRentalSystem.Messaging.Events;
+using BikeRentalSystem.Messaging.Interfaces;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class MotorcycleService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseService(_notifier), IMotorcycleService
+public class MotorcycleService(IUnitOfWork _unitOfWork, IMessageProducer _messageProducer, INotifier _notifier) : BaseService(_notifier), IMotorcycleService
 {
     public async Task<Motorcycle> GetById(Guid id)
     {
@@ -29,6 +32,20 @@ public class MotorcycleService(IUnitOfWork _unitOfWork, INotifier _notifier) : B
         {
             _notifier.Handle("Getting all motorcycles");
             return await _unitOfWork.Motorcycles.GetAll();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<Motorcycle>> GetAllPaged(int page, int pageSize)
+    {
+        try
+        {
+            _notifier.Handle("Getting paged motorcycles");
+            return await _unitOfWork.Motorcycles.GetAllPaged(page, pageSize);
         }
         catch (Exception ex)
         {
@@ -92,6 +109,24 @@ public class MotorcycleService(IUnitOfWork _unitOfWork, INotifier _notifier) : B
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Motorcycle added successfully");
+
+                    var motorcycleRegisteredEvent = new MotorcycleRegistered
+                    {
+                        Id = motorcycle.Id,
+                        Year = motorcycle.Year,
+                        Model = motorcycle.Model,
+                        Plate = motorcycle.Plate,
+                        CreatedAt = motorcycle.CreatedAt,
+                        UpdatedAt = motorcycle.UpdatedAt,
+                        IsDeleted = motorcycle.IsDeleted
+                    };
+                    _messageProducer.Publish(motorcycleRegisteredEvent, "exchange_name", "routing_key");
+
+                    if (motorcycle.Year == 2024)
+                    {
+                        _notifier.Handle("Motorcycle year is 2024, sending notification");
+                    }
+
                     return true;
                 }
                 else
@@ -137,7 +172,6 @@ public class MotorcycleService(IUnitOfWork _unitOfWork, INotifier _notifier) : B
         {
             try
             {
-                existingMotorcycle.Identifier = motorcycle.Identifier;
                 existingMotorcycle.Year = motorcycle.Year;
                 existingMotorcycle.Model = motorcycle.Model;
                 existingMotorcycle.Plate = motorcycle.Plate;
@@ -150,6 +184,19 @@ public class MotorcycleService(IUnitOfWork _unitOfWork, INotifier _notifier) : B
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Motorcycle updated successfully");
+
+                    var motorcycleRegisteredEvent = new MotorcycleRegistered
+                    {
+                        Id = motorcycle.Id,
+                        Year = motorcycle.Year,
+                        Model = motorcycle.Model,
+                        Plate = motorcycle.Plate,
+                        CreatedAt = motorcycle.CreatedAt,
+                        UpdatedAt = motorcycle.UpdatedAt,
+                        IsDeleted = motorcycle.IsDeleted
+                    };
+                    _messageProducer.Publish(motorcycleRegisteredEvent, "exchange_name", "routing_key");
+
                     return true;
                 }
                 else

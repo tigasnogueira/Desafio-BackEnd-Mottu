@@ -12,10 +12,6 @@ public class CourierMapping : IEntityTypeConfiguration<Courier>
 
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Identifier)
-            .IsRequired()
-            .HasMaxLength(50);
-
         builder.Property(c => c.Name)
             .IsRequired()
             .HasMaxLength(100);

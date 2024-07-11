@@ -1,20 +1,21 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Interfaces;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Notifications;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace BikeRentalSystem.Api.Controllers;
 
 [ApiController]
-[AllowAnonymous]
 public abstract class MainController : Controller
 {
     protected readonly INotifier _notifier;
+    protected readonly IUser _user;
 
-    protected MainController(INotifier notifier)
+    protected MainController(INotifier notifier, IUser user)
     {
         _notifier = notifier;
+        _user = user;
     }
 
     protected ActionResult CustomResponse(object result = null, int? statusCode = null)
@@ -66,7 +67,7 @@ public abstract class MainController : Controller
         }
     }
 
-    protected void NotifyError(string message, NotificationType type) => _notifier.Handle(new Notification(message, type));
+    protected void NotifyError(string message, NotificationType type = NotificationType.Error) => _notifier.Handle(new Notification(message, type));
 
     protected void HandleException(Exception exception) => _notifier.HandleException(exception);
 

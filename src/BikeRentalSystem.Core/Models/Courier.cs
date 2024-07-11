@@ -2,7 +2,6 @@
 
 public class Courier : EntityBase
 {
-    public string Identifier { get; set; }
     public string Name { get; set; }
     public string Cnpj { get; set; }
     public DateTime BirthDate { get; set; }
@@ -14,9 +13,8 @@ public class Courier : EntityBase
     {
     }
 
-    public Courier(string identifier, string name, string cnpj, DateTime birthDate, string cnhNumber, string cnhType, string cnhImage)
+    public Courier(string name, string cnpj, DateTime birthDate, string cnhNumber, string cnhType, string cnhImage)
     {
-        Identifier = identifier;
         Name = name;
         Cnpj = cnpj;
         BirthDate = birthDate;

@@ -2,7 +2,6 @@
 
 public class CourierRequest
 {
-    public string Identifier { get; set; }
     public string Name { get; set; }
     public string Cnpj { get; set; }
     public DateTime BirthDate { get; set; }

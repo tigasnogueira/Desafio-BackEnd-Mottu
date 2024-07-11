@@ -11,9 +11,6 @@ public class MotorcycleValidation : AbstractValidator<Motorcycle>
     {
         _unitOfWork = unitOfWork;
 
-        RuleFor(m => m.Identifier)
-            .NotEmpty().WithMessage("The Identifier cannot be empty.");
-
         RuleFor(m => m.Year)
             .NotEmpty().WithMessage("The Year cannot be empty.")
             .InclusiveBetween(2000, DateTime.Now.Year + 1).WithMessage($"The Year must be between 2000 and {DateTime.Now.Year + 1}.");
