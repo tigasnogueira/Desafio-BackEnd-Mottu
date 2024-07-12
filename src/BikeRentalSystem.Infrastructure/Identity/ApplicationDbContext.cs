@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace BikeRentalSystem.Api.Data;
+namespace BikeRentalSystem.Infrastructure.Identity;
 
 public class ApplicationDbContext : IdentityDbContext
 {

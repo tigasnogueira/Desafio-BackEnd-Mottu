@@ -1,4 +1,4 @@
-﻿namespace BikeRentalSystem.Api.Extensions;
+﻿namespace BikeRentalSystem.Identity.Extensions;
 
 public class AppSettings
 {

@@ -1,13 +1,13 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
-using BikeRentalSystem.Api.Extensions;
-using BikeRentalSystem.Api.Models.Dtos;
-using BikeRentalSystem.Api.Models.Request;
+using BikeRentalSystem.Api.Contracts.Request;
 using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Dtos;
 using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Identity.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

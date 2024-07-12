@@ -1,4 +1,4 @@
-﻿namespace BikeRentalSystem.Api.Models.Dtos;
+﻿namespace BikeRentalSystem.Core.Dtos;
 
 public class MotorcycleDto
 {

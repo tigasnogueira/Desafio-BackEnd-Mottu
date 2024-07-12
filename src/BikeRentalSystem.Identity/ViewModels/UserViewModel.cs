@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace BikeRentalSystem.Api.Models.ViewModels;
+namespace BikeRentalSystem.Identity.ViewModels;
 
 public class RegisterUserViewModel
 {

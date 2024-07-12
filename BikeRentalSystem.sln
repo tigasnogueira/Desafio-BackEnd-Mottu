@@ -51,7 +51,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Messaging"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RentalServices", "RentalServices", "{BE4B5721-6B28-43F7-9342-0F77D8B09313}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Shared", "src\BikeRentalSystem.Shared\BikeRentalSystem.Shared.csproj", "{8DAF62B5-5EC9-4642-A6E2-0C695E0F7BFE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Shared", "src\BikeRentalSystem.Shared\BikeRentalSystem.Shared.csproj", "{8DAF62B5-5EC9-4642-A6E2-0C695E0F7BFE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{EDC6E3E8-6A7A-45B1-819F-CF3C6B4957E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Identity", "src\BikeRentalSystem.Identity\BikeRentalSystem.Identity.csproj", "{4EEABEAD-064E-451C-9DDA-59ED8F12E252}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -83,6 +87,10 @@ Global
 		{8DAF62B5-5EC9-4642-A6E2-0C695E0F7BFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DAF62B5-5EC9-4642-A6E2-0C695E0F7BFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DAF62B5-5EC9-4642-A6E2-0C695E0F7BFE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EEABEAD-064E-451C-9DDA-59ED8F12E252}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EEABEAD-064E-451C-9DDA-59ED8F12E252}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EEABEAD-064E-451C-9DDA-59ED8F12E252}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EEABEAD-064E-451C-9DDA-59ED8F12E252}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -102,6 +110,8 @@ Global
 		{5F5A59A8-460D-470F-B0A7-8043DEFC5930} = {82ABBB22-0A6D-4B54-8F9E-EACD27C7D73E}
 		{BE4B5721-6B28-43F7-9342-0F77D8B09313} = {9670A7B4-9849-41AC-860D-6B0CDD7D8011}
 		{8DAF62B5-5EC9-4642-A6E2-0C695E0F7BFE} = {DFF534DE-41E0-452E-8B59-9F79DFD93512}
+		{EDC6E3E8-6A7A-45B1-819F-CF3C6B4957E5} = {9670A7B4-9849-41AC-860D-6B0CDD7D8011}
+		{4EEABEAD-064E-451C-9DDA-59ED8F12E252} = {EDC6E3E8-6A7A-45B1-819F-CF3C6B4957E5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {008A7623-C8AF-4E37-B20B-EFCAA229157D}

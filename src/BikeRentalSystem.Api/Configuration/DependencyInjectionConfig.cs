@@ -1,11 +1,13 @@
-﻿using BikeRentalSystem.Api.Extensions;
-using BikeRentalSystem.Core.Interfaces;
+﻿using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
+using BikeRentalSystem.Identity.Extensions;
+using BikeRentalSystem.Identity.Interfaces;
+using BikeRentalSystem.Identity.Services;
 using BikeRentalSystem.Infrastructure.Context;
 using BikeRentalSystem.Infrastructure.Repositories;
 using BikeRentalSystem.Messaging.Configurations;
@@ -46,6 +48,7 @@ public static class DependencyInjectionConfig
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddScoped<IUser, AspNetUser>();
         services.AddScoped<RoleManager<IdentityRole>>();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddAuthorization();
 
         services.AddRabbitMQ(configuration);

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace BikeRentalSystem.Api.Extensions;
+namespace BikeRentalSystem.Identity.Extensions;
 
 public class IdentityMessagesEnglish : IdentityErrorDescriber
 {

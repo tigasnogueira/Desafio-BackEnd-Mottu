@@ -1,8 +1,8 @@
 ﻿using BikeRentalSystem.Core.Models.Enums;
 
-namespace BikeRentalSystem.Api.Models.Request;
+namespace BikeRentalSystem.Api.Contracts.Request;
 
-public class RentalUpdateRequest
+public class RentalRequest
 {
     public Guid CourierId { get; set; }
     public Guid MotorcycleId { get; set; }

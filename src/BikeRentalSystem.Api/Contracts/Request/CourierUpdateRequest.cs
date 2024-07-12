@@ -1,4 +1,4 @@
-﻿namespace BikeRentalSystem.Api.Models.Request;
+﻿namespace BikeRentalSystem.Api.Contracts.Request;
 
 public class CourierUpdateRequest
 {

@@ -1,6 +1,6 @@
-﻿namespace BikeRentalSystem.Api.Models.Request;
+﻿namespace BikeRentalSystem.Api.Contracts.Request;
 
-public class MotorcycleRequest
+public class MotorcycleUpdateRequest
 {
     public int Year { get; set; }
     public string Model { get; set; }

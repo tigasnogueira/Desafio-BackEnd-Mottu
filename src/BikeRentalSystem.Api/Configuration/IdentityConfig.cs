@@ -1,5 +1,5 @@
-﻿using BikeRentalSystem.Api.Data;
-using BikeRentalSystem.Api.Extensions;
+﻿using BikeRentalSystem.Identity.Extensions;
+using BikeRentalSystem.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

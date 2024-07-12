@@ -1,7 +1,8 @@
 ﻿using BikeRentalSystem.Core.Interfaces;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
-namespace BikeRentalSystem.Api.Extensions;
+namespace BikeRentalSystem.Identity.Extensions;
 
 public class AspNetUser : IUser
 {

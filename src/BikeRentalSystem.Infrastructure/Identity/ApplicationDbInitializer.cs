@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace BikeRentalSystem.Api.Data;
+namespace BikeRentalSystem.Infrastructure.Identity;
 
 public static class ApplicationDbInitializer
 {
