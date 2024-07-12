@@ -10,6 +10,7 @@
     <ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.Infrastructure\BikeRentalSystem.Infrastructure.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.Messaging\BikeRentalSystem.Messaging.csproj" />
+    <ProjectReference Include="..\BikeRentalSystem.Shared\BikeRentalSystem.Shared.csproj" />
   </ItemGroup>
 
 </Project>

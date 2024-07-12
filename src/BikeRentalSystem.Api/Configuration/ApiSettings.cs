@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning.ApiExplorer;
 using BikeRentalSystem.Infrastructure.Context;
+using BikeRentalSystem.Shared.Configurations;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -11,6 +12,8 @@ public class ApiSettings
     {
         services.AddDbContext<DataContext>(options =>
             options.UseNpgsql(configuration.GetSection("DatabaseSettings:DefaultConnection").Value));
+
+        services.Configure<AzureBlobStorageSettings>(configuration.GetSection("AzureBlobStorageSettings"));
 
         services.AddControllers()
             .AddJsonOptions(options =>

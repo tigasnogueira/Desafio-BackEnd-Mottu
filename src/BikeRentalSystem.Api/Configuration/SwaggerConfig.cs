@@ -14,6 +14,7 @@ public static class SwaggerConfig
         services.AddSwaggerGen(c =>
         {
             c.OperationFilter<SwaggerDefaultValues>();
+            c.OperationFilter<FileUploadOperation>();
 
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
@@ -151,5 +152,32 @@ public class SwaggerAuthorizedMiddleware
         }
 
         await _next.Invoke(context);
+    }
+}
+
+public class FileUploadOperation : IOperationFilter
+{
+    public void Apply(OpenApiOperation operation, OperationFilterContext context)
+    {
+        var fileParameters = context.ApiDescription.ParameterDescriptions
+            .Where(p => p.ModelMetadata.ContainerType == typeof(IFormFile) || p.ModelMetadata.ContainerType == typeof(IEnumerable<IFormFile>))
+            .ToList();
+
+        foreach (var fileParameter in fileParameters)
+        {
+            var mediaType = new OpenApiMediaType
+            {
+                Schema = new OpenApiSchema
+                {
+                    Type = "string",
+                    Format = "binary"
+                }
+            };
+
+            operation.RequestBody = new OpenApiRequestBody
+            {
+                Content = { ["multipart/form-data"] = mediaType }
+            };
+        }
     }
 }

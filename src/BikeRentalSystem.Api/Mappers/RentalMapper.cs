@@ -13,7 +13,9 @@ public class RentalMapper : Profile
     public RentalMapper()
     {
         CreateMap<RentalDto, RentalRequest>().ReverseMap();
+        CreateMap<RentalDto, RentalUpdateRequest>().ReverseMap();
         CreateMap<Rental, RentalRequest>().ReverseMap();
+        CreateMap<Rental, RentalUpdateRequest>().ReverseMap();
         CreateMap<Rental, RentalDto>()
             .ForMember(dest => dest.Courier, opt => opt.MapFrom(src => src.Courier))
             .ForMember(dest => dest.Motorcycle, opt => opt.MapFrom(src => src.Motorcycle))

@@ -68,14 +68,18 @@ public class CourierController : MainController
         }
     }
 
+    [RequestSizeLimit(40000000)]
     [HttpPost]
     [ClaimsAuthorize("Courier", "Add")]
-    public async Task<IActionResult> CreateCourier(CourierRequest courierDto)
+    public async Task<IActionResult> CreateCourier([FromForm] CourierRequest courierDto, IFormFile cnhImage = null)
     {
         try
         {
             var courier = _mapper.Map<Courier>(courierDto);
-            await _courierService.Add(courier);
+            using (var stream = cnhImage?.OpenReadStream())
+            {
+                await _courierService.Add(courier, stream);
+            }
             var createdCourierDto = _mapper.Map<CourierDto>(courier);
             return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
         }
@@ -85,15 +89,19 @@ public class CourierController : MainController
         }
     }
 
+    [RequestSizeLimit(40000000)]
     [HttpPut("{id:guid}")]
     [ClaimsAuthorize("Courier", "Update")]
-    public async Task<IActionResult> UpdateCourier(Guid id, CourierUpdateRequest courierDto)
+    public async Task<IActionResult> UpdateCourier(Guid id, [FromForm] CourierUpdateRequest courierDto, IFormFile cnhImage = null)
     {
         try
         {
             var courier = _mapper.Map<Courier>(courierDto);
             courier.Id = id;
-            await _courierService.Update(courier);
+            using (var stream = cnhImage?.OpenReadStream())
+            {
+                await _courierService.Update(courier, stream);
+            }
             return CustomResponse(StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
@@ -109,6 +117,29 @@ public class CourierController : MainController
         try
         {
             await _courierService.SoftDelete(id);
+            return CustomResponse(StatusCodes.Status204NoContent);
+        }
+        catch (Exception ex)
+        {
+            return CustomResponse(ex.Message);
+        }
+    }
+
+    [RequestSizeLimit(40000000)]
+    [HttpPatch("{cnpj}/cnh")]
+    [ClaimsAuthorize("Courier", "Update")]
+    public async Task<IActionResult> AddOrUpdateCnhImage(string cnpj, IFormFile cnhImage)
+    {
+        try
+        {
+            using (var stream = cnhImage.OpenReadStream())
+            {
+                var result = await _courierService.AddOrUpdateCnhImage(cnpj, stream);
+                if (!result)
+                {
+                    return CustomResponse("Failed to update CNH image", StatusCodes.Status400BadRequest);
+                }
+            }
             return CustomResponse(StatusCodes.Status204NoContent);
         }
         catch (Exception ex)

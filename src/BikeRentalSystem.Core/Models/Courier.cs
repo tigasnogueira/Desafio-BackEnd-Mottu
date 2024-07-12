@@ -7,7 +7,7 @@ public class Courier : EntityBase
     public DateTime BirthDate { get; set; }
     public string CnhNumber { get; set; }
     public string CnhType { get; set; }
-    public string CnhImage { get; set; }
+    public string? CnhImage { get; set; }
 
     public Courier()
     {

@@ -37,4 +37,8 @@
     <ProjectReference Include="..\BikeRentalSystem.Services\BikeRentalSystem.RentalServices.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Response\" />
+  </ItemGroup>
+
 </Project>

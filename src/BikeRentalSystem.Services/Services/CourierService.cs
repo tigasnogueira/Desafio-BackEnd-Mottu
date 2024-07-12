@@ -91,7 +91,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Add(Courier courier)
+    public async Task<bool> Add(Courier courier, Stream cnhImageStream = null)
     {
         if (courier == null)
         {
@@ -100,6 +100,8 @@ public class CourierService : BaseService, ICourierService
         }
 
         var validator = new CourierValidation(_unitOfWork);
+        validator.ConfigureRulesForCreate();
+
         var validationResult = await validator.ValidateAsync(courier);
         if (!validationResult.IsValid)
         {
@@ -112,6 +114,21 @@ public class CourierService : BaseService, ICourierService
             try
             {
                 await _unitOfWork.Couriers.Add(courier);
+
+                if (cnhImageStream != null)
+                {
+                    var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(courier.Cnpj, cnhImageStream);
+                    courier.CnhImage = cnhImageUrl;
+
+                    var imageValidationResult = await validator.ValidateImageAsync(courier);
+                    if (!imageValidationResult.IsValid)
+                    {
+                        await transaction.RollbackAsync();
+                        _notifier.NotifyValidationErrors(imageValidationResult);
+                        return false;
+                    }
+                }
+
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
@@ -119,20 +136,7 @@ public class CourierService : BaseService, ICourierService
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier added successfully");
 
-                    var courierRegisteredEvent = new CourierRegistered
-                    {
-                        Id = courier.Id,
-                        Name = courier.Name,
-                        Cnpj = courier.Cnpj,
-                        BirthDate = courier.BirthDate,
-                        CnhNumber = courier.CnhNumber,
-                        CnhType = courier.CnhType,
-                        CnhImage = courier.CnhImage,
-                        CreatedAt = courier.CreatedAt,
-                        UpdatedAt = courier.UpdatedAt,
-                        IsDeleted = courier.IsDeleted
-                    };
-                    _messageProducer.Publish(courierRegisteredEvent, "exchange_name", "routing_key");
+                    AddCourierRegisteredEvent(courier);
 
                     return true;
                 }
@@ -152,7 +156,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Update(Courier courier)
+    public async Task<bool> Update(Courier courier, Stream cnhImageStream = null)
     {
         if (courier == null)
         {
@@ -168,6 +172,8 @@ public class CourierService : BaseService, ICourierService
         }
 
         var validator = new CourierValidation(_unitOfWork);
+        validator.ConfigureRulesForUpdate(existingCourier);
+
         var validationResult = await validator.ValidateAsync(courier);
         if (!validationResult.IsValid)
         {
@@ -179,13 +185,21 @@ public class CourierService : BaseService, ICourierService
         {
             try
             {
-                existingCourier.Name = courier.Name;
-                existingCourier.Cnpj = courier.Cnpj;
-                existingCourier.BirthDate = courier.BirthDate;
-                existingCourier.CnhNumber = courier.CnhNumber;
-                existingCourier.CnhType = courier.CnhType;
-                existingCourier.CnhImage = courier.CnhImage;
-                existingCourier.Update();
+                if (cnhImageStream != null)
+                {
+                    var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(courier.Cnpj, cnhImageStream);
+                    existingCourier.CnhImage = cnhImageUrl;
+
+                    var imageValidationResult = await validator.ValidateImageAsync(existingCourier);
+                    if (!imageValidationResult.IsValid)
+                    {
+                        await transaction.RollbackAsync();
+                        _notifier.NotifyValidationErrors(imageValidationResult);
+                        return false;
+                    }
+                }
+
+                UpdateCourierDetails(existingCourier, courier);
 
                 _unitOfWork.Couriers.Update(existingCourier, 0);
                 var result = await _unitOfWork.SaveAsync();
@@ -195,20 +209,7 @@ public class CourierService : BaseService, ICourierService
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier updated successfully");
 
-                    var courierRegisteredEvent = new CourierRegistered
-                    {
-                        Id = courier.Id,
-                        Name = courier.Name,
-                        Cnpj = courier.Cnpj,
-                        BirthDate = courier.BirthDate,
-                        CnhNumber = courier.CnhNumber,
-                        CnhType = courier.CnhType,
-                        CnhImage = courier.CnhImage,
-                        CreatedAt = courier.CreatedAt,
-                        UpdatedAt = courier.UpdatedAt,
-                        IsDeleted = courier.IsDeleted
-                    };
-                    _messageProducer.Publish(courierRegisteredEvent, "exchange_name", "routing_key");
+                    AddCourierRegisteredEvent(courier);
 
                     return true;
                 }
@@ -279,5 +280,90 @@ public class CourierService : BaseService, ICourierService
             HandleException(ex);
             return false;
         }
+    }
+
+    public async Task<bool> AddOrUpdateCnhImage(string cnpj, Stream cnhImageStream)
+    {
+        if (string.IsNullOrEmpty(cnpj))
+        {
+            _notifier.Handle("CNPJ cannot be null or empty", NotificationType.Error);
+            return false;
+        }
+
+        if (cnhImageStream == null)
+        {
+            _notifier.Handle("CNH image stream cannot be null", NotificationType.Error);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
+            {
+                var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(cnpj, cnhImageStream);
+
+                var courier = await _unitOfWork.Couriers.GetByCnpj(cnpj);
+                courier.CnhImage = cnhImageUrl;
+
+                var validator = new CourierValidation(_unitOfWork);
+                var imageValidationResult = await validator.ValidateImageAsync(courier);
+                if (!imageValidationResult.IsValid)
+                {
+                    await transaction.RollbackAsync();
+                    _notifier.NotifyValidationErrors(imageValidationResult);
+                    return false;
+                }
+
+                var result = await _unitOfWork.SaveAsync();
+
+                if (result > 0)
+                {
+                    await transaction.CommitAsync();
+                    _notifier.Handle("CNH image updated successfully");
+                    return true;
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    _notifier.Handle("Failed to update CNH image, rolling back transaction", NotificationType.Error);
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
+        }
+    }
+
+    private void UpdateCourierDetails(Courier existingCourier, Courier newCourier)
+    {
+        existingCourier.Name = newCourier.Name;
+        existingCourier.Cnpj = newCourier.Cnpj;
+        existingCourier.BirthDate = newCourier.BirthDate;
+        existingCourier.CnhNumber = newCourier.CnhNumber;
+        existingCourier.CnhType = newCourier.CnhType;
+        existingCourier.CnhImage = newCourier.CnhImage;
+        existingCourier.Update();
+    }
+
+    private void AddCourierRegisteredEvent(Courier courier)
+    {
+        var courierRegisteredEvent = new CourierRegistered
+        {
+            Id = courier.Id,
+            Name = courier.Name,
+            Cnpj = courier.Cnpj,
+            BirthDate = courier.BirthDate,
+            CnhNumber = courier.CnhNumber,
+            CnhType = courier.CnhType,
+            CnhImage = courier.CnhImage,
+            CreatedAt = courier.CreatedAt,
+            UpdatedAt = courier.UpdatedAt,
+            IsDeleted = courier.IsDeleted
+        };
+        _messageProducer.Publish(courierRegisteredEvent, "exchange_name", "routing_key");
     }
 }

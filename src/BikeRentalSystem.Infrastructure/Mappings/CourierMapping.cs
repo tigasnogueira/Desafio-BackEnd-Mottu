@@ -38,7 +38,6 @@ public class CourierMapping : IEntityTypeConfiguration<Courier>
             .HasMaxLength(5);
 
         builder.Property(c => c.CnhImage)
-            .IsRequired()
             .HasMaxLength(255);
 
         builder.Property(c => c.CreatedAt)

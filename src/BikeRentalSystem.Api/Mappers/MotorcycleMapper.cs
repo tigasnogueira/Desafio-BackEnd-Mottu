@@ -13,7 +13,9 @@ public class MotorcycleMapper : Profile
     public MotorcycleMapper()
     {
         CreateMap<MotorcycleDto, MotorcycleRequest>().ReverseMap();
+        CreateMap<MotorcycleDto, MotorcycleUpdateRequest>().ReverseMap();
         CreateMap<Motorcycle, MotorcycleRequest>().ReverseMap();
+        CreateMap<Motorcycle, MotorcycleUpdateRequest>().ReverseMap();
         CreateMap<Motorcycle, MotorcycleDto>().ReverseMap();
 
         CreateMap<PaginatedResponse<Motorcycle>, PaginatedResponse<MotorcycleDto>>()

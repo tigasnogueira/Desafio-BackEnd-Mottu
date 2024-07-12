@@ -100,6 +100,8 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
 
         var validator = new MotorcycleValidation(_unitOfWork);
+        validator.ConfigureRulesForCreate();
+
         var validationResult = await validator.ValidateAsync(motorcycle);
         if (!validationResult.IsValid)
         {
@@ -119,17 +121,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     await transaction.CommitAsync();
                     _notifier.Handle("Motorcycle added successfully");
 
-                    var motorcycleRegisteredEvent = new MotorcycleRegistered
-                    {
-                        Id = motorcycle.Id,
-                        Year = motorcycle.Year,
-                        Model = motorcycle.Model,
-                        Plate = motorcycle.Plate,
-                        CreatedAt = motorcycle.CreatedAt,
-                        UpdatedAt = motorcycle.UpdatedAt,
-                        IsDeleted = motorcycle.IsDeleted
-                    };
-                    _messageProducer.Publish(motorcycleRegisteredEvent, "exchange_name", "routing_key");
+                    AddMotorcycleRegisteredEvent(motorcycle);
 
                     if (motorcycle.Year == 2024)
                     {
@@ -170,6 +162,8 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
 
         var validator = new MotorcycleValidation(_unitOfWork);
+        validator.ConfigureRulesForUpdate(existingMotorcycle);
+
         var validationResult = await validator.ValidateAsync(motorcycle);
         if (!validationResult.IsValid)
         {
@@ -181,10 +175,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         {
             try
             {
-                existingMotorcycle.Year = motorcycle.Year;
-                existingMotorcycle.Model = motorcycle.Model;
-                existingMotorcycle.Plate = motorcycle.Plate;
-                existingMotorcycle.Update();
+                UpdateMotorcycleDetails(existingMotorcycle, motorcycle);
 
                 _unitOfWork.Motorcycles.Update(existingMotorcycle, 0);
                 var result = await _unitOfWork.SaveAsync();
@@ -194,17 +185,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     await transaction.CommitAsync();
                     _notifier.Handle("Motorcycle updated successfully");
 
-                    var motorcycleRegisteredEvent = new MotorcycleRegistered
-                    {
-                        Id = motorcycle.Id,
-                        Year = motorcycle.Year,
-                        Model = motorcycle.Model,
-                        Plate = motorcycle.Plate,
-                        CreatedAt = motorcycle.CreatedAt,
-                        UpdatedAt = motorcycle.UpdatedAt,
-                        IsDeleted = motorcycle.IsDeleted
-                    };
-                    _messageProducer.Publish(motorcycleRegisteredEvent, "exchange_name", "routing_key");
+                    AddMotorcycleRegisteredEvent(existingMotorcycle);
 
                     return true;
                 }
@@ -275,5 +256,28 @@ public class MotorcycleService : BaseService, IMotorcycleService
             HandleException(ex);
             return false;
         }
+    }
+
+    private void UpdateMotorcycleDetails(Motorcycle existingMotorcycle, Motorcycle updatedMotorcycle)
+    {
+        existingMotorcycle.Year = updatedMotorcycle.Year;
+        existingMotorcycle.Model = updatedMotorcycle.Model;
+        existingMotorcycle.Plate = updatedMotorcycle.Plate;
+        existingMotorcycle.Update();
+    }
+
+    private void AddMotorcycleRegisteredEvent(Motorcycle motorcycle)
+    {
+        var motorcycleRegisteredEvent = new MotorcycleRegistered
+        {
+            Id = motorcycle.Id,
+            Year = motorcycle.Year,
+            Model = motorcycle.Model,
+            Plate = motorcycle.Plate,
+            CreatedAt = motorcycle.CreatedAt,
+            UpdatedAt = motorcycle.UpdatedAt,
+            IsDeleted = motorcycle.IsDeleted
+        };
+        _messageProducer.Publish(motorcycleRegisteredEvent, "exchange_name", "routing_key");
     }
 }

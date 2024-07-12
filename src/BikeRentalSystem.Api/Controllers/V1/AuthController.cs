@@ -3,7 +3,6 @@ using BikeRentalSystem.Api.Extensions;
 using BikeRentalSystem.Api.Models.ViewModels;
 using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -131,7 +130,7 @@ public class AuthController : MainController
 
         foreach (var userRole in userRoles)
         {
-            claims.Add(new Claim(ClaimTypes.Role, userRole)); // Usar ClaimTypes.Role
+            claims.Add(new Claim(ClaimTypes.Role, userRole));
         }
 
         var identityClaims = new ClaimsIdentity();

@@ -41,6 +41,8 @@ public static class DependencyInjectionConfig
         services.AddScoped<IValidator<Courier>, CourierValidation>();
         services.AddScoped<IValidator<Rental>, RentalValidation>();
 
+        services.AddScoped<IBlobStorageService, BlobStorageService>();
+
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddScoped<IUser, AspNetUser>();
         services.AddScoped<RoleManager<IdentityRole>>();

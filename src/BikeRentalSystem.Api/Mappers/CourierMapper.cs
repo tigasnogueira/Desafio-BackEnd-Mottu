@@ -13,7 +13,9 @@ public class CourierMapper : Profile
     public CourierMapper()
     {
         CreateMap<CourierDto, CourierRequest>().ReverseMap();
+        CreateMap<CourierDto, CourierUpdateRequest>().ReverseMap();
         CreateMap<Courier, CourierRequest>().ReverseMap();
+        CreateMap<Courier, CourierUpdateRequest>().ReverseMap();
         CreateMap<Courier, CourierDto>().ReverseMap();
 
         CreateMap<PaginatedResponse<Courier>, PaginatedResponse<CourierDto>>()

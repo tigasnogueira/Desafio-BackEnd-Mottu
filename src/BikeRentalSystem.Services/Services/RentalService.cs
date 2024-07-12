@@ -152,22 +152,7 @@ public class RentalService : BaseService, IRentalService
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental added successfully");
 
-                    var rentalRegisteredEvent = new RentalRegistered
-                    {
-                        Id = rental.Id,
-                        CourierId = rental.CourierId,
-                        MotorcycleId = rental.MotorcycleId,
-                        StartDate = rental.StartDate,
-                        EndDate = rental.EndDate,
-                        ExpectedEndDate = rental.ExpectedEndDate,
-                        DailyRate = rental.DailyRate,
-                        TotalCost = rental.TotalCost,
-                        Plan = rental.Plan,
-                        CreatedAt = rental.CreatedAt,
-                        UpdatedAt = rental.UpdatedAt,
-                        IsDeleted = rental.IsDeleted
-                    };
-                    _messageProducer.Publish(rentalRegisteredEvent, "exchange_name", "routing_key");
+                    AddRentalRegisteredEvent(rental);
 
                     return true;
                 }
@@ -214,15 +199,7 @@ public class RentalService : BaseService, IRentalService
         {
             try
             {
-                existingRental.CourierId = rental.CourierId;
-                existingRental.MotorcycleId = rental.MotorcycleId;
-                existingRental.StartDate = rental.StartDate;
-                existingRental.EndDate = rental.EndDate;
-                existingRental.ExpectedEndDate = rental.ExpectedEndDate;
-                existingRental.DailyRate = rental.DailyRate;
-                existingRental.TotalCost = rental.TotalCost;
-                existingRental.Plan = rental.Plan;
-                existingRental.Update();
+                UpdateRentalDetails(existingRental, rental);
 
                 _unitOfWork.Rentals.Update(existingRental, 0);
                 var result = await _unitOfWork.SaveAsync();
@@ -232,22 +209,7 @@ public class RentalService : BaseService, IRentalService
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental updated successfully");
 
-                    var rentalRegisteredEvent = new RentalRegistered
-                    {
-                        Id = rental.Id,
-                        CourierId = rental.CourierId,
-                        MotorcycleId = rental.MotorcycleId,
-                        StartDate = rental.StartDate,
-                        EndDate = rental.EndDate,
-                        ExpectedEndDate = rental.ExpectedEndDate,
-                        DailyRate = rental.DailyRate,
-                        TotalCost = rental.TotalCost,
-                        Plan = rental.Plan,
-                        CreatedAt = rental.CreatedAt,
-                        UpdatedAt = rental.UpdatedAt,
-                        IsDeleted = rental.IsDeleted
-                    };
-                    _messageProducer.Publish(rentalRegisteredEvent, "exchange_name", "routing_key");
+                    AddRentalRegisteredEvent(existingRental);
 
                     return true;
                 }
@@ -326,5 +288,38 @@ public class RentalService : BaseService, IRentalService
         var courier = await _unitOfWork.Couriers.GetById(courierId);
 
         return (motorcycle, courier);
+    }
+
+    private void UpdateRentalDetails(Rental existingRental, Rental rental)
+    {
+        existingRental.CourierId = rental.CourierId;
+        existingRental.MotorcycleId = rental.MotorcycleId;
+        existingRental.StartDate = rental.StartDate;
+        existingRental.EndDate = rental.EndDate;
+        existingRental.ExpectedEndDate = rental.ExpectedEndDate;
+        existingRental.DailyRate = rental.DailyRate;
+        existingRental.TotalCost = rental.TotalCost;
+        existingRental.Plan = rental.Plan;
+        existingRental.Update();
+    }
+
+    private void AddRentalRegisteredEvent(Rental rental)
+    {
+        var rentalRegisteredEvent = new RentalRegistered
+        {
+            Id = rental.Id,
+            CourierId = rental.CourierId,
+            MotorcycleId = rental.MotorcycleId,
+            StartDate = rental.StartDate,
+            EndDate = rental.EndDate,
+            ExpectedEndDate = rental.ExpectedEndDate,
+            DailyRate = rental.DailyRate,
+            TotalCost = rental.TotalCost,
+            Plan = rental.Plan,
+            CreatedAt = rental.CreatedAt,
+            UpdatedAt = rental.UpdatedAt,
+            IsDeleted = rental.IsDeleted
+        };
+        _messageProducer.Publish(rentalRegisteredEvent, "exchange_name", "routing_key");
     }
 }
