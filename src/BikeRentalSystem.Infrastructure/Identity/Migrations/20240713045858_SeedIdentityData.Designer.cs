@@ -9,18 +9,18 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BikeRentalSystem.Api.Migrations
+namespace BikeRentalSystem.Infrastructure.Identity.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240709190532_SeedRolesAndClaims")]
-    partial class SeedRolesAndClaims
+    [Migration("20240713045858_SeedIdentityData")]
+    partial class SeedIdentityData
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "7.0.20")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -49,6 +49,32 @@ namespace BikeRentalSystem.Api.Migrations
                         .HasDatabaseName("RoleNameIndex");
 
                     b.ToTable("AspNetRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "2",
+                            Name = "Courier",
+                            NormalizedName = "COURIER"
+                        },
+                        new
+                        {
+                            Id = "3",
+                            Name = "Motorcycle",
+                            NormalizedName = "MOTORCYCLE"
+                        },
+                        new
+                        {
+                            Id = "4",
+                            Name = "Rental",
+                            NormalizedName = "RENTAL"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -138,6 +164,24 @@ namespace BikeRentalSystem.Api.Migrations
                         .HasDatabaseName("UserNameIndex");
 
                     b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c6eedb55-99d5-4ac4-ac80-800b6089288f",
+                            Email = "admin@example.com",
+                            EmailConfirmed = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                            NormalizedUserName = "ADMIN@EXAMPLE.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAECiVNbFNyf4oouorKinwFBKXjXI1MPgdW+goE6tUshIZp+nTyYdsRA3tCqVdpumFgQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "201fb683-ebc2-4fc7-b6d3-f599513d0fca",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@example.com"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -163,17 +207,101 @@ namespace BikeRentalSystem.Api.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AspNetUserClaims", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            ClaimType = "Courier",
+                            ClaimValue = "Get",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            ClaimType = "Courier",
+                            ClaimValue = "Add",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            ClaimType = "Courier",
+                            ClaimValue = "Update",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            ClaimType = "Courier",
+                            ClaimValue = "Delete",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            ClaimType = "Motorcycle",
+                            ClaimValue = "Get",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            ClaimType = "Motorcycle",
+                            ClaimValue = "Add",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            ClaimType = "Motorcycle",
+                            ClaimValue = "Update",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            ClaimType = "Motorcycle",
+                            ClaimValue = "Delete",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            ClaimType = "Rental",
+                            ClaimValue = "Get",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            ClaimType = "Rental",
+                            ClaimValue = "Add",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            ClaimType = "Rental",
+                            ClaimValue = "Update",
+                            UserId = "1"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            ClaimType = "Rental",
+                            ClaimValue = "Delete",
+                            UserId = "1"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("text");
@@ -210,12 +338,10 @@ namespace BikeRentalSystem.Api.Migrations
                         .HasColumnType("text");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
                         .HasColumnType("text");

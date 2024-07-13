@@ -13,7 +13,13 @@ public class ApiSettings
         services.AddDbContext<DataContext>(options =>
             options.UseNpgsql(configuration.GetSection("DatabaseSettings:DefaultConnection").Value));
 
-        services.Configure<AzureBlobStorageSettings>(configuration.GetSection("AzureBlobStorageSettings"));
+        var azureConnectionString = Environment.GetEnvironmentVariable("AZURE_CONNECTION_STRING");
+
+        services.Configure<AzureBlobStorageSettings>(options =>
+        {
+            options.ConnectionString = azureConnectionString;
+            options.ContainerName = configuration["AzureBlobStorageSettings:ContainerName"];
+        });
 
         services.AddControllers()
             .AddJsonOptions(options =>

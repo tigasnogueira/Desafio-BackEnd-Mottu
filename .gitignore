@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/src/BikeRentalSystem.Api/Properties/launchSettings.json
+/src/BikeRentalSystem.Api/Properties/launchSettings.json

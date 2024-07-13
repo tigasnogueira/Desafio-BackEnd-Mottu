@@ -1,9 +1,9 @@
 ﻿using Asp.Versioning;
 using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Identity.Extensions;
 using BikeRentalSystem.Identity.Interfaces;
 using BikeRentalSystem.Identity.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeRentalSystem.Api.Controllers.V1;
@@ -12,7 +12,7 @@ namespace BikeRentalSystem.Api.Controllers.V1;
 [Route("api/v{version:apiVersion}/auth")]
 public class AuthController : MainController
 {
-    private readonly IAuthService _authenticationService;
+    private readonly IAuthService _authService;
     private readonly ILogger _logger;
 
     public AuthController(INotifier notifier,
@@ -20,46 +20,143 @@ public class AuthController : MainController
                           IUser user,
                           ILogger<AuthController> logger) : base(notifier, user)
     {
-        _authenticationService = authenticationService;
+        _authService = authenticationService;
         _logger = logger;
     }
 
     [HttpPost("register")]
     public async Task<ActionResult> Register(RegisterUserViewModel registerUser)
     {
-        if (!ModelState.IsValid) return CustomResponse(ModelState);
-
-        var result = await _authenticationService.RegisterAsync(registerUser);
-        if (result)
+        try
         {
-            return CustomResponse(await _authenticationService.GenerateJwtAsync(registerUser.Email));
+            if (!ModelState.IsValid) return CustomResponse(ModelState);
+
+            var result = await _authService.RegisterAsync(registerUser);
+            if (result)
+            {
+                _logger.LogInformation($"User {registerUser.Email} registered successfully");
+                return CustomResponse(await _authService.GenerateJwtAsync(registerUser.Email));
+            }
+
+            NotifyError("Error registering the user.");
+            return CustomResponse(registerUser);
         }
-        return CustomResponse(registerUser);
+        catch (Exception ex)
+        {
+            NotifyError("An error occurred while registering the user.");
+            _logger.LogError(ex, "An error occurred while registering the user.");
+            return CustomResponse(registerUser);
+        }
     }
 
     [HttpPost("login")]
     public async Task<ActionResult> Login(LoginUserViewModel loginUser)
     {
-        if (!ModelState.IsValid) return CustomResponse(ModelState);
-
-        var result = await _authenticationService.LoginAsync(loginUser);
-        if (result != null)
+        try
         {
-            _logger.LogInformation($"User {loginUser.Email} logged in successfully");
-            return CustomResponse(result);
-        }
+            if (!ModelState.IsValid) return CustomResponse(ModelState);
 
-        NotifyError("Incorrect username or password");
-        return CustomResponse(loginUser);
+            var result = await _authService.LoginAsync(loginUser);
+            if (result != null)
+            {
+                _logger.LogInformation($"User {loginUser.Email} logged in successfully");
+                return CustomResponse(result);
+            }
+
+            NotifyError("Incorrect username or password");
+            return CustomResponse(loginUser);
+        }
+        catch (Exception ex)
+        {
+            NotifyError("An error occurred while logging in.");
+            _logger.LogError(ex, "An error occurred while logging in.");
+            return CustomResponse(loginUser);
+        }
+    }
+
+    [HttpPost("add-role")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> AddRole([FromBody] string roleName)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                NotifyError("Role name is required.");
+                return CustomResponse(roleName);
+            }
+
+            var result = await _authService.AddRoleAsync(roleName);
+            if (result)
+            {
+                _logger.LogInformation($"Role {roleName} added successfully");
+                return CustomResponse(result);
+            }
+
+            NotifyError("Error adding role.");
+            return CustomResponse(roleName);
+        }
+        catch (Exception ex)
+        {
+            NotifyError("An error occurred while adding the role.");
+            _logger.LogError(ex, "An error occurred while adding the role.");
+            return CustomResponse(roleName);
+        }
+    }
+
+    [HttpPost("add-claim")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult> AddClaim([FromBody] ClaimViewModel claim)
+    {
+        try
+        {
+            if (claim == null || string.IsNullOrWhiteSpace(claim.Type) || string.IsNullOrWhiteSpace(claim.Value))
+            {
+                NotifyError("Claim type and value are required.");
+                return CustomResponse(claim);
+            }
+
+            var result = await _authService.AddClaimAsync(claim);
+            if (result)
+            {
+                _logger.LogInformation($"Claim {claim.Type} : {claim.Value} added successfully");
+                return CustomResponse(result);
+            }
+
+            return CustomResponse("Error adding claim.");
+        }
+        catch (Exception ex)
+        {
+            NotifyError("An error occurred while adding the claim.");
+            _logger.LogError(ex, "An error occurred while adding the claim.");
+            return CustomResponse(claim);
+        }
     }
 
     [HttpPost("assign-roles-claims")]
-    [ClaimsAuthorize("Admin", "Add")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult> AssignRolesAndClaims(AssignRolesAndClaimsViewModel model)
     {
-        if (!ModelState.IsValid) return CustomResponse(ModelState);
+        try
+        {
+            if (!ModelState.IsValid) return CustomResponse(ModelState);
 
-        await _authenticationService.AssignRolesAndClaimsAsync(model.UserId, model.Roles, model.Claims);
-        return CustomResponse();
+            var result = await _authService.AssignRolesAndClaimsAsync(model.UserId, model.Roles, model.Claims);
+
+            if (!result)
+            {
+                NotifyError("Error assigning roles and/or claims.");
+                return CustomResponse(model);
+            }
+
+            _logger.LogInformation($"Roles and/or claims assigned successfully to user {model.UserId}");
+            return CustomResponse(result);
+        }
+        catch (Exception ex)
+        {
+            NotifyError("An error occurred while assigning roles and claims.");
+            _logger.LogError(ex, "An error occurred while assigning roles and claims.");
+            return CustomResponse(model);
+        }
     }
 }

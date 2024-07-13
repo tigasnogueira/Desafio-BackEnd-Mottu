@@ -94,31 +94,143 @@ public class AuthService : BaseService, IAuthService
         }
     }
 
-    public async Task AssignRolesAndClaimsAsync(string userId, IEnumerable<string> roles, IEnumerable<Claim> claims)
+    public async Task<bool> AddRoleAsync(string roleName)
+    {
+        try
+        {
+            if (await _roleManager.RoleExistsAsync(roleName))
+            {
+                _logger.LogWarning($"Role {roleName} already exists.");
+                return false;
+            }
+
+            var role = new IdentityRole(roleName);
+            var result = await _roleManager.CreateAsync(role);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Role {roleName} created successfully.");
+                return true;
+            }
+
+            foreach (var error in result.Errors)
+            {
+                _logger.LogError($"Error creating role: {error.Description}");
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"An error occurred while creating the role {roleName}.");
+            return false;
+        }
+    }
+
+    public async Task<bool> AddClaimAsync(ClaimViewModel claim)
+    {
+        try
+        {
+            var existingClaims = await _roleManager.GetClaimsAsync(new IdentityRole(claim.Type));
+            if (existingClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
+            {
+                _logger.LogWarning($"Claim {claim.Type} : {claim.Value} already exists.");
+                return false;
+            }
+
+            var newClaim = new Claim(claim.Type, claim.Value);
+            var result = await _roleManager.AddClaimAsync(new IdentityRole(claim.Type), newClaim);
+
+            if (result.Succeeded)
+            {
+                _logger.LogInformation($"Claim {claim.Type}:{claim.Value} created successfully.");
+                return true;
+            }
+
+            foreach (var error in result.Errors)
+            {
+                _logger.LogError($"Error creating claim: {error.Description}");
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"An error occurred while creating the claim {claim.Type}:{claim.Value}.");
+            return false;
+        }
+    }
+
+    public async Task<bool> AssignRolesAndClaimsAsync(string userId, IEnumerable<string> roles, IEnumerable<ClaimViewModel> claims)
     {
         try
         {
             var user = await _userManager.FindByIdAsync(userId);
-            if (user != null)
+            if (user == null)
             {
-                foreach (var claim in claims)
-                {
-                    await _userManager.AddClaimAsync(user, claim);
-                }
+                _logger.LogWarning($"User with ID {userId} not found.");
+                return false;
+            }
+
+            if (roles != null)
+            {
                 foreach (var role in roles)
                 {
                     if (!await _roleManager.RoleExistsAsync(role))
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(role));
+                        var newRole = new IdentityRole(role);
+                        var roleResult = await _roleManager.CreateAsync(newRole);
+                        if (!roleResult.Succeeded)
+                        {
+                            foreach (var error in roleResult.Errors)
+                            {
+                                _logger.LogError($"Error creating role: {error.Description}");
+                            }
+                            return false;
+                        }
                     }
-                    await _userManager.AddToRoleAsync(user, role);
+
+                    if (!await _userManager.IsInRoleAsync(user, role))
+                    {
+                        var result = await _userManager.AddToRoleAsync(user, role);
+                        if (!result.Succeeded)
+                        {
+                            foreach (var error in result.Errors)
+                            {
+                                _logger.LogError($"Error adding role to user: {error.Description}");
+                            }
+                            return false;
+                        }
+                    }
                 }
             }
+
+            if (claims != null)
+            {
+                foreach (var claimViewModel in claims)
+                {
+                    var claim = new Claim(claimViewModel.Type, claimViewModel.Value);
+                    var existingClaims = await _userManager.GetClaimsAsync(user);
+                    if (!existingClaims.Any(c => c.Type == claimViewModel.Type && c.Value == claimViewModel.Value))
+                    {
+                        var result = await _userManager.AddClaimAsync(user, claim);
+                        if (!result.Succeeded)
+                        {
+                            foreach (var error in result.Errors)
+                            {
+                                _logger.LogError($"Error adding claim to user: {error.Description}");
+                            }
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            _logger.LogInformation($"Roles and/or claims assigned to user {userId} successfully.");
+            return true;
         }
         catch (Exception ex)
         {
-            HandleException(ex);
-            _logger.LogError(ex, "An error occurred while assigning roles and claims to the user.");
+            _logger.LogError(ex, $"An error occurred while assigning roles and/or claims to the user {userId}.");
+            return false;
         }
     }
 

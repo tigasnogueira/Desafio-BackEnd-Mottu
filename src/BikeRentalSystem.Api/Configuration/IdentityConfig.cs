@@ -22,10 +22,22 @@ public static class IdentityConfig
             .AddDefaultTokenProviders();
 
         var appSettingsSection = configuration.GetSection("AppSettings");
-        services.Configure<AppSettings>(appSettingsSection);
-
         var appSettings = appSettingsSection.Get<AppSettings>();
+        appSettings.Secret = Environment.GetEnvironmentVariable("APP_SECRET");
         var key = Encoding.ASCII.GetBytes(appSettings.Secret);
+
+        if (key.Length < 16)
+        {
+            throw new ArgumentException("The secret key must be at least 16 characters long.");
+        }
+
+        services.Configure<AppSettings>(options =>
+        {
+            options.Secret = appSettings.Secret;
+            options.ExpirationHours = appSettings.ExpirationHours;
+            options.Issuer = appSettings.Issuer;
+            options.ValidAt = appSettings.ValidAt;
+        });
 
         services.AddAuthentication(options =>
         {

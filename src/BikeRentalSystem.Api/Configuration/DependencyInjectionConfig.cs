@@ -8,7 +8,6 @@ using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Identity.Extensions;
 using BikeRentalSystem.Identity.Interfaces;
 using BikeRentalSystem.Identity.Services;
-using BikeRentalSystem.Infrastructure.Context;
 using BikeRentalSystem.Infrastructure.Repositories;
 using BikeRentalSystem.Messaging.Configurations;
 using BikeRentalSystem.Messaging.Consumers;
@@ -17,7 +16,6 @@ using BikeRentalSystem.Messaging.Services;
 using BikeRentalSystem.RentalServices.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace BikeRentalSystem.Api.Configuration;
 
@@ -26,8 +24,6 @@ public static class DependencyInjectionConfig
     public static void AddDependencyInjection(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<INotifier, Notifier>();
-        services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
