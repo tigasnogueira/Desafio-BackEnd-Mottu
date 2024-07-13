@@ -38,6 +38,20 @@ public class IdentityRoleConfiguration : IEntityTypeConfiguration<IdentityRole>
     }
 }
 
+public class IdentityUserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<string>>
+{
+    public void Configure(EntityTypeBuilder<IdentityUserRole<string>> builder)
+    {
+        builder.HasData(
+            new IdentityUserRole<string>
+            {
+                UserId = "1",
+                RoleId = "1"
+            }
+        );
+    }
+}
+
 public class IdentityUserClaimConfiguration : IEntityTypeConfiguration<IdentityUserClaim<string>>
 {
     public void Configure(EntityTypeBuilder<IdentityUserClaim<string>> builder)

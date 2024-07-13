@@ -4,7 +4,9 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BikeRentalSystem.Api.Migrations
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
+namespace BikeRentalSystem.Infrastructure.Identity.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration
@@ -97,8 +99,8 @@ namespace BikeRentalSystem.Api.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    ProviderKey = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    ProviderKey = table.Column<string>(type: "text", nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "text", nullable: true),
                     UserId = table.Column<string>(type: "text", nullable: false)
                 },
@@ -142,8 +144,8 @@ namespace BikeRentalSystem.Api.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<string>(type: "text", nullable: false),
-                    LoginProvider = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    Name = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    LoginProvider = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "text", nullable: false),
                     Value = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
@@ -156,6 +158,46 @@ namespace BikeRentalSystem.Api.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[,]
+                {
+                    { "1", null, "Admin", "ADMIN" },
+                    { "2", null, "Courier", "COURIER" },
+                    { "3", null, "Motorcycle", "MOTORCYCLE" },
+                    { "4", null, "Rental", "RENTAL" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUsers",
+                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "Email", "EmailConfirmed", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
+                values: new object[] { "1", 0, "f03ddfe4-7c06-4d9e-8e1a-c6ca69ad8ded", "admin@example.com", true, false, null, "ADMIN@EXAMPLE.COM", "ADMIN@EXAMPLE.COM", "AQAAAAIAAYagAAAAEMjCNCIbwN8wNNgXvhcl2VWKnqBfAFIFgEzBrWvrgxsdis/Dsb0oBbLHdIIwjyFGjQ==", null, false, "5df8cf16-e551-43fd-8d23-9c275720ef34", false, "admin@example.com" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserClaims",
+                columns: new[] { "Id", "ClaimType", "ClaimValue", "UserId" },
+                values: new object[,]
+                {
+                    { 1, "Courier", "Get", "1" },
+                    { 2, "Courier", "Add", "1" },
+                    { 3, "Courier", "Update", "1" },
+                    { 4, "Courier", "Delete", "1" },
+                    { 5, "Motorcycle", "Get", "1" },
+                    { 6, "Motorcycle", "Add", "1" },
+                    { 7, "Motorcycle", "Update", "1" },
+                    { 8, "Motorcycle", "Delete", "1" },
+                    { 9, "Rental", "Get", "1" },
+                    { 10, "Rental", "Add", "1" },
+                    { 11, "Rental", "Update", "1" },
+                    { 12, "Rental", "Delete", "1" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "AspNetUserRoles",
+                columns: new[] { "RoleId", "UserId" },
+                values: new object[] { "1", "1" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",

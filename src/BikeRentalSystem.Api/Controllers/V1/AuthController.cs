@@ -104,35 +104,6 @@ public class AuthController : MainController
         }
     }
 
-    [HttpPost("add-claim")]
-    [Authorize(Roles = "Admin")]
-    public async Task<ActionResult> AddClaim([FromBody] ClaimViewModel claim)
-    {
-        try
-        {
-            if (claim == null || string.IsNullOrWhiteSpace(claim.Type) || string.IsNullOrWhiteSpace(claim.Value))
-            {
-                NotifyError("Claim type and value are required.");
-                return CustomResponse(claim);
-            }
-
-            var result = await _authService.AddClaimAsync(claim);
-            if (result)
-            {
-                _logger.LogInformation($"Claim {claim.Type} : {claim.Value} added successfully");
-                return CustomResponse(result);
-            }
-
-            return CustomResponse("Error adding claim.");
-        }
-        catch (Exception ex)
-        {
-            NotifyError("An error occurred while adding the claim.");
-            _logger.LogError(ex, "An error occurred while adding the claim.");
-            return CustomResponse(claim);
-        }
-    }
-
     [HttpPost("assign-roles-claims")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult> AssignRolesAndClaims(AssignRolesAndClaimsViewModel model)

@@ -28,4 +28,8 @@
     <ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Identity\Migrations\" />
+  </ItemGroup>
+
 </Project>

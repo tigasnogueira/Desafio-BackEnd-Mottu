@@ -126,39 +126,6 @@ public class AuthService : BaseService, IAuthService
         }
     }
 
-    public async Task<bool> AddClaimAsync(ClaimViewModel claim)
-    {
-        try
-        {
-            var existingClaims = await _roleManager.GetClaimsAsync(new IdentityRole(claim.Type));
-            if (existingClaims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
-            {
-                _logger.LogWarning($"Claim {claim.Type} : {claim.Value} already exists.");
-                return false;
-            }
-
-            var newClaim = new Claim(claim.Type, claim.Value);
-            var result = await _roleManager.AddClaimAsync(new IdentityRole(claim.Type), newClaim);
-
-            if (result.Succeeded)
-            {
-                _logger.LogInformation($"Claim {claim.Type}:{claim.Value} created successfully.");
-                return true;
-            }
-
-            foreach (var error in result.Errors)
-            {
-                _logger.LogError($"Error creating claim: {error.Description}");
-            }
-            return false;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"An error occurred while creating the claim {claim.Type}:{claim.Value}.");
-            return false;
-        }
-    }
-
     public async Task<bool> AssignRolesAndClaimsAsync(string userId, IEnumerable<string> roles, IEnumerable<ClaimViewModel> claims)
     {
         try

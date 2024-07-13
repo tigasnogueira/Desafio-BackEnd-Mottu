@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BikeRentalSystem.Api.Migrations
+namespace BikeRentalSystem.Infrastructure.Identity.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
@@ -167,15 +167,15 @@ namespace BikeRentalSystem.Api.Migrations
                         {
                             Id = "1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c6eedb55-99d5-4ac4-ac80-800b6089288f",
+                            ConcurrencyStamp = "f03ddfe4-7c06-4d9e-8e1a-c6ca69ad8ded",
                             Email = "admin@example.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@EXAMPLE.COM",
                             NormalizedUserName = "ADMIN@EXAMPLE.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAECiVNbFNyf4oouorKinwFBKXjXI1MPgdW+goE6tUshIZp+nTyYdsRA3tCqVdpumFgQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMjCNCIbwN8wNNgXvhcl2VWKnqBfAFIFgEzBrWvrgxsdis/Dsb0oBbLHdIIwjyFGjQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "201fb683-ebc2-4fc7-b6d3-f599513d0fca",
+                            SecurityStamp = "5df8cf16-e551-43fd-8d23-9c275720ef34",
                             TwoFactorEnabled = false,
                             UserName = "admin@example.com"
                         });
@@ -327,6 +327,13 @@ namespace BikeRentalSystem.Api.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = "1",
+                            RoleId = "1"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
