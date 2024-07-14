@@ -1,14 +1,26 @@
-﻿using BikeRentalSystem.Core.Interfaces.Notifications;
+﻿using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
+using BikeRentalSystem.Messaging.Events;
+using BikeRentalSystem.Messaging.Interfaces;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseService(_notifier), IRentalService
+public class RentalService : BaseService, IRentalService
 {
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMessageProducer _messageProducer;
+
+    public RentalService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
+    {
+        _unitOfWork = unitOfWork;
+        _messageProducer = messageProducer;
+    }
+
     public async Task<Rental> GetById(Guid id)
     {
         try
@@ -29,6 +41,20 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
         {
             _notifier.Handle("Getting all rentals");
             return await _unitOfWork.Rentals.GetAll();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            throw;
+        }
+    }
+
+    public async Task<PaginatedResponse<Rental>> GetAllPaged(int page, int pageSize)
+    {
+        try
+        {
+            _notifier.Handle("Getting paged rentals");
+            return await _unitOfWork.Rentals.GetAllPaged(page, pageSize);
         }
         catch (Exception ex)
         {
@@ -113,6 +139,11 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
         {
             try
             {
+                var (motorcycles, couriers) = await GetForeignEntities(rental.MotorcycleId, rental.CourierId);
+
+                rental.Motorcycle = motorcycles;
+                rental.Courier = couriers;
+
                 await _unitOfWork.Rentals.Add(rental);
                 var result = await _unitOfWork.SaveAsync();
 
@@ -120,6 +151,9 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental added successfully");
+
+                    AddRentalRegisteredEvent(rental);
+
                     return true;
                 }
                 else
@@ -165,15 +199,7 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
         {
             try
             {
-                existingRental.CourierId = rental.CourierId;
-                existingRental.MotorcycleId = rental.MotorcycleId;
-                existingRental.StartDate = rental.StartDate;
-                existingRental.EndDate = rental.EndDate;
-                existingRental.ExpectedEndDate = rental.ExpectedEndDate;
-                existingRental.DailyRate = rental.DailyRate;
-                existingRental.TotalCost = rental.TotalCost;
-                existingRental.Plan = rental.Plan;
-                existingRental.Update();
+                UpdateRentalDetails(existingRental, rental);
 
                 _unitOfWork.Rentals.Update(existingRental, 0);
                 var result = await _unitOfWork.SaveAsync();
@@ -182,6 +208,9 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental updated successfully");
+
+                    AddRentalRegisteredEvent(existingRental);
+
                     return true;
                 }
                 else
@@ -251,5 +280,46 @@ public class RentalService(IUnitOfWork _unitOfWork, INotifier _notifier) : BaseS
             HandleException(ex);
             return false;
         }
+    }
+
+    private async Task<(Motorcycle, Courier)> GetForeignEntities(Guid motorcycleId, Guid courierId)
+    {
+        var motorcycle = await _unitOfWork.Motorcycles.GetById(motorcycleId);
+        var courier = await _unitOfWork.Couriers.GetById(courierId);
+
+        return (motorcycle, courier);
+    }
+
+    private void UpdateRentalDetails(Rental existingRental, Rental rental)
+    {
+        existingRental.CourierId = rental.CourierId;
+        existingRental.MotorcycleId = rental.MotorcycleId;
+        existingRental.StartDate = rental.StartDate;
+        existingRental.EndDate = rental.EndDate;
+        existingRental.ExpectedEndDate = rental.ExpectedEndDate;
+        existingRental.DailyRate = rental.DailyRate;
+        existingRental.TotalCost = rental.TotalCost;
+        existingRental.Plan = rental.Plan;
+        existingRental.Update();
+    }
+
+    private void AddRentalRegisteredEvent(Rental rental)
+    {
+        var rentalRegisteredEvent = new RentalRegistered
+        {
+            Id = rental.Id,
+            CourierId = rental.CourierId,
+            MotorcycleId = rental.MotorcycleId,
+            StartDate = rental.StartDate,
+            EndDate = rental.EndDate,
+            ExpectedEndDate = rental.ExpectedEndDate,
+            DailyRate = rental.DailyRate,
+            TotalCost = rental.TotalCost,
+            Plan = rental.Plan,
+            CreatedAt = rental.CreatedAt,
+            UpdatedAt = rental.UpdatedAt,
+            IsDeleted = rental.IsDeleted
+        };
+        _messageProducer.Publish(rentalRegisteredEvent, "exchange_name", "routing_key");
     }
 }

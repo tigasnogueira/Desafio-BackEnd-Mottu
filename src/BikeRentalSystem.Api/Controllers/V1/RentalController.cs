@@ -1,14 +1,19 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
-using BikeRentalSystem.Api.Models.Dtos;
+using BikeRentalSystem.Api.Contracts.Request;
+using BikeRentalSystem.Core.Common;
+using BikeRentalSystem.Core.Dtos;
+using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
 using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Models;
+using BikeRentalSystem.Identity.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BikeRentalSystem.Api.Controllers.V1;
 
-[ApiController]
+[Authorize]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/rentals")]
 public class RentalController : MainController
@@ -16,16 +21,14 @@ public class RentalController : MainController
     private readonly IRentalService _rentalService;
     private readonly IMapper _mapper;
 
-    public RentalController(IRentalService rentalService, IMapper mapper, INotifier notifier) : base(notifier)
+    public RentalController(IRentalService rentalService, IMapper mapper, INotifier notifier, IUser user) : base(notifier, user)
     {
         _rentalService = rentalService;
         _mapper = mapper;
     }
 
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RentalDto))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ClaimsAuthorize("Rental", "Get")]
     public async Task<IActionResult> GetRentalById(Guid id)
     {
         try
@@ -40,17 +43,24 @@ public class RentalController : MainController
         }
     }
 
-    [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<RentalDto>))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAllRentals()
+    [AllowAnonymous]
+    [HttpGet("list")]
+    public async Task<IActionResult> GetAllRentals([FromQuery] int? page, [FromQuery] int? pageSize)
     {
         try
         {
-            var rentals = await _rentalService.GetAll();
-            var rentalDtos = _mapper.Map<IEnumerable<RentalDto>>(rentals);
-            return CustomResponse(rentalDtos);
+            if (page.HasValue && pageSize.HasValue)
+            {
+                var rentals = await _rentalService.GetAllPaged(page.Value, pageSize.Value);
+                var rentalDtos = _mapper.Map<PaginatedResponse<RentalDto>>(rentals);
+                return CustomResponse(rentalDtos);
+            }
+            else
+            {
+                var rentals = await _rentalService.GetAll();
+                var rentalDtos = _mapper.Map<IEnumerable<RentalDto>>(rentals);
+                return CustomResponse(rentalDtos);
+            }
         }
         catch (Exception ex)
         {
@@ -59,10 +69,8 @@ public class RentalController : MainController
     }
 
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateRental(RentalDto rentalDto)
+    [ClaimsAuthorize("Rental", "Add")]
+    public async Task<IActionResult> CreateRental(RentalRequest rentalDto)
     {
         try
         {
@@ -78,10 +86,8 @@ public class RentalController : MainController
     }
 
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateRental(Guid id, RentalDto rentalDto)
+    [ClaimsAuthorize("Rental", "Update")]
+    public async Task<IActionResult> UpdateRental(Guid id, RentalUpdateRequest rentalDto)
     {
         try
         {
@@ -96,10 +102,8 @@ public class RentalController : MainController
         }
     }
 
-    [HttpDelete("{id:guid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [HttpPatch("{id:guid}")]
+    [ClaimsAuthorize("Rental", "Delete")]
     public async Task<IActionResult> SoftDeleteRental(Guid id)
     {
         try

@@ -17,8 +17,7 @@ public class DataContextFactory : IDesignTimeDbContextFactory<DataContext>
             .Build();
 
         var connectionString = configuration.GetSection("DatabaseSettings:DefaultConnection").Value;
-        Console.WriteLine($"Connection string: {connectionString}");
-
+        
         if (string.IsNullOrEmpty(connectionString))
         {
             throw new ArgumentException("The connection string 'DefaultConnection' was not found.");

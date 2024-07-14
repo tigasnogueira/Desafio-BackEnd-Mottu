@@ -1,8 +1,7 @@
-﻿using BikeRentalSystem.Api.Models.Response;
+﻿using Asp.Versioning.ApiExplorer;
 using BikeRentalSystem.Infrastructure.Context;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using BikeRentalSystem.Shared.Configurations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
 
 namespace BikeRentalSystem.Api.Configuration;
@@ -14,6 +13,14 @@ public class ApiSettings
         services.AddDbContext<DataContext>(options =>
             options.UseNpgsql(configuration.GetSection("DatabaseSettings:DefaultConnection").Value));
 
+        var azureConnectionString = Environment.GetEnvironmentVariable("AZURE_CONNECTION_STRING");
+
+        services.Configure<AzureBlobStorageSettings>(options =>
+        {
+            options.ConnectionString = azureConnectionString;
+            options.ContainerName = configuration["AzureBlobStorageSettings:ContainerName"];
+        });
+
         services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -24,37 +31,22 @@ public class ApiSettings
         services.ConfigureAutomapper();
         services.AddDependencyInjection(configuration);
         services.AddApiVersioningConfiguration();
-        services.AddSwaggerConfiguration();
+        services.AddSwaggerConfig();
         services.AddHealthCheckConfiguration();
-
-        var keycloakConfig = configuration.GetSection("Keycloak").Get<KeycloakConfigResponse>();
-        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-            {
-                options.Authority = keycloakConfig!.Authority;
-                options.Audience = keycloakConfig.Resource;
-                options.RequireHttpsMetadata = true;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-                };
-                options.EventsType = typeof(CustomJwtBearerEvents);
-            });
+        services.AddIdentityConfig(configuration);
 
         services.AddAuthorization();
+        services.AddAuthentication();
     }
 
-    public void ConfigurePipeline(IApplicationBuilder app, IWebHostEnvironment env)
+    public void ConfigurePipeline(IApplicationBuilder app, IWebHostEnvironment env, IApiVersionDescriptionProvider provider)
     {
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
         }
 
-        app.UseSwaggerConfiguration();
+        app.UseSwaggerConfig(provider);
 
         app.UseHttpsRedirection();
         app.UseRouting();

@@ -11,6 +11,10 @@ public class RentalValidation : AbstractValidator<Rental>
     {
         _unitOfWork = unitOfWork;
 
+        ConfigureCommonRules();
+    }
+    public void ConfigureCommonRules()
+    {
         RuleFor(r => r.CourierId)
             .NotEmpty().WithMessage("The Courier ID cannot be empty.");
 

@@ -7,8 +7,15 @@ using System.Data.SqlClient;
 
 namespace BikeRentalSystem.RentalServices.Services;
 
-public class BaseService(INotifier _notifier)
+public class BaseService
 {
+    protected INotifier _notifier;
+
+    public BaseService(INotifier notifier)
+    {
+        _notifier = notifier;
+    }
+
     protected List<string> ExecuteValidation<TV, TE>(TV validation, TE entity)
         where TV : AbstractValidator<TE>
         where TE : EntityBase

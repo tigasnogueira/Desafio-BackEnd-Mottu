@@ -12,10 +12,6 @@ public class CourierMapping : IEntityTypeConfiguration<Courier>
 
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Identifier)
-            .IsRequired()
-            .HasMaxLength(50);
-
         builder.Property(c => c.Name)
             .IsRequired()
             .HasMaxLength(100);
@@ -42,8 +38,8 @@ public class CourierMapping : IEntityTypeConfiguration<Courier>
             .HasMaxLength(5);
 
         builder.Property(c => c.CnhImage)
-            .IsRequired()
-            .HasMaxLength(255);
+            .HasMaxLength(255)
+            .IsRequired(false);
 
         builder.Property(c => c.CreatedAt)
             .IsRequired();

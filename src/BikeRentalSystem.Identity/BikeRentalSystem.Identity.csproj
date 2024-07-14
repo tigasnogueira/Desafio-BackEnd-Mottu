@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.20" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="7.0.20" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
+    <ProjectReference Include="..\BikeRentalSystem.Services\BikeRentalSystem.RentalServices.csproj" />
+    <ProjectReference Include="..\BikeRentalSystem.Shared\BikeRentalSystem.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

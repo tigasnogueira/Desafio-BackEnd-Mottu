@@ -7,8 +7,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
 
-public class MotorcycleRepository(DataContext _dataContext, INotifier _notifier) : Repository<Motorcycle>(_dataContext, _notifier), IMotorcycleRepository
+public class MotorcycleRepository : Repository<Motorcycle>, IMotorcycleRepository
 {
+    public MotorcycleRepository(DataContext dataContext, INotifier notifier) : base(dataContext, notifier)
+    {
+    }
+
     public async Task<Motorcycle> GetByPlate(string plate)
     {
         try
