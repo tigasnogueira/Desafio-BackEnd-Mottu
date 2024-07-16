@@ -143,7 +143,7 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         }
     }
 
-    public virtual async Task Update(TEntity entity, int updatedById)
+    public virtual async Task Update(TEntity entity)
     {
         try
         {
@@ -178,7 +178,7 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         try
         {
             entity.IsDeletedToggle();
-            await Update(entity, 0);
+            await Update(entity);
         }
         catch (Exception ex)
         {

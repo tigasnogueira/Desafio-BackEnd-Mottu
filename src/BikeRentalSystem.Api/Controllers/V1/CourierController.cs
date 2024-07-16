@@ -34,6 +34,11 @@ public class CourierController : MainController
         try
         {
             var courier = await _courierService.GetById(id);
+            if (courier == null)
+            {
+                NotifyError("Resource not found");
+                return CustomResponse(null, StatusCodes.Status404NotFound);
+            }
             var courierDto = _mapper.Map<CourierDto>(courier);
             return CustomResponse(courierDto);
         }
@@ -78,14 +83,18 @@ public class CourierController : MainController
             var courier = _mapper.Map<Courier>(courierDto);
             using (var stream = cnhImage?.OpenReadStream())
             {
-                await _courierService.Add(courier, stream);
+                var success = await _courierService.Add(courier, stream);
+                if (!success)
+                {
+                    return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
+                }
             }
             var createdCourierDto = _mapper.Map<CourierDto>(courier);
             return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
         }
         catch (Exception ex)
         {
-            return CustomResponse(ex.Message);
+            return CustomResponse(ex.Message, StatusCodes.Status400BadRequest);
         }
     }
 
@@ -102,7 +111,8 @@ public class CourierController : MainController
             {
                 await _courierService.Update(courier, stream);
             }
-            return CustomResponse(StatusCodes.Status204NoContent);
+            var updatedCourierDto = _mapper.Map<CourierDto>(courier);
+            return CustomResponse(updatedCourierDto, StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
         {
@@ -117,7 +127,7 @@ public class CourierController : MainController
         try
         {
             await _courierService.SoftDelete(id);
-            return CustomResponse(StatusCodes.Status204NoContent);
+            return CustomResponse(null, StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
         {
@@ -140,7 +150,7 @@ public class CourierController : MainController
                     return CustomResponse("Failed to update CNH image", StatusCodes.Status400BadRequest);
                 }
             }
-            return CustomResponse(StatusCodes.Status204NoContent);
+            return CustomResponse("CNH image updated succesfully", StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
         {

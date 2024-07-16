@@ -201,7 +201,7 @@ public class CourierService : BaseService, ICourierService
 
                 UpdateCourierDetails(existingCourier, courier);
 
-                _unitOfWork.Couriers.Update(existingCourier, 0);
+                _unitOfWork.Couriers.Update(existingCourier);
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
@@ -251,7 +251,7 @@ public class CourierService : BaseService, ICourierService
                 try
                 {
                     courier.IsDeletedToggle();
-                    await _unitOfWork.Couriers.Update(courier, 0);
+                    await _unitOfWork.Couriers.Update(courier);
                     var result = await _unitOfWork.SaveAsync();
 
                     if (result > 0)
@@ -300,9 +300,15 @@ public class CourierService : BaseService, ICourierService
         {
             try
             {
-                var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(cnpj, cnhImageStream);
-
                 var courier = await _unitOfWork.Couriers.GetByCnpj(cnpj);
+                if (courier == null)
+                {
+                    _notifier.Handle($"Courier with CNPJ {cnpj} not found.", NotificationType.Error);
+                    await transaction.RollbackAsync();
+                    return false;
+                }
+
+                var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(cnpj, cnhImageStream);
                 courier.CnhImage = cnhImageUrl;
 
                 var validator = new CourierValidation(_unitOfWork);

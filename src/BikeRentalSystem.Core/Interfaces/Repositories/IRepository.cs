@@ -12,7 +12,7 @@ public interface IRepository<TEntity> where TEntity : class
     Task<IEnumerable<TEntity>> Find(Expression<Func<TEntity, bool>> predicate);
     Task Add(TEntity entity);
     Task AddRange(IEnumerable<TEntity> entities);
-    Task Update(TEntity entity, int updatedById);
+    Task Update(TEntity entity);
     Task UpdateRange(IEnumerable<TEntity> entities);
     void Delete(TEntity entity);
     void DeleteRange(IEnumerable<TEntity> entities);

@@ -10,9 +10,9 @@ public class RentalValidation : AbstractValidator<Rental>
     public RentalValidation(IUnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
-
         ConfigureCommonRules();
     }
+
     public void ConfigureCommonRules()
     {
         RuleFor(r => r.CourierId)

@@ -34,6 +34,10 @@ public class RentalController : MainController
         try
         {
             var rental = await _rentalService.GetById(id);
+            if (rental == null)
+            {
+                return CustomResponse(null, StatusCodes.Status404NotFound);
+            }
             var rentalDto = _mapper.Map<RentalDto>(rental);
             return CustomResponse(rentalDto);
         }
@@ -75,7 +79,13 @@ public class RentalController : MainController
         try
         {
             var rental = _mapper.Map<Rental>(rentalDto);
-            await _rentalService.Add(rental);
+            var result = await _rentalService.Add(rental);
+
+            if (!result)
+            {
+                return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
+            }
+
             var createdRentalDto = _mapper.Map<RentalDto>(rental);
             return CustomResponse(createdRentalDto, StatusCodes.Status201Created);
         }
@@ -94,7 +104,8 @@ public class RentalController : MainController
             var rental = _mapper.Map<Rental>(rentalDto);
             rental.Id = id;
             await _rentalService.Update(rental);
-            return CustomResponse(StatusCodes.Status204NoContent);
+            var updatedRentalDto = _mapper.Map<RentalDto>(rental);
+            return CustomResponse(updatedRentalDto, StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
         {
@@ -109,7 +120,7 @@ public class RentalController : MainController
         try
         {
             await _rentalService.SoftDelete(id);
-            return CustomResponse(StatusCodes.Status204NoContent);
+            return CustomResponse(null, StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
         {

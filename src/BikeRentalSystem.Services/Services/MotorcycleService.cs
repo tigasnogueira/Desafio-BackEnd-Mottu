@@ -177,7 +177,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
             {
                 UpdateMotorcycleDetails(existingMotorcycle, motorcycle);
 
-                _unitOfWork.Motorcycles.Update(existingMotorcycle, 0);
+                _unitOfWork.Motorcycles.Update(existingMotorcycle);
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
@@ -227,7 +227,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
                 try
                 {
                     motorcycle.IsDeletedToggle();
-                    await _unitOfWork.Motorcycles.Update(motorcycle, 0);
+                    await _unitOfWork.Motorcycles.Update(motorcycle);
                     var result = await _unitOfWork.SaveAsync();
 
                     if (result > 0)

@@ -18,14 +18,35 @@ public abstract class MainController : Controller
         _user = user;
     }
 
-    protected ActionResult CustomResponse(object result = null, int? statusCode = null)
+    protected ActionResult CustomResponse(object? result = null, int? statusCode = null)
     {
         if (!ValidOperation())
             return HandleErrorResponse();
 
         if (statusCode.HasValue)
         {
+            if (statusCode == StatusCodes.Status404NotFound)
+            {
+                return NotFound(new { success = false, errors = result ?? "Resource not found" });
+            }
+            if (statusCode == StatusCodes.Status201Created)
+            {
+                return StatusCode(StatusCodes.Status201Created, new { success = true, data = result });
+            }
+            if (statusCode == StatusCodes.Status204NoContent)
+            {
+                return NoContent();
+            }
+            if (statusCode == StatusCodes.Status400BadRequest)
+            {
+                return BadRequest(new { success = false, errors = result ?? "Bad request" });
+            }
             return StatusCode(statusCode.Value, new { success = true, data = result });
+        }
+
+        if (result is string errorMessage && HttpContext.Request.Method != "GET")
+        {
+            return BadRequest(new { success = false, errors = errorMessage });
         }
 
         switch (HttpContext.Request.Method)
@@ -46,9 +67,14 @@ public abstract class MainController : Controller
 
     protected ActionResult CustomResponse(ModelStateDictionary modelState)
     {
-        if (!modelState.IsValid)
+        if (modelState != null && !modelState.IsValid)
         {
             NotifyErrorInvalidModel(modelState);
+            return BadRequest(new
+            {
+                success = false,
+                errors = modelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList()
+            });
         }
 
         return CustomResponse();
@@ -58,6 +84,8 @@ public abstract class MainController : Controller
 
     private void NotifyErrorInvalidModel(ModelStateDictionary modelState)
     {
+        if (modelState == null) return;
+
         var errors = modelState.Values.SelectMany(e => e.Errors);
         foreach (var error in errors)
         {
@@ -83,9 +111,12 @@ public abstract class MainController : Controller
             return NotFound(new { success = false, errors });
         }
 
-        return IsBadRequestError(errors)
-            ? BadRequest(new { success = false, errors })
-            : StatusCode(500, new { success = false, errors, message = "An unexpected error occurred." });
+        if (IsBadRequestError(errors))
+        {
+            return BadRequest(new { success = false, errors });
+        }
+
+        return StatusCode(500, new { success = false, errors, message = "An unexpected error occurred." });
     }
 
     private static bool IsNotFoundError(IEnumerable<string> errors) =>
@@ -94,5 +125,6 @@ public abstract class MainController : Controller
     private static bool IsBadRequestError(IEnumerable<string> errors) =>
         errors.Any(e =>
             e.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
-            e.Contains("cannot", StringComparison.OrdinalIgnoreCase));
+            e.Contains("cannot", StringComparison.OrdinalIgnoreCase) ||
+            e.Contains("Error", StringComparison.OrdinalIgnoreCase));
 }
