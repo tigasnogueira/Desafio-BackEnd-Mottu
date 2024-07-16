@@ -60,6 +60,7 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
             courier.CnhImage = cnhImageUrl;
 
             _dbSet.Update(courier);
+            await _dataContext.SaveChangesAsync();
 
             return cnhImageUrl;
         }

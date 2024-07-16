@@ -110,7 +110,8 @@ public class RentalService : BaseService, IRentalService
         try
         {
             _notifier.Handle("Calculating rental cost");
-            return await _unitOfWork.Rentals.CalculateRentalCost(rentalId);
+            var rentalCost = await _unitOfWork.Rentals.CalculateRentalCost(rentalId);
+            return rentalCost;
         }
         catch (Exception ex)
         {
@@ -143,6 +144,8 @@ public class RentalService : BaseService, IRentalService
 
                 rental.Motorcycle = motorcycles;
                 rental.Courier = couriers;
+
+                rental.TotalCost = CalculateRentalCost(rental.Id).Result;
 
                 await _unitOfWork.Rentals.Add(rental);
                 var result = await _unitOfWork.SaveAsync();
@@ -201,7 +204,7 @@ public class RentalService : BaseService, IRentalService
             {
                 UpdateRentalDetails(existingRental, rental);
 
-                _unitOfWork.Rentals.Update(existingRental, 0);
+                _unitOfWork.Rentals.Update(existingRental);
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
@@ -251,7 +254,7 @@ public class RentalService : BaseService, IRentalService
                 try
                 {
                     rental.IsDeletedToggle();
-                    await _unitOfWork.Rentals.Update(rental, 0);
+                    await _unitOfWork.Rentals.Update(rental);
                     var result = await _unitOfWork.SaveAsync();
 
                     if (result > 0)
@@ -298,7 +301,7 @@ public class RentalService : BaseService, IRentalService
         existingRental.EndDate = rental.EndDate;
         existingRental.ExpectedEndDate = rental.ExpectedEndDate;
         existingRental.DailyRate = rental.DailyRate;
-        existingRental.TotalCost = rental.TotalCost;
+        existingRental.TotalCost = CalculateRentalCost(existingRental.Id).Result;
         existingRental.Plan = rental.Plan;
         existingRental.Update();
     }

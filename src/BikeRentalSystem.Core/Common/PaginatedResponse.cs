@@ -19,6 +19,8 @@ public class PaginatedResponse<TEntity>
         TotalItems = count;
         PageNumber = pageNumber;
         PageSize = pageSize;
-        TotalPages = (int)Math.Ceiling(count / (double)pageSize);
+        TotalPages = pageSize.HasValue && pageSize.Value > 0
+            ? (int)Math.Ceiling(count / (double)pageSize.Value)
+            : 0;
     }
 }

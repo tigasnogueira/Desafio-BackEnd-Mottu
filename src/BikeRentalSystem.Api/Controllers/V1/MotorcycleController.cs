@@ -34,6 +34,10 @@ public class MotorcycleController : MainController
         try
         {
             var motorcycle = await _motorcycleService.GetById(id);
+            if (motorcycle == null)
+            {
+                return CustomResponse("Resource not found", StatusCodes.Status404NotFound);
+            }
             var motorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
             return CustomResponse(motorcycleDto);
         }
@@ -75,7 +79,11 @@ public class MotorcycleController : MainController
         try
         {
             var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
-            await _motorcycleService.Add(motorcycle);
+            var result = await _motorcycleService.Add(motorcycle);
+            if (!result)
+            {
+                return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
+            }
             var createdMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
             return CustomResponse(createdMotorcycleDto, StatusCodes.Status201Created);
         }
@@ -94,7 +102,8 @@ public class MotorcycleController : MainController
             var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
             motorcycle.Id = id;
             await _motorcycleService.Update(motorcycle);
-            return CustomResponse(StatusCodes.Status204NoContent);
+            var updatedMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
+            return CustomResponse(updatedMotorcycleDto, StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
         {
@@ -109,7 +118,7 @@ public class MotorcycleController : MainController
         try
         {
             await _motorcycleService.SoftDelete(id);
-            return CustomResponse(StatusCodes.Status204NoContent);
+            return CustomResponse(null, StatusCodes.Status204NoContent);
         }
         catch (Exception ex)
         {
