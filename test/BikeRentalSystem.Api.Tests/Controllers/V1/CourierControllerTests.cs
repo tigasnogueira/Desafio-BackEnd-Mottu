@@ -135,20 +135,45 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     public async Task CreateCourier_ShouldReturnCreated_WhenCourierIsValid()
     {
         // Arrange
-        var courierRequest = new CourierRequest();
-        var courier = new Courier();
-        var courierDto = new CourierDto();
+        var courierRequest = new CourierRequest
+        {
+            Name = "John Doe",
+            Cnpj = "12345678901234",
+            BirthDate = new DateTime(1980, 1, 1),
+            CnhNumber = "1234567890",
+            CnhType = "A"
+        };
+
+        var courier = new Courier
+        {
+            Id = Guid.NewGuid(),
+            Name = "John Doe",
+            Cnpj = "12345678901234",
+            BirthDate = new DateTime(1980, 1, 1),
+            CnhNumber = "1234567890",
+            CnhType = "A"
+        };
+
+        var courierDto = new CourierDto
+        {
+            Id = courier.Id,
+            Name = "John Doe",
+            Cnpj = "12345678901234",
+            BirthDate = new DateTime(1980, 1, 1),
+            CnhNumber = "1234567890",
+            CnhType = "A"
+        };
+
         var cnhImage = Substitute.For<IFormFile>();
         var stream = new MemoryStream();
-
         cnhImage.OpenReadStream().Returns(stream);
 
         _mapperMock.Map<Courier>(courierRequest).Returns(courier);
         _mapperMock.Map<CourierDto>(courier).Returns(courierDto);
-        _courierServiceMock.Add(courier, Arg.Any<Stream>()).Returns(Task.FromResult(true));
+        _courierServiceMock.Add(courier).Returns(Task.FromResult(true));
 
         // Act
-        var result = await controller.CreateCourier(courierRequest, cnhImage);
+        var result = await controller.CreateCourier(courierRequest);
 
         // Assert
         var createdResult = Assert.IsType<ObjectResult>(result);
@@ -175,9 +200,9 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var cnhImage = Substitute.For<IFormFile>();
 
         _mapperMock.Map<Courier>(courierUpdateRequest).Returns(courier);
-        _courierServiceMock.Update(courier, Arg.Any<Stream>()).Returns(Task.FromResult(true));
+        _courierServiceMock.Update(courier);
 
-        var result = await controller.UpdateCourier(courierId, courierUpdateRequest, cnhImage);
+        var result = await controller.UpdateCourier(courierId, courierUpdateRequest);
         var noContentResult = Assert.IsType<NoContentResult>(result);
     }
 
@@ -233,10 +258,10 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var cnhImage = Substitute.For<IFormFile>();
 
         _mapperMock.Map<Courier>(courierRequest).Returns(courier);
-        _courierServiceMock.Add(courier, Arg.Any<Stream>()).Returns(Task.FromResult(false));
+        _courierServiceMock.Add(courier);
 
         // Act
-        var result = await controller.CreateCourier(courierRequest, cnhImage);
+        var result = await controller.CreateCourier(courierRequest);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -308,10 +333,10 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         // Arrange
         var courierRequest = new CourierRequest();
         var cnhImage = Substitute.For<IFormFile>();
-        _courierServiceMock.When(x => x.Add(Arg.Any<Courier>(), Arg.Any<Stream>())).Do(x => throw new Exception("Test Exception"));
+        _courierServiceMock.When(x => x.Add(Arg.Any<Courier>())).Do(x => throw new Exception("Test Exception"));
 
         // Act
-        var result = await controller.CreateCourier(courierRequest, cnhImage);
+        var result = await controller.CreateCourier(courierRequest);
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);

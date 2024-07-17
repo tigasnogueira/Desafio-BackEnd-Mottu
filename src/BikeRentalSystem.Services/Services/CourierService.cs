@@ -91,7 +91,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Add(Courier courier, Stream cnhImageStream = null)
+    public async Task<bool> Add(Courier courier)
     {
         if (courier == null)
         {
@@ -114,20 +114,6 @@ public class CourierService : BaseService, ICourierService
             try
             {
                 await _unitOfWork.Couriers.Add(courier);
-
-                if (cnhImageStream != null)
-                {
-                    var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(courier.Cnpj, cnhImageStream);
-                    courier.CnhImage = cnhImageUrl;
-
-                    var imageValidationResult = await validator.ValidateImageAsync(courier);
-                    if (!imageValidationResult.IsValid)
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.NotifyValidationErrors(imageValidationResult);
-                        return false;
-                    }
-                }
 
                 var result = await _unitOfWork.SaveAsync();
 
@@ -156,7 +142,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Update(Courier courier, Stream cnhImageStream = null)
+    public async Task<bool> Update(Courier courier)
     {
         if (courier == null)
         {
@@ -164,44 +150,30 @@ public class CourierService : BaseService, ICourierService
             return false;
         }
 
-        var existingCourier = await _unitOfWork.Couriers.GetById(courier.Id);
-        if (existingCourier == null)
+        try
         {
-            _notifier.Handle("Courier not found", NotificationType.Error);
-            return false;
-        }
-
-        var validator = new CourierValidation(_unitOfWork);
-        validator.ConfigureRulesForUpdate(existingCourier);
-
-        var validationResult = await validator.ValidateAsync(courier);
-        if (!validationResult.IsValid)
-        {
-            _notifier.NotifyValidationErrors(validationResult);
-            return false;
-        }
-
-        using (var transaction = await _unitOfWork.BeginTransactionAsync())
-        {
-            try
+            using (var transaction = await _unitOfWork.BeginTransactionAsync())
             {
-                if (cnhImageStream != null)
+                var existingCourier = await _unitOfWork.Couriers.GetById(courier.Id);
+                if (existingCourier == null)
                 {
-                    var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(courier.Cnpj, cnhImageStream);
-                    existingCourier.CnhImage = cnhImageUrl;
+                    _notifier.Handle("Courier not found", NotificationType.Error);
+                    return false;
+                }
 
-                    var imageValidationResult = await validator.ValidateImageAsync(existingCourier);
-                    if (!imageValidationResult.IsValid)
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.NotifyValidationErrors(imageValidationResult);
-                        return false;
-                    }
+                var validator = new CourierValidation(_unitOfWork);
+                validator.ConfigureRulesForUpdate(existingCourier);
+
+                var validationResult = await validator.ValidateAsync(courier);
+                if (!validationResult.IsValid)
+                {
+                    _notifier.NotifyValidationErrors(validationResult);
+                    return false;
                 }
 
                 UpdateCourierDetails(existingCourier, courier);
 
-                _unitOfWork.Couriers.Update(existingCourier);
+                await _unitOfWork.Couriers.Update(existingCourier);
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
@@ -220,12 +192,11 @@ public class CourierService : BaseService, ICourierService
                     return false;
                 }
             }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                HandleException(ex);
-                return false;
-            }
+        }
+        catch (Exception ex)
+        {
+            _notifier.Handle($"Error updating courier: {ex.Message}", NotificationType.Error);
+            return false;
         }
     }
 

@@ -76,19 +76,17 @@ public class CourierController : MainController
     [RequestSizeLimit(40000000)]
     [HttpPost]
     [ClaimsAuthorize("Courier", "Add")]
-    public async Task<IActionResult> CreateCourier([FromForm] CourierRequest courierDto, IFormFile cnhImage = null)
+    public async Task<IActionResult> CreateCourier([FromForm] CourierRequest courierDto)
     {
         try
         {
             var courier = _mapper.Map<Courier>(courierDto);
-            using (var stream = cnhImage?.OpenReadStream())
+            var success = await _courierService.Add(courier);
+            if (!success)
             {
-                var success = await _courierService.Add(courier, stream);
-                if (!success)
-                {
-                    return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
-                }
+                return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
             }
+
             var createdCourierDto = _mapper.Map<CourierDto>(courier);
             return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
         }
@@ -101,16 +99,14 @@ public class CourierController : MainController
     [RequestSizeLimit(40000000)]
     [HttpPut("{id:guid}")]
     [ClaimsAuthorize("Courier", "Update")]
-    public async Task<IActionResult> UpdateCourier(Guid id, [FromForm] CourierUpdateRequest courierDto, IFormFile cnhImage = null)
+    public async Task<IActionResult> UpdateCourier(Guid id, [FromForm] CourierUpdateRequest courierDto)
     {
         try
         {
             var courier = _mapper.Map<Courier>(courierDto);
             courier.Id = id;
-            using (var stream = cnhImage?.OpenReadStream())
-            {
-                await _courierService.Update(courier, stream);
-            }
+            await _courierService.Update(courier);
+            
             var updatedCourierDto = _mapper.Map<CourierDto>(courier);
             return CustomResponse(updatedCourierDto, StatusCodes.Status204NoContent);
         }

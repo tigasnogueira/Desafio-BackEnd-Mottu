@@ -14,6 +14,6 @@ public interface IRepository<TEntity> where TEntity : class
     Task AddRange(IEnumerable<TEntity> entities);
     Task Update(TEntity entity);
     Task UpdateRange(IEnumerable<TEntity> entities);
-    void Delete(TEntity entity);
-    void DeleteRange(IEnumerable<TEntity> entities);
+    Task Delete(TEntity entity);
+    Task DeleteRange(IEnumerable<TEntity> entities);
 }

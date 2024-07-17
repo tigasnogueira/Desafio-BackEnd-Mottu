@@ -55,13 +55,16 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         }
     }
 
-    public async Task<decimal> CalculateRentalCost(Guid rentalId)
+    public async Task<decimal> CalculateRentalCost(Rental rental)
     {
+        if (rental == null)
+        {
+            throw new ArgumentNullException(nameof(rental), "Rental cannot be null");
+        }
+
         try
         {
-            _notifier.Handle($"Calculating rental cost for {nameof(Rental)} ID {rentalId}.");
-            var rental = await _dbSet.FindAsync(rentalId);
-            if (rental == null) throw new Exception("Rental not found");
+            _notifier.Handle($"Calculating rental cost for rental with Motorcycle ID {rental.MotorcycleId} and Courier ID {rental.CourierId}.");
 
             var daysRented = (rental.EndDate - rental.StartDate).Days;
             var cost = daysRented * rental.DailyRate;
@@ -81,7 +84,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         }
         catch (Exception ex)
         {
-            _notifier.Handle($"Error calculating rental cost for {nameof(Rental)} ID {rentalId}: {ex.Message}", NotificationType.Error);
+            _notifier.Handle($"Error calculating rental cost for rental with Motorcycle ID {rental.MotorcycleId} and Courier ID {rental.CourierId}: {ex.Message}", NotificationType.Error);
             throw;
         }
     }

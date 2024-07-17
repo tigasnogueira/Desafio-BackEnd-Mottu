@@ -213,34 +213,46 @@ public class RentalServiceTests
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForEarlyReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
-        var expectedCost = 150m;
+        var rental = new Rental
+        {
+            StartDate = DateTime.UtcNow.AddDays(-5),
+            EndDate = DateTime.UtcNow.AddDays(-2),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(-1),
+            DailyRate = 50m
+        };
+        var expectedCost = 150m + (50m * 0.20m);
 
-        _unitOfWorkMock.Rentals.CalculateRentalCost(rentalId).Returns(expectedCost);
+        _unitOfWorkMock.Rentals.CalculateRentalCost(rental).Returns(expectedCost);
 
         // Act
-        var result = await _rentalService.CalculateRentalCost(rentalId);
+        var result = await _rentalService.CalculateRentalCost(rental);
 
         // Assert
         result.Should().Be(expectedCost);
-        _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rentalId);
+        await _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rental);
     }
 
     [Fact]
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForLateReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
-        var expectedCost = 330m;
+        var rental = new Rental
+        {
+            StartDate = DateTime.UtcNow.AddDays(-5),
+            EndDate = DateTime.UtcNow.AddDays(2),
+            ExpectedEndDate = DateTime.UtcNow,
+            DailyRate = 50m
+        };
+        var expectedCost = (5 * 50m) + (2 * 50);
 
-        _unitOfWorkMock.Rentals.CalculateRentalCost(rentalId).Returns(expectedCost);
+        _unitOfWorkMock.Rentals.CalculateRentalCost(rental).Returns(expectedCost);
 
         // Act
-        var result = await _rentalService.CalculateRentalCost(rentalId);
+        var result = await _rentalService.CalculateRentalCost(rental);
 
         // Assert
         result.Should().Be(expectedCost);
-        _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rentalId);
+        await _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rental);
     }
 
     [Fact]

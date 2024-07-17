@@ -147,9 +147,8 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
     {
         try
         {
-            entity.Update();
+            _notifier.Handle($"Updating {typeof(TEntity).Name}.");
             _dataContext.Entry(entity).State = EntityState.Modified;
-            await _dataContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -164,7 +163,6 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         {
             _notifier.Handle($"Updating range of {typeof(TEntity).Name}.");
             _dbSet.UpdateRange(entities);
-            await _dataContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -173,10 +171,11 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         }
     }
 
-    public virtual async void Delete(TEntity entity)
+    public virtual async Task Delete(TEntity entity)
     {
         try
         {
+            _notifier.Handle($"Deleting {typeof(TEntity).Name}.");
             entity.IsDeletedToggle();
             await Update(entity);
         }
@@ -187,10 +186,11 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         }
     }
 
-    public virtual async void DeleteRange(IEnumerable<TEntity> entities)
+    public virtual async Task DeleteRange(IEnumerable<TEntity> entities)
     {
         try
         {
+            _notifier.Handle($"Deleting range of {typeof(TEntity).Name}.");
             foreach (var entity in entities)
             {
                 entity.IsDeletedToggle();

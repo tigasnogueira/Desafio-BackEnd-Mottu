@@ -131,7 +131,7 @@ public class RentalRepositoryTests : IDisposable
         await _dataContext.SaveChangesAsync();
 
         // Act
-        var result = await _repository.CalculateRentalCost(rentalId);
+        var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
         result.Should().Be(210); // 7 days * 30 = 210
@@ -162,7 +162,7 @@ public class RentalRepositoryTests : IDisposable
         await _dataContext.SaveChangesAsync();
 
         // Act
-        var result = await _repository.CalculateRentalCost(rentalId);
+        var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
         var expectedCost = (endDate - startDate).Days * dailyRate;
@@ -197,7 +197,7 @@ public class RentalRepositoryTests : IDisposable
         await _dataContext.SaveChangesAsync();
 
         // Act
-        var result = await _repository.CalculateRentalCost(rentalId);
+        var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
         var expectedCost = (endDate - startDate).Days * dailyRate;
@@ -208,9 +208,12 @@ public class RentalRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task CalculateRentalCost_ShouldThrowException_WhenRentalNotFound()
+    public async Task CalculateRentalCost_ShouldThrowException_WhenRentalIsNull()
     {
+        // Arrange
+        Rental rental = null;
+
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(async () => await _repository.CalculateRentalCost(Guid.NewGuid()));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await _repository.CalculateRentalCost(rental));
     }
 }

@@ -10,6 +10,5 @@ public class RentalRequest
     public DateTime EndDate { get; set; }
     public DateTime ExpectedEndDate { get; set; }
     public decimal DailyRate { get; set; }
-    public decimal TotalCost { get; set; }
     public RentalPlan Plan { get; set; }
 }

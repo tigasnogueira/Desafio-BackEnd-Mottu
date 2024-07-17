@@ -42,7 +42,6 @@ public class UnitOfWork : IUnitOfWork
     {
         try
         {
-            await SaveAsync();
             if (_transaction != null)
             {
                 await _transaction.CommitAsync();
