@@ -93,7 +93,7 @@ Antes de iniciar a aplicação, é necessário gerar as migrações do banco de 
 Há duas opções para testar a aplicação:
 
 1. **Postman**:
-   - Importe o arquivo `BikeRentalSystem.postman_collection.json` incluso no repositório no Postman, trazendo todos os endpoints configurados e com documentação.
+   - Importe o arquivo `BikeRentalSystem.postman_collection.json` incluso no repositório do projeto, trazendo todos os endpoints configurados e com documentação.
 
 2. **Swagger**:
    - Acesse o Swagger da aplicação, que será aberto em uma página do navegador logo ao inicializar a API.
