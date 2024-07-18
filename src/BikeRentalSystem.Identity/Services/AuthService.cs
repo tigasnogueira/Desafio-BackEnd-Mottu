@@ -22,11 +22,11 @@ public class AuthService : BaseService, IAuthService
     private readonly ILogger _logger;
 
     public AuthService(SignInManager<IdentityUser> signInManager,
-                                 UserManager<IdentityUser> userManager,
-                                 RoleManager<IdentityRole> roleManager,
-                                 IOptions<AppSettings> appSettings,
-                                 ILogger<AuthService> logger,
-                                 INotifier notifier) : base(notifier)
+                       UserManager<IdentityUser> userManager,
+                       RoleManager<IdentityRole> roleManager,
+                       IOptions<AppSettings> appSettings,
+                       ILogger<AuthService> logger,
+                       INotifier notifier) : base(notifier)
     {
         _signInManager = signInManager;
         _userManager = userManager;
@@ -66,7 +66,7 @@ public class AuthService : BaseService, IAuthService
         }
     }
 
-    public async Task<LoginResponseViewModel> LoginAsync(LoginUserViewModel loginUser)
+    public async Task<LoginResponseViewModel?> LoginAsync(LoginUserViewModel loginUser)
     {
         try
         {
@@ -201,7 +201,7 @@ public class AuthService : BaseService, IAuthService
         }
     }
 
-    public async Task<LoginResponseViewModel> GenerateJwtAsync(string email)
+    public async Task<LoginResponseViewModel?> GenerateJwtAsync(string email)
     {
         try
         {

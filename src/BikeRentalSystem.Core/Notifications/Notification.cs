@@ -9,7 +9,7 @@ public class Notification
     }
 
     public string Message { get; }
-    public NotificationType Type { get; set; }
+    public NotificationType Type { get; }
 }
 
 public enum NotificationType

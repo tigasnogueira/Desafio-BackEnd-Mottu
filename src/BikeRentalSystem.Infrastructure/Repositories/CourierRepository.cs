@@ -12,7 +12,8 @@ public class CourierRepository : Repository<Courier>, ICourierRepository
 {
     private readonly IBlobStorageService _blobStorageService;
 
-    public CourierRepository(DataContext dataContext, INotifier notifier, IBlobStorageService blobStorageService) : base(dataContext, notifier)
+    public CourierRepository(DataContext dataContext, INotifier notifier, IBlobStorageService blobStorageService)
+        : base(dataContext, notifier)
     {
         _blobStorageService = blobStorageService;
     }

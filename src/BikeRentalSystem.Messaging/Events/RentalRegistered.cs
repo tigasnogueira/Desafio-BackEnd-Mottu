@@ -4,7 +4,7 @@ namespace BikeRentalSystem.Messaging.Events;
 
 public class RentalRegistered
 {
-    public Guid Id { get; set; }
+    public Guid Id { get; set; } = Guid.NewGuid();
     public Guid CourierId { get; set; }
     public Guid MotorcycleId { get; set; }
     public DateTime StartDate { get; set; }
@@ -13,7 +13,7 @@ public class RentalRegistered
     public decimal DailyRate { get; set; }
     public decimal TotalCost { get; set; }
     public RentalPlan Plan { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsDeleted { get; set; } = false;
 }

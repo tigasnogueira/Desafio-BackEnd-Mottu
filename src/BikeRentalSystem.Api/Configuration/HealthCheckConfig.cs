@@ -6,38 +6,55 @@ namespace BikeRentalSystem.Api.Configuration;
 
 public static class HealthCheckConfig
 {
-    public static IServiceCollection AddHealthCheckConfiguration(this IServiceCollection services)
+    public static IServiceCollection AddHealthCheckConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        AddHealthChecks(services, configuration);
+        AddHealthChecksUI(services);
+        return services;
+    }
+
+    private static void AddHealthChecks(IServiceCollection services, IConfiguration configuration)
     {
         services.AddHealthChecks()
             .AddCheck<CustomHealthCheck>("custom_health_check")
             .AddNpgSql(
-                connectionString: "YourConnectionStringHere",
+                connectionString: configuration.GetConnectionString("DefaultConnection"),
                 name: "postgresql",
                 healthQuery: "SELECT 1;",
                 failureStatus: HealthStatus.Degraded,
-                tags: new string[] { "db", "sql", "postgresql" });
+                tags: new[] { "db", "sql", "postgresql" });
+    }
 
+    private static void AddHealthChecksUI(IServiceCollection services)
+    {
         services.AddHealthChecksUI()
             .AddInMemoryStorage();
-
-        return services;
     }
 
     public static void UseHealthCheckConfiguration(this IApplicationBuilder app)
     {
         app.UseEndpoints(endpoints =>
         {
-            endpoints.MapHealthChecks("/health", new HealthCheckOptions
-            {
-                Predicate = _ => true,
-                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-            });
+            MapHealthChecks(endpoints);
+            MapHealthChecksUI(endpoints);
+        });
+    }
 
-            endpoints.MapHealthChecksUI(options =>
-            {
-                options.UIPath = "/health-ui";
-                options.ApiPath = "/health-ui-api";
-            });
+    private static void MapHealthChecks(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapHealthChecks("/health", new HealthCheckOptions
+        {
+            Predicate = _ => true,
+            ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+    }
+
+    private static void MapHealthChecksUI(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapHealthChecksUI(options =>
+        {
+            options.UIPath = "/health-ui";
+            options.ApiPath = "/health-ui-api";
         });
     }
 }

@@ -1,4 +1,5 @@
 ﻿using BikeRentalSystem.Messaging.Interfaces;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 using System.Text;
@@ -8,15 +9,31 @@ namespace BikeRentalSystem.Messaging.Services;
 public class RabbitMQProducer : IMessageProducer
 {
     private readonly IModel _channel;
+    private readonly ILogger<RabbitMQProducer> _logger;
 
-    public RabbitMQProducer(IModel channel)
+    public RabbitMQProducer(IModel channel, ILogger<RabbitMQProducer> logger)
     {
-        _channel = channel;
+        _channel = channel ?? throw new ArgumentNullException(nameof(channel));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public void Publish<T>(T message, string exchange, string routingKey) where T : class
+    public async Task PublishAsync<T>(T message, string exchange, string routingKey) where T : class
     {
-        var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
-        _channel.BasicPublish(exchange, routingKey, null, messageBody);
+        if (message == null)
+        {
+            throw new ArgumentNullException(nameof(message));
+        }
+
+        try
+        {
+            var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
+            await Task.Run(() => _channel.BasicPublish(exchange, routingKey, null, messageBody));
+            _logger.LogInformation("Message published to exchange {Exchange} with routing key {RoutingKey}", exchange, routingKey);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error publishing message to exchange {Exchange} with routing key {RoutingKey}", exchange, routingKey);
+            throw;
+        }
     }
 }

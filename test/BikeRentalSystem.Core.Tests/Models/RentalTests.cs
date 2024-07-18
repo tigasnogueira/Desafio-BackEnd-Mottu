@@ -1,4 +1,4 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Enums;
 using BikeRentalSystem.Core.Models.Validations;
@@ -55,7 +55,8 @@ public class RentalTests
         rental.Update();
 
         // Assert
-        rental.UpdatedAt.Should().BeAfter(initialUpdatedAt);
+        if (initialUpdatedAt.HasValue)
+            rental.UpdatedAt.Should().BeAfter(initialUpdatedAt.Value);
         rental.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
 
@@ -66,10 +67,10 @@ public class RentalTests
         var rental = new Rental();
 
         // Act & Assert
-        rental.IsDeletedToggle();
+        rental.ToggleIsDeleted();
         rental.IsDeleted.Should().BeTrue();
 
-        rental.IsDeletedToggle();
+        rental.ToggleIsDeleted();
         rental.IsDeleted.Should().BeFalse();
     }
 

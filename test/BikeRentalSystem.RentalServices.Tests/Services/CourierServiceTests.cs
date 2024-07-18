@@ -1,8 +1,7 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
-using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Core.Tests.Helpers;
 using BikeRentalSystem.Messaging.Interfaces;
@@ -36,7 +35,7 @@ public class CourierServiceTests
         // Arrange
         var courierId = Guid.NewGuid();
         var courier = new Courier { Id = courierId, Name = "John Doe", Cnpj = "12345678901234" };
-        _unitOfWorkMock.Couriers.GetById(courierId).Returns(courier);
+        _unitOfWorkMock.Couriers.GetById(courierId).Returns(Task.FromResult(courier));
 
         // Act
         var result = await _courierService.GetById(courierId);
@@ -52,7 +51,7 @@ public class CourierServiceTests
     {
         // Arrange
         var courierId = Guid.NewGuid();
-        _unitOfWorkMock.Couriers.GetById(courierId).Returns((Courier)null);
+        _unitOfWorkMock.Couriers.GetById(courierId).Returns(Task.FromResult<Courier>(null));
 
         // Act
         var result = await _courierService.GetById(courierId);
@@ -73,18 +72,15 @@ public class CourierServiceTests
             Cnpj = "12345678901234",
             CnhNumber = "AB123456",
             CnhType = "A",
-            BirthDate = new DateTime(1990, 1, 1)
+            BirthDate = new DateOnly(1990, 1, 1)
         };
 
-        var validator = new CourierValidation(_unitOfWorkMock);
-        validator.ConfigureRulesForCreate();
-
         var validationResult = new ValidationResult();
-        var validationMock = Substitute.For<AbstractValidator<Courier>>();
-        validationMock.ValidateAsync(courier).Returns(validationResult);
+        var validator = Substitute.For<AbstractValidator<Courier>>();
+        validator.ValidateAsync(courier).Returns(Task.FromResult(validationResult));
 
         _unitOfWorkMock.Couriers.Add(courier).Returns(Task.CompletedTask);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
         var result = await _courierService.Add(courier);
@@ -101,8 +97,6 @@ public class CourierServiceTests
     {
         // Arrange
         var courier = new Courier { Id = Guid.NewGuid(), Name = "", Cnpj = "12345678901234", CnhNumber = "AB123456", CnhType = "A" };
-        var validator = new CourierValidation(_unitOfWorkMock);
-        validator.ConfigureRulesForCreate();
         var validationResult = new ValidationResult(new List<ValidationFailure>
         {
             new ValidationFailure("Name", "The Name cannot be empty."),
@@ -110,9 +104,8 @@ public class CourierServiceTests
             new ValidationFailure("BirthDate", "The Date of Birth cannot be empty.")
         });
 
-        // Mocking the validation
-        var validationMock = Substitute.For<AbstractValidator<Courier>>();
-        validationMock.ValidateAsync(courier).Returns(validationResult);
+        var validator = Substitute.For<AbstractValidator<Courier>>();
+        validator.ValidateAsync(courier).Returns(Task.FromResult(validationResult));
 
         // Act
         var result = await _courierService.Add(courier);
@@ -133,10 +126,10 @@ public class CourierServiceTests
         // Arrange
         var courierId = Guid.NewGuid();
         var existingCourier = new Courier { Id = courierId, Name = "John Doe", Cnpj = "12345678901234" };
-        var updatedCourier = new Courier { Id = courierId, Name = "Jane Doe", Cnpj = "12345678901234", CnhNumber = "AB123456", CnhType = "A", BirthDate = new DateTime(1990, 1, 1) };
+        var updatedCourier = new Courier { Id = courierId, Name = "Jane Doe", Cnpj = "12345678901234", CnhNumber = "AB123456", CnhType = "A", BirthDate = new DateOnly(1990, 1, 1) };
 
-        _unitOfWorkMock.Couriers.GetById(courierId).Returns(existingCourier);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.Couriers.GetById(courierId).Returns(Task.FromResult(existingCourier));
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
         var result = await _courierService.Update(updatedCourier);
@@ -144,7 +137,7 @@ public class CourierServiceTests
         // Assert
         result.Should().BeTrue();
         _notifierMock.Received().Handle("Courier updated successfully");
-        _unitOfWorkMock.Couriers.Received().Update(existingCourier);
+        await _unitOfWorkMock.Couriers.Received().Update(existingCourier);
         await _unitOfWorkMock.Received().SaveAsync();
     }
 
@@ -155,17 +148,15 @@ public class CourierServiceTests
         var courierId = Guid.NewGuid();
         var existingCourier = new Courier { Id = courierId, Name = "John Doe", Cnpj = "12345678901234" };
         var updatedCourier = new Courier { Id = courierId, Name = "", Cnpj = "12345678901234", CnhNumber = "AB123456", CnhType = "A" };
-        _unitOfWorkMock.Couriers.GetById(courierId).Returns(existingCourier);
-        var validator = new CourierValidation(_unitOfWorkMock);
-        validator.ConfigureRulesForUpdate(existingCourier);
+
+        _unitOfWorkMock.Couriers.GetById(courierId).Returns(Task.FromResult(existingCourier));
         var validationResult = new ValidationResult(new List<ValidationFailure>
         {
             new ValidationFailure("Name", "The Name cannot be empty.")
         });
 
-        // Mocking the validation
-        var validationMock = Substitute.For<AbstractValidator<Courier>>();
-        validationMock.ValidateAsync(updatedCourier).Returns(validationResult);
+        var validator = Substitute.For<AbstractValidator<Courier>>();
+        validator.ValidateAsync(updatedCourier).Returns(Task.FromResult(validationResult));
 
         // Act
         var result = await _courierService.Update(updatedCourier);
@@ -184,8 +175,9 @@ public class CourierServiceTests
         // Arrange
         var courierId = Guid.NewGuid();
         var courier = new Courier { Id = courierId, Name = "John Doe", Cnpj = "12345678901234" };
-        _unitOfWorkMock.Couriers.GetById(courierId).Returns(courier);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+
+        _unitOfWorkMock.Couriers.GetById(courierId).Returns(Task.FromResult(courier));
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
         var result = await _courierService.SoftDelete(courierId);
@@ -193,7 +185,7 @@ public class CourierServiceTests
         // Assert
         result.Should().BeTrue();
         _notifierMock.Received().Handle("Courier soft deleted successfully");
-        _unitOfWorkMock.Couriers.Received().Update(courier);
+        await _unitOfWorkMock.Couriers.Received().Update(courier);
         await _unitOfWorkMock.Received().SaveAsync();
     }
 
@@ -202,7 +194,7 @@ public class CourierServiceTests
     {
         // Arrange
         var courierId = Guid.NewGuid();
-        _unitOfWorkMock.Couriers.GetById(courierId).Returns((Courier)null);
+        _unitOfWorkMock.Couriers.GetById(courierId).Returns(Task.FromResult<Courier>(null));
 
         // Act
         var result = await _courierService.SoftDelete(courierId);
@@ -219,9 +211,10 @@ public class CourierServiceTests
         // Arrange
         var cnpj = "12345678901234";
         var courier = new Courier { Cnpj = cnpj, Name = "John Doe", CnhNumber = "AB123456", CnhType = "A" };
-        _unitOfWorkMock.Couriers.GetByCnpj(cnpj).Returns(courier);
-        _unitOfWorkMock.Couriers.AddOrUpdateCnhImage(cnpj, Arg.Any<Stream>()).Returns("http://example.com/AB123456.png");
-        _unitOfWorkMock.SaveAsync().Returns(1);
+
+        _unitOfWorkMock.Couriers.GetByCnpj(cnpj).Returns(Task.FromResult(courier));
+        _unitOfWorkMock.Couriers.AddOrUpdateCnhImage(cnpj, Arg.Any<Stream>()).Returns(Task.FromResult("http://example.com/AB123456.png"));
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
         var result = await _courierService.AddOrUpdateCnhImage(cnpj, new MemoryStream());
@@ -237,7 +230,7 @@ public class CourierServiceTests
     {
         // Arrange
         var cnpj = "12345678901234";
-        _unitOfWorkMock.Couriers.GetByCnpj(cnpj).Returns((Courier)null);
+        _unitOfWorkMock.Couriers.GetByCnpj(cnpj).Returns(Task.FromResult<Courier>(null));
 
         // Act
         var result = await _courierService.AddOrUpdateCnhImage(cnpj, new MemoryStream());

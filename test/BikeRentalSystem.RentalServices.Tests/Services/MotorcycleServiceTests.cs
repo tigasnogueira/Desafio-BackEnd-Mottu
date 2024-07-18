@@ -1,6 +1,6 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Core.Tests.Helpers;
@@ -42,12 +42,11 @@ public class MotorcycleServiceTests
         };
 
         var validationResult = new ValidationResult();
-
         var validationMock = Substitute.For<AbstractValidator<Motorcycle>>();
-        validationMock.ValidateAsync(motorcycle).Returns(validationResult);
+        validationMock.ValidateAsync(motorcycle).Returns(Task.FromResult(validationResult));
 
         _unitOfWorkMock.Motorcycles.Add(motorcycle).Returns(Task.CompletedTask);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
         var result = await _motorcycleService.Add(motorcycle);
@@ -72,13 +71,13 @@ public class MotorcycleServiceTests
         };
 
         var validationResult = new ValidationResult(new List<ValidationFailure>
-    {
-        new ValidationFailure("Model", "The Model cannot be empty."),
-        new ValidationFailure("Model", "The Model must be between 1 and 50 characters.")
-    });
+        {
+            new ValidationFailure("Model", "The Model cannot be empty."),
+            new ValidationFailure("Model", "The Model must be between 1 and 50 characters.")
+        });
 
         var validationMock = Substitute.For<AbstractValidator<Motorcycle>>();
-        validationMock.ValidateAsync(motorcycle).Returns(validationResult);
+        validationMock.ValidateAsync(motorcycle).Returns(Task.FromResult(validationResult));
 
         // Act
         var result = await _motorcycleService.Add(motorcycle);
@@ -99,8 +98,8 @@ public class MotorcycleServiceTests
         var existingMotorcycle = new Motorcycle { Id = motorcycleId, Year = 2022, Model = "Honda", Plate = "ABC1234" };
         var updatedMotorcycle = new Motorcycle { Id = motorcycleId, Year = 2023, Model = "Yamaha", Plate = "XYZ1234" };
 
-        _unitOfWorkMock.Motorcycles.GetById(motorcycleId).Returns(existingMotorcycle);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.Motorcycles.GetById(motorcycleId).Returns(Task.FromResult(existingMotorcycle));
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
         var result = await _motorcycleService.Update(updatedMotorcycle);
@@ -108,7 +107,7 @@ public class MotorcycleServiceTests
         // Assert
         result.Should().BeTrue();
         _notifierMock.Received().Handle("Motorcycle updated successfully");
-        _unitOfWorkMock.Motorcycles.Received().Update(existingMotorcycle);
+        await _unitOfWorkMock.Motorcycles.Received().Update(existingMotorcycle);
         await _unitOfWorkMock.Received().SaveAsync();
     }
 
@@ -120,16 +119,16 @@ public class MotorcycleServiceTests
         var existingMotorcycle = new Motorcycle { Id = motorcycleId, Year = 2022, Model = "Honda", Plate = "ABC1234" };
         var updatedMotorcycle = new Motorcycle { Id = motorcycleId, Year = 2023, Model = string.Empty, Plate = "XYZ1234" };
 
-        _unitOfWorkMock.Motorcycles.GetById(motorcycleId).Returns(existingMotorcycle);
+        _unitOfWorkMock.Motorcycles.GetById(motorcycleId).Returns(Task.FromResult(existingMotorcycle));
 
         var validationResult = new ValidationResult(new List<ValidationFailure>
-    {
-        new ValidationFailure("Model", "The Model cannot be empty."),
-        new ValidationFailure("Model", "The Model must be between 1 and 50 characters.")
-    });
+        {
+            new ValidationFailure("Model", "The Model cannot be empty."),
+            new ValidationFailure("Model", "The Model must be between 1 and 50 characters.")
+        });
 
         var validationMock = Substitute.For<AbstractValidator<Motorcycle>>();
-        validationMock.ValidateAsync(updatedMotorcycle).Returns(validationResult);
+        validationMock.ValidateAsync(updatedMotorcycle).Returns(Task.FromResult(validationResult));
 
         // Act
         var result = await _motorcycleService.Update(updatedMotorcycle);
@@ -140,6 +139,7 @@ public class MotorcycleServiceTests
             v.Errors.Any(e => e.ErrorMessage == "The Model cannot be empty.") &&
             v.Errors.Any(e => e.ErrorMessage == "The Model must be between 1 and 50 characters.")
         ));
+        _unitOfWorkMock.Motorcycles.DidNotReceive().Update(Arg.Any<Motorcycle>());
     }
 
     [Fact]
@@ -181,7 +181,7 @@ public class MotorcycleServiceTests
         var motorcycle = new Motorcycle { Id = motorcycleId, Year = 2023, Model = "Yamaha", Plate = "XYZ1234" };
 
         _unitOfWorkMock.Motorcycles.GetById(motorcycleId).Returns(Task.FromResult(motorcycle));
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
         var result = await _motorcycleService.SoftDelete(motorcycleId);
@@ -206,5 +206,6 @@ public class MotorcycleServiceTests
         // Assert
         result.Should().BeFalse();
         _notifierMock.Received().Handle("Motorcycle not found", NotificationType.Error);
+        _unitOfWorkMock.Motorcycles.DidNotReceive().Update(Arg.Any<Motorcycle>());
     }
 }

@@ -20,7 +20,7 @@ public class BlobStorageService : BaseService, IBlobStorageService
         }
 
         _blobServiceClient = new BlobServiceClient(azureBlobSettings.Value.ConnectionString);
-        _containerName = azureBlobSettings.Value.ContainerName;
+        _containerName = azureBlobSettings.Value.ContainerName ?? throw new ArgumentNullException(nameof(azureBlobSettings.Value.ContainerName), "Container name cannot be null or empty.");
     }
 
     public async Task<string> UploadFileAsync(Stream fileStream, string fileName)
@@ -33,6 +33,7 @@ public class BlobStorageService : BaseService, IBlobStorageService
             var blobClient = containerClient.GetBlobClient(fileName);
             await blobClient.UploadAsync(fileStream, true);
 
+            _notifier.Handle($"File '{fileName}' uploaded successfully.");
             return blobClient.Uri.ToString();
         }
         catch (Exception ex)
@@ -49,6 +50,8 @@ public class BlobStorageService : BaseService, IBlobStorageService
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
             var blobClient = containerClient.GetBlobClient(fileName);
             var blobDownloadInfo = await blobClient.DownloadAsync();
+
+            _notifier.Handle($"File '{fileName}' downloaded successfully.");
             return blobDownloadInfo.Value.Content;
         }
         catch (Exception ex)
@@ -65,6 +68,8 @@ public class BlobStorageService : BaseService, IBlobStorageService
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
             var blobClient = containerClient.GetBlobClient(fileName);
             await blobClient.DeleteIfExistsAsync();
+
+            _notifier.Handle($"File '{fileName}' deleted successfully.");
         }
         catch (Exception ex)
         {

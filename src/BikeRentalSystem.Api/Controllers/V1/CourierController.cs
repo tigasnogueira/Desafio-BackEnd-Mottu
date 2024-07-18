@@ -21,7 +21,7 @@ public class CourierController : MainController
     private readonly ICourierService _courierService;
     private readonly IMapper _mapper;
 
-    public CourierController(ICourierService courierService, IMapper mapper, INotifier notifier, IUser user) : base(notifier, user)
+    public CourierController(ICourierService courierService, IMapper mapper, INotifier notifier, IAspNetUser user) : base(notifier, user)
     {
         _courierService = courierService;
         _mapper = mapper;
@@ -31,46 +31,44 @@ public class CourierController : MainController
     [ClaimsAuthorize("Courier", "Get")]
     public async Task<IActionResult> GetCourierById(Guid id)
     {
-        try
-        {
-            var courier = await _courierService.GetById(id);
-            if (courier == null)
+        return await HandleRequestAsync(
+            async () =>
             {
-                NotifyError("Resource not found");
-                return CustomResponse(null, StatusCodes.Status404NotFound);
-            }
-            var courierDto = _mapper.Map<CourierDto>(courier);
-            return CustomResponse(courierDto);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+                var courier = await _courierService.GetById(id);
+                if (courier == null)
+                {
+                    NotifyError("Resource not found");
+                    return CustomResponse(null, StatusCodes.Status404NotFound);
+                }
+                var courierDto = _mapper.Map<CourierDto>(courier);
+                return CustomResponse(courierDto);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
     }
 
     [AllowAnonymous]
     [HttpGet("list")]
     public async Task<IActionResult> GetAllCouriers([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        try
-        {
-            if (page.HasValue && pageSize.HasValue)
+        return await HandleRequestAsync(
+            async () =>
             {
-                var couriers = await _courierService.GetAllPaged(page.Value, pageSize.Value);
-                var courierDtos = _mapper.Map<PaginatedResponse<CourierDto>>(couriers);
-                return CustomResponse(courierDtos);
-            }
-            else
-            {
-                var couriers = await _courierService.GetAll();
-                var courierDtos = _mapper.Map<IEnumerable<CourierDto>>(couriers);
-                return CustomResponse(courierDtos);
-            }
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+                if (page.HasValue && pageSize.HasValue)
+                {
+                    var couriers = await _courierService.GetAllPaged(page.Value, pageSize.Value);
+                    var courierDtos = _mapper.Map<PaginatedResponse<CourierDto>>(couriers);
+                    return CustomResponse(courierDtos);
+                }
+                else
+                {
+                    var couriers = await _courierService.GetAll();
+                    var courierDtos = _mapper.Map<IEnumerable<CourierDto>>(couriers);
+                    return CustomResponse(courierDtos);
+                }
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
     }
 
     [RequestSizeLimit(40000000)]
@@ -78,22 +76,21 @@ public class CourierController : MainController
     [ClaimsAuthorize("Courier", "Add")]
     public async Task<IActionResult> CreateCourier([FromForm] CourierRequest courierDto)
     {
-        try
-        {
-            var courier = _mapper.Map<Courier>(courierDto);
-            var success = await _courierService.Add(courier);
-            if (!success)
+        return await HandleRequestAsync(
+            async () =>
             {
-                return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
-            }
+                var courier = _mapper.Map<Courier>(courierDto);
+                var success = await _courierService.Add(courier);
+                if (!success)
+                {
+                    return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
+                }
 
-            var createdCourierDto = _mapper.Map<CourierDto>(courier);
-            return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message, StatusCodes.Status400BadRequest);
-        }
+                var createdCourierDto = _mapper.Map<CourierDto>(courier);
+                return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
     }
 
     [RequestSizeLimit(40000000)]
@@ -101,34 +98,32 @@ public class CourierController : MainController
     [ClaimsAuthorize("Courier", "Update")]
     public async Task<IActionResult> UpdateCourier(Guid id, [FromForm] CourierUpdateRequest courierDto)
     {
-        try
-        {
-            var courier = _mapper.Map<Courier>(courierDto);
-            courier.Id = id;
-            await _courierService.Update(courier);
-            
-            var updatedCourierDto = _mapper.Map<CourierDto>(courier);
-            return CustomResponse(updatedCourierDto, StatusCodes.Status204NoContent);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+        return await HandleRequestAsync(
+            async () =>
+            {
+                var courier = _mapper.Map<Courier>(courierDto);
+                courier.Id = id;
+                await _courierService.Update(courier);
+
+                var updatedCourierDto = _mapper.Map<CourierDto>(courier);
+                return CustomResponse(updatedCourierDto, StatusCodes.Status204NoContent);
+            },
+            ex => CustomResponse(ex.Message)
+        );
     }
 
     [HttpPatch("{id:guid}")]
     [ClaimsAuthorize("Courier", "Delete")]
     public async Task<IActionResult> SoftDeleteCourier(Guid id)
     {
-        try
-        {
-            await _courierService.SoftDelete(id);
-            return CustomResponse(null, StatusCodes.Status204NoContent);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+        return await HandleRequestAsync(
+            async () =>
+            {
+                await _courierService.SoftDelete(id);
+                return CustomResponse(null, StatusCodes.Status204NoContent);
+            },
+            ex => CustomResponse(ex.Message)
+        );
     }
 
     [RequestSizeLimit(40000000)]
@@ -136,21 +131,32 @@ public class CourierController : MainController
     [ClaimsAuthorize("Courier", "Update")]
     public async Task<IActionResult> AddOrUpdateCnhImage(string cnpj, IFormFile cnhImage)
     {
+        return await HandleRequestAsync(
+            async () =>
+            {
+                using (var stream = cnhImage.OpenReadStream())
+                {
+                    var result = await _courierService.AddOrUpdateCnhImage(cnpj, stream);
+                    if (!result)
+                    {
+                        return CustomResponse("Failed to update CNH image", StatusCodes.Status400BadRequest);
+                    }
+                }
+                return CustomResponse("CNH image updated successfully", StatusCodes.Status204NoContent);
+            },
+            ex => CustomResponse(ex.Message)
+        );
+    }
+
+    private async Task<IActionResult> HandleRequestAsync(Func<Task<IActionResult>> operation, Func<Exception, IActionResult> handleException)
+    {
         try
         {
-            using (var stream = cnhImage.OpenReadStream())
-            {
-                var result = await _courierService.AddOrUpdateCnhImage(cnpj, stream);
-                if (!result)
-                {
-                    return CustomResponse("Failed to update CNH image", StatusCodes.Status400BadRequest);
-                }
-            }
-            return CustomResponse("CNH image updated succesfully", StatusCodes.Status204NoContent);
+            return await operation();
         }
         catch (Exception ex)
         {
-            return CustomResponse(ex.Message);
+            return handleException(ex);
         }
     }
 }

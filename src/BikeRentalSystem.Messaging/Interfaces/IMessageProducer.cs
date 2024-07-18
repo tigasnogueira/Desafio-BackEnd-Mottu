@@ -2,5 +2,5 @@
 
 public interface IMessageProducer
 {
-    void Publish<T>(T message, string exchange, string routingKey) where T : class;
+    Task PublishAsync<T>(T message, string exchange, string routingKey) where T : class;
 }

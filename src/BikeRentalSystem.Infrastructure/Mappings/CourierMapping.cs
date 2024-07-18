@@ -44,7 +44,8 @@ public class CourierMapping : IEntityTypeConfiguration<Courier>
         builder.Property(c => c.CreatedAt)
             .IsRequired();
 
-        builder.Property(c => c.UpdatedAt);
+        builder.Property(c => c.UpdatedAt)
+            .IsRequired(false);
 
         builder.Property(c => c.IsDeleted)
             .IsRequired();

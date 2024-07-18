@@ -5,7 +5,7 @@ namespace BikeRentalSystem.Core.Interfaces.Services;
 
 public interface IRentalService
 {
-    Task<Rental> GetById(Guid id);
+    Task<Rental?> GetById(Guid id);
     Task<IEnumerable<Rental>> GetAll();
     Task<PaginatedResponse<Rental>> GetAllPaged(int page, int pageSize);
     Task<IEnumerable<Rental>> GetByCourierId(Guid courierId);

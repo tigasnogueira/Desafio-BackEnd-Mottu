@@ -8,33 +8,63 @@ namespace BikeRentalSystem.Api.Configuration;
 
 public class ApiSettings
 {
-    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
+        configuration = BuildConfiguration(environment);
+        services.AddSingleton(configuration);
+
+        ConfigureDatabase(services, configuration);
+        ConfigureAzureBlobStorage(services, configuration);
+        ConfigureControllers(services);
+        ConfigureAdditionalServices(services, configuration);
+    }
+
+    private static IConfiguration BuildConfiguration(IWebHostEnvironment environment)
+    {
+        return new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            .AddJsonFile($"appsettings.{environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .Build();
+    }
+
+    private static void ConfigureDatabase(IServiceCollection services, IConfiguration configuration)
+    {
+        var connectionString = configuration.GetSection("DatabaseSettings:DefaultConnection").Value;
         services.AddDbContext<DataContext>(options =>
-            options.UseNpgsql(configuration.GetSection("DatabaseSettings:DefaultConnection").Value));
+            options.UseNpgsql(connectionString));
+    }
 
+    private static void ConfigureAzureBlobStorage(IServiceCollection services, IConfiguration configuration)
+    {
         var azureConnectionString = Environment.GetEnvironmentVariable("AZURE_CONNECTION_STRING");
-
         services.Configure<AzureBlobStorageSettings>(options =>
         {
-            options.ConnectionString = azureConnectionString;
+            options.ConnectionString = azureConnectionString ?? string.Empty;
             options.ContainerName = configuration["AzureBlobStorageSettings:ContainerName"];
         });
+    }
 
+    private static void ConfigureControllers(IServiceCollection services)
+    {
         services.AddControllers()
             .AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
+    }
 
+    private static void ConfigureAdditionalServices(IServiceCollection services, IConfiguration configuration)
+    {
         services.ConfigureAutomapper();
         services.AddDependencyInjection(configuration);
         services.AddApiVersioningConfiguration();
         services.AddSwaggerConfig();
-        services.AddHealthCheckConfiguration();
+        services.AddHealthCheckConfiguration(configuration);
+        services.AddHttpContextAccessor();
         services.AddIdentityConfig(configuration);
-
         services.AddAuthorization();
         services.AddAuthentication();
     }
@@ -47,14 +77,12 @@ public class ApiSettings
         }
 
         app.UseSwaggerConfig(provider);
-
         app.UseHttpsRedirection();
         app.UseRouting();
-
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseHealthCheckConfiguration();
 
-        app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        app.UseEndpoints(endpoints => endpoints.MapControllers());
     }
 }

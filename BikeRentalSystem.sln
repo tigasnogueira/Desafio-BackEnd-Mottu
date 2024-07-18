@@ -55,23 +55,31 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Shared", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{EDC6E3E8-6A7A-45B1-819F-CF3C6B4957E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Identity", "src\BikeRentalSystem.Identity\BikeRentalSystem.Identity.csproj", "{4EEABEAD-064E-451C-9DDA-59ED8F12E252}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Identity", "src\BikeRentalSystem.Identity\BikeRentalSystem.Identity.csproj", "{4EEABEAD-064E-451C-9DDA-59ED8F12E252}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ServiceTests", "ServiceTests", "{6BF97EFD-6DB9-484A-BCDE-9B2B97B13798}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Core.Tests", "test\BikeRentalSystem.Core.Tests\BikeRentalSystem.Core.Tests.csproj", "{B08F08D1-C0D0-492A-8809-B4698562D7B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Core.Tests", "test\BikeRentalSystem.Core.Tests\BikeRentalSystem.Core.Tests.csproj", "{B08F08D1-C0D0-492A-8809-B4698562D7B7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Infrastructure.Tests", "test\BikeRentalSystem.Infrastructure.Tests\BikeRentalSystem.Infrastructure.Tests.csproj", "{D3E4798B-F688-4507-A7D6-3CEA9E0EFE23}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Infrastructure.Tests", "test\BikeRentalSystem.Infrastructure.Tests\BikeRentalSystem.Infrastructure.Tests.csproj", "{D3E4798B-F688-4507-A7D6-3CEA9E0EFE23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.RentalServices.Tests", "test\BikeRentalSystem.RentalServices.Tests\BikeRentalSystem.RentalServices.Tests.csproj", "{685ED1F9-07BA-4E97-97EF-17F4A207BE54}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.RentalServices.Tests", "test\BikeRentalSystem.RentalServices.Tests\BikeRentalSystem.RentalServices.Tests.csproj", "{685ED1F9-07BA-4E97-97EF-17F4A207BE54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Api.Tests", "test\BikeRentalSystem.Api.Tests\BikeRentalSystem.Api.Tests.csproj", "{9538A82B-D11A-4D20-B8C8-E1531AD2FAF8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Api.Tests", "test\BikeRentalSystem.Api.Tests\BikeRentalSystem.Api.Tests.csproj", "{9538A82B-D11A-4D20-B8C8-E1531AD2FAF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Messaging.Tests", "test\BikeRentalSystem.Messaging.Tests\BikeRentalSystem.Messaging.Tests.csproj", "{07E6D2B2-C82B-42EE-9ACD-01DB83F692BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Messaging.Tests", "test\BikeRentalSystem.Messaging.Tests\BikeRentalSystem.Messaging.Tests.csproj", "{07E6D2B2-C82B-42EE-9ACD-01DB83F692BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Identity.Tests", "test\BikeRentalSystem.Identity.Tests\BikeRentalSystem.Identity.Tests.csproj", "{0246F494-5AD7-4EB4-A7A7-3F40F7ABCF3E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Identity.Tests", "test\BikeRentalSystem.Identity.Tests\BikeRentalSystem.Identity.Tests.csproj", "{0246F494-5AD7-4EB4-A7A7-3F40F7ABCF3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BikeRentalSystem.Shared.Tests", "test\BikeRentalSystem.Shared.Tests\BikeRentalSystem.Shared.Tests.csproj", "{1974E80A-95D7-4B18-8DAA-F609E86DB418}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BikeRentalSystem.Shared.Tests", "test\BikeRentalSystem.Shared.Tests\BikeRentalSystem.Shared.Tests.csproj", "{1974E80A-95D7-4B18-8DAA-F609E86DB418}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{9600540A-0975-4E96-9509-DBD85CD7C5D9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{99480D87-5B49-4165-9E31-D899E6312555}"
+	ProjectSection(SolutionItems) = preProject
+		BikeRentalSystem.postman_collection.json = BikeRentalSystem.postman_collection.json
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -135,6 +143,10 @@ Global
 		{1974E80A-95D7-4B18-8DAA-F609E86DB418}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1974E80A-95D7-4B18-8DAA-F609E86DB418}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1974E80A-95D7-4B18-8DAA-F609E86DB418}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9600540A-0975-4E96-9509-DBD85CD7C5D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9600540A-0975-4E96-9509-DBD85CD7C5D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9600540A-0975-4E96-9509-DBD85CD7C5D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9600540A-0975-4E96-9509-DBD85CD7C5D9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

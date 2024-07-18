@@ -14,9 +14,9 @@ public class RentalDto
     public decimal TotalCost { get; set; }
     public RentalPlan Plan { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public bool IsDeleted { get; set; }
 
-    public CourierDto Courier { get; set; }
-    public MotorcycleDto Motorcycle { get; set; }
+    public CourierDto Courier { get; set; } = new();
+    public MotorcycleDto Motorcycle { get; set; } = new();
 }

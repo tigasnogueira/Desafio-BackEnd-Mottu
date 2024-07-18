@@ -29,7 +29,8 @@ public class MotorcycleMapping : IEntityTypeConfiguration<Motorcycle>
         builder.Property(m => m.CreatedAt)
             .IsRequired();
 
-        builder.Property(m => m.UpdatedAt);
+        builder.Property(m => m.UpdatedAt)
+            .IsRequired(false);
 
         builder.Property(m => m.IsDeleted)
             .IsRequired();

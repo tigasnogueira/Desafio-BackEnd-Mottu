@@ -4,7 +4,7 @@ using BikeRentalSystem.Api.Configuration;
 var builder = WebApplication.CreateBuilder(args);
 
 var apiSettings = new ApiSettings();
-apiSettings.ConfigureServices(builder.Services, builder.Configuration);
+apiSettings.ConfigureServices(builder.Services, builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 

@@ -5,7 +5,7 @@ namespace BikeRentalSystem.Core.Interfaces.Repositories;
 
 public interface IRepository<TEntity> where TEntity : class
 {
-    Task<TEntity> GetById(Guid id);
+    Task<TEntity?> GetById(Guid id);
     Task<IEnumerable<TEntity>> GetAll();
     Task<PaginatedResponse<TEntity>> GetAllPaged(int pageNumber, int pageSize);
     Task<PaginatedResponse<TEntity>> GetFilteredAsync(List<Expression<Func<TEntity, bool>>> filters, int pageNumber, int pageSize);

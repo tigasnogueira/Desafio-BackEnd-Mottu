@@ -6,7 +6,6 @@ using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
 
@@ -176,7 +175,7 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         try
         {
             _notifier.Handle($"Deleting {typeof(TEntity).Name}.");
-            entity.IsDeletedToggle();
+            entity.ToggleIsDeleted();
             await Update(entity);
         }
         catch (Exception ex)
@@ -193,7 +192,7 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
             _notifier.Handle($"Deleting range of {typeof(TEntity).Name}.");
             foreach (var entity in entities)
             {
-                entity.IsDeletedToggle();
+                entity.ToggleIsDeleted();
             }
             await UpdateRange(entities);
         }
@@ -202,34 +201,5 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
             _notifier.Handle($"Error deleting range of {typeof(TEntity).Name}: {ex.Message}", NotificationType.Error);
             throw;
         }
-    }
-
-    public void Detach(TEntity entity)
-    {
-        _dataContext.Entry(entity).State = EntityState.Detached;
-    }
-
-    public void AttachWithoutIdentity(TEntity entity, int updatedById)
-    {
-        _dbSet.Attach(entity);
-        var properties = _dataContext.Entry(entity).Properties;
-
-        foreach (var property in properties)
-        {
-            if (property.Metadata.PropertyInfo.GetCustomAttribute<IgnoreOnUpdateAttribute>() != null)
-            {
-                property.IsModified = false;
-            }
-            else if (property.Metadata.IsPrimaryKey() && property.Metadata.ValueGenerated == Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.OnAdd)
-            {
-                property.IsModified = false;
-            }
-            else
-            {
-                property.IsModified = true;
-            }
-        }
-
-        entity.Update();
     }
 }

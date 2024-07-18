@@ -4,6 +4,7 @@ using BikeRentalSystem.Core.Tests.Helpers;
 using BikeRentalSystem.Infrastructure.Context;
 using BikeRentalSystem.Infrastructure.Repositories;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 
 namespace BikeRentalSystem.Infrastructure.Tests.Repositories;
 
@@ -23,16 +24,44 @@ public class RentalRepositoryTests : IDisposable
     public void Dispose()
     {
         _dataContext.Database.EnsureDeleted();
-        _dataContext.Database.EnsureCreated();
+        _dataContext.Dispose();
     }
 
     [Fact]
     public async Task GetByCourierId_ShouldReturnRentals_WhenCourierIdExists()
     {
         // Arrange
-        var courierId = Guid.NewGuid();
-        var rental1 = new Rental { CourierId = courierId, MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30 };
-        var rental2 = new Rental { CourierId = courierId, MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30 };
+        var courier = new Courier
+        {
+            Name = "Test Courier",
+            Cnpj = "12345678901234",
+            BirthDate = new DateOnly(1990, 1, 1),
+            CnhNumber = "CNH12345",
+            CnhType = "A"
+        };
+        await _dataContext.Couriers.AddAsync(courier);
+        await _dataContext.SaveChangesAsync();
+
+        var courierId = courier.Id;
+
+        var rental1 = new Rental
+        {
+            CourierId = courierId,
+            MotorcycleId = Guid.NewGuid(),
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(7),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
+            DailyRate = 30
+        };
+        var rental2 = new Rental
+        {
+            CourierId = courierId,
+            MotorcycleId = Guid.NewGuid(),
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(7),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
+            DailyRate = 30
+        };
         await _dataContext.Rentals.AddRangeAsync(rental1, rental2);
         await _dataContext.SaveChangesAsync();
 
@@ -41,7 +70,7 @@ public class RentalRepositoryTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result.Count().Should().Be(2);
+        result.Count().Should().Be(2, because: "we have just added two rentals for this courier");
     }
 
     [Fact]
@@ -88,8 +117,8 @@ public class RentalRepositoryTests : IDisposable
     public async Task GetActiveRentals_ShouldReturnActiveRentals()
     {
         // Arrange
-        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.MinValue, DailyRate = 30 };
-        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.MinValue, DailyRate = 30 };
+        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow.AddDays(-2), EndDate = DateTime.UtcNow.AddDays(5), ExpectedEndDate = DateTime.UtcNow.AddDays(5), DailyRate = 30 };
+        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(6), ExpectedEndDate = DateTime.UtcNow.AddDays(6), DailyRate = 30 };
         await _dataContext.Rentals.AddRangeAsync(rental1, rental2);
         await _dataContext.SaveChangesAsync();
 
@@ -116,10 +145,8 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForOnTimeReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
         var rental = new Rental
         {
-            Id = rentalId,
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
             StartDate = DateTime.UtcNow.AddDays(-7),
@@ -141,15 +168,13 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForEarlyReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
         var startDate = DateTime.UtcNow.AddDays(-7);
-        var endDate = DateTime.UtcNow.AddDays(-1); // Retorno antecipado
+        var endDate = DateTime.UtcNow.AddDays(-1);
         var expectedEndDate = DateTime.UtcNow;
         var dailyRate = 30m;
 
         var rental = new Rental
         {
-            Id = rentalId,
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
             StartDate = startDate,
@@ -176,7 +201,6 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForLateReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
         var startDate = DateTime.UtcNow.AddDays(-8);
         var endDate = DateTime.UtcNow;
         var expectedEndDate = DateTime.UtcNow.AddDays(-1);
@@ -184,7 +208,6 @@ public class RentalRepositoryTests : IDisposable
 
         var rental = new Rental
         {
-            Id = rentalId,
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
             StartDate = startDate,

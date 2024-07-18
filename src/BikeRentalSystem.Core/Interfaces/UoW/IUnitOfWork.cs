@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Storage;
+﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+using Microsoft.EntityFrameworkCore.Storage;
 
-namespace BikeRentalSystem.Core.Interfaces.Repositories;
+namespace BikeRentalSystem.Core.Interfaces.UoW;
 
 public interface IUnitOfWork : IDisposable
 {

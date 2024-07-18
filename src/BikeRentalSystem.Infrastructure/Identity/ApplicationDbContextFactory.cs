@@ -9,6 +9,7 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     public ApplicationDbContext CreateDbContext(string[] args)
     {
         var basePath = Directory.GetParent(Directory.GetCurrentDirectory()).FullName;
+
         var apiProjectPath = Path.Combine(basePath, "BikeRentalSystem.Api");
 
         var configuration = new ConfigurationBuilder()

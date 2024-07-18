@@ -1,41 +1,48 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <InvariantGlobalization>true</InvariantGlobalization>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<UserSecretsId>968d6918-8763-4c81-b712-997e844495df</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<DockerfileContext>..\..</DockerfileContext>
+		<DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+		<OutputType>Exe</OutputType>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Asp.Versioning.Mvc" Version="7.1.1" />
-    <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="7.1.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="7.1.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI" Version="7.0.2" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="7.1.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI.Core" Version="7.0.0" />
-    <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="7.0.0" />
-    <PackageReference Include="AutoMapper" Version="13.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.20" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.20" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.20" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.20">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.20" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="7.0.20" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.18" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Asp.Versioning.Mvc" Version="7.1.1" />
+		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="7.1.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="7.1.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI" Version="7.0.2" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="7.1.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.Core" Version="7.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="7.0.0" />
+		<PackageReference Include="AutoMapper" Version="13.0.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.20" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.20" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.20" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.20">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="7.0.20" />
+		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="7.0.20" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.18" />
+		<PackageReference Include="Scrutor" Version="4.2.2" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.3" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
-    <ProjectReference Include="..\BikeRentalSystem.Identity\BikeRentalSystem.Identity.csproj" />
-    <ProjectReference Include="..\BikeRentalSystem.Messaging\BikeRentalSystem.Messaging.csproj" />
-    <ProjectReference Include="..\BikeRentalSystem.Services\BikeRentalSystem.RentalServices.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
+		<ProjectReference Include="..\BikeRentalSystem.Identity\BikeRentalSystem.Identity.csproj" />
+		<ProjectReference Include="..\BikeRentalSystem.Messaging\BikeRentalSystem.Messaging.csproj" />
+		<ProjectReference Include="..\BikeRentalSystem.Services\BikeRentalSystem.RentalServices.csproj" />
+	</ItemGroup>
 
 </Project>

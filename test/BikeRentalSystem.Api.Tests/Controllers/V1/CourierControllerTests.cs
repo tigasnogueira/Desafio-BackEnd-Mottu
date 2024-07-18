@@ -51,14 +51,11 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task GetCourierById_ShouldReturnNotFound_WhenCourierDoesNotExist()
     {
-        // Arrange
         var courierId = Guid.NewGuid();
         _courierServiceMock.GetById(courierId).Returns(Task.FromResult<Courier>(null));
 
-        // Act
         var result = await controller.GetCourierById(courierId);
 
-        // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         Assert.NotNull(notFoundResult.Value);
 
@@ -76,7 +73,6 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task GetAllCouriers_ShouldReturnPagedCouriers_WhenPagingParametersAreProvided()
     {
-        // Arrange
         var page = 1;
         var pageSize = 10;
         var couriers = new List<Courier> { new Courier() };
@@ -86,10 +82,8 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         _courierServiceMock.GetAllPaged(page, pageSize).Returns(Task.FromResult(paginatedResponse));
         _mapperMock.Map<PaginatedResponse<CourierDto>>(paginatedResponse).Returns(paginatedDto);
 
-        // Act
         var result = await controller.GetAllCouriers(page, pageSize);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
 
@@ -107,19 +101,16 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task GetAllCouriers_ShouldReturnAllCouriers_WhenNoPagingParametersProvided()
     {
-        // Arrange
         var couriers = new List<Courier> { new Courier() };
         var courierDtos = new List<CourierDto> { new CourierDto() };
 
         _courierServiceMock.GetAll().Returns(Task.FromResult((IEnumerable<Courier>)couriers));
         _mapperMock.Map<IEnumerable<CourierDto>>(couriers).Returns(courierDtos);
 
-        // Act
         var result = await controller.GetAllCouriers(null, null);
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
 
-        // Assert
         var responseObject = okResult.Value;
         var successProperty = responseObject.GetType().GetProperty("success");
         var dataProperty = responseObject.GetType().GetProperty("data");
@@ -134,12 +125,11 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task CreateCourier_ShouldReturnCreated_WhenCourierIsValid()
     {
-        // Arrange
         var courierRequest = new CourierRequest
         {
             Name = "John Doe",
             Cnpj = "12345678901234",
-            BirthDate = new DateTime(1980, 1, 1),
+            BirthDate = new DateOnly(1980, 1, 1),
             CnhNumber = "1234567890",
             CnhType = "A"
         };
@@ -149,7 +139,7 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
             Id = Guid.NewGuid(),
             Name = "John Doe",
             Cnpj = "12345678901234",
-            BirthDate = new DateTime(1980, 1, 1),
+            BirthDate = new DateOnly(1980, 1, 1),
             CnhNumber = "1234567890",
             CnhType = "A"
         };
@@ -172,10 +162,8 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         _mapperMock.Map<CourierDto>(courier).Returns(courierDto);
         _courierServiceMock.Add(courier).Returns(Task.FromResult(true));
 
-        // Act
         var result = await controller.CreateCourier(courierRequest);
 
-        // Assert
         var createdResult = Assert.IsType<ObjectResult>(result);
         Assert.NotNull(createdResult.Value);
         Assert.Equal(StatusCodes.Status201Created, createdResult.StatusCode);
@@ -252,7 +240,6 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task CreateCourier_ShouldReturnBadRequest_WhenCnpjOrCnhIsDuplicate()
     {
-        // Arrange
         var courierRequest = new CourierRequest();
         var courier = new Courier();
         var cnhImage = Substitute.For<IFormFile>();
@@ -260,10 +247,8 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         _mapperMock.Map<Courier>(courierRequest).Returns(courier);
         _courierServiceMock.Add(courier);
 
-        // Act
         var result = await controller.CreateCourier(courierRequest);
 
-        // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
 
@@ -305,14 +290,11 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task GetCourierById_ShouldReturnBadRequest_WhenExceptionOccurs()
     {
-        // Arrange
         var courierId = Guid.NewGuid();
         _courierServiceMock.GetById(courierId).Throws(new Exception("Test Exception"));
 
-        // Act
         var result = await controller.GetCourierById(courierId);
 
-        // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
 
@@ -330,15 +312,12 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task CreateCourier_ShouldReturnBadRequest_WhenExceptionOccurs()
     {
-        // Arrange
         var courierRequest = new CourierRequest();
         var cnhImage = Substitute.For<IFormFile>();
         _courierServiceMock.When(x => x.Add(Arg.Any<Courier>())).Do(x => throw new Exception("Test Exception"));
 
-        // Act
         var result = await controller.CreateCourier(courierRequest);
 
-        // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
 

@@ -10,6 +10,7 @@ public class ApplicationDbContext : IdentityDbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
         builder.ApplyConfiguration(new IdentityRoleConfiguration());
         builder.ApplyConfiguration(new IdentityUserConfiguration());
         builder.ApplyConfiguration(new IdentityUserRoleConfiguration());

@@ -3,8 +3,8 @@
 public class Motorcycle : EntityBase
 {
     public int Year { get; set; }
-    public string Model { get; set; }
-    public string Plate { get; set; }
+    public string Model { get; set; } = string.Empty;
+    public string Plate { get; set; } = string.Empty;
 
     public Motorcycle()
     {

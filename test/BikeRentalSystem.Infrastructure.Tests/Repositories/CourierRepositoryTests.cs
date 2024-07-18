@@ -27,7 +27,7 @@ public class CourierRepositoryTests : IDisposable
     public void Dispose()
     {
         _dataContext.Database.EnsureDeleted();
-        _dataContext.Database.EnsureCreated();
+        _dataContext.Dispose();
     }
 
     [Fact]

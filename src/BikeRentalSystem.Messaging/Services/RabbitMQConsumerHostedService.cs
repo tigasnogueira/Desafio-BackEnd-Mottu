@@ -9,15 +9,13 @@ public class RabbitMQConsumerHostedService : BackgroundService
 
     public RabbitMQConsumerHostedService(IEnumerable<IMessageConsumer> consumers)
     {
-        _consumers = consumers;
+        _consumers = consumers ?? throw new ArgumentNullException(nameof(consumers));
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        foreach (var consumer in _consumers)
-        {
-            consumer.Consume();
-        }
-        return Task.CompletedTask;
+        var tasks = _consumers.Select(consumer => consumer.ConsumeAsync());
+
+        await Task.WhenAll(tasks);
     }
 }

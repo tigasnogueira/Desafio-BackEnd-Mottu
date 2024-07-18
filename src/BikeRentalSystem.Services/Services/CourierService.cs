@@ -1,7 +1,7 @@
 ﻿using BikeRentalSystem.Core.Common;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
@@ -17,8 +17,8 @@ public class CourierService : BaseService, ICourierService
 
     public CourierService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
     {
-        _unitOfWork = unitOfWork;
-        _messageProducer = messageProducer;
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _messageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
     }
 
     public async Task<Courier> GetById(Guid id)
@@ -114,24 +114,19 @@ public class CourierService : BaseService, ICourierService
             try
             {
                 await _unitOfWork.Couriers.Add(courier);
-
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier added successfully");
-
-                    AddCourierRegisteredEvent(courier);
-
+                    PublishCourierRegisteredEvent(courier);
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to add courier, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to add courier, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -150,27 +145,27 @@ public class CourierService : BaseService, ICourierService
             return false;
         }
 
-        try
+        var existingCourier = await _unitOfWork.Couriers.GetById(courier.Id);
+        if (existingCourier == null)
         {
-            using (var transaction = await _unitOfWork.BeginTransactionAsync())
+            _notifier.Handle("Courier not found", NotificationType.Error);
+            return false;
+        }
+
+        var validator = new CourierValidation(_unitOfWork);
+        validator.ConfigureRulesForUpdate(existingCourier);
+
+        var validationResult = await validator.ValidateAsync(courier);
+        if (!validationResult.IsValid)
+        {
+            _notifier.NotifyValidationErrors(validationResult);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
             {
-                var existingCourier = await _unitOfWork.Couriers.GetById(courier.Id);
-                if (existingCourier == null)
-                {
-                    _notifier.Handle("Courier not found", NotificationType.Error);
-                    return false;
-                }
-
-                var validator = new CourierValidation(_unitOfWork);
-                validator.ConfigureRulesForUpdate(existingCourier);
-
-                var validationResult = await validator.ValidateAsync(courier);
-                if (!validationResult.IsValid)
-                {
-                    _notifier.NotifyValidationErrors(validationResult);
-                    return false;
-                }
-
                 UpdateCourierDetails(existingCourier, courier);
 
                 await _unitOfWork.Couriers.Update(existingCourier);
@@ -180,76 +175,63 @@ public class CourierService : BaseService, ICourierService
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier updated successfully");
-
-                    AddCourierRegisteredEvent(courier);
-
+                    PublishCourierRegisteredEvent(courier);
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to update courier, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to update courier, rolling back transaction", NotificationType.Error);
+                return false;
             }
-        }
-        catch (Exception ex)
-        {
-            _notifier.Handle($"Error updating courier: {ex.Message}", NotificationType.Error);
-            return false;
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
         }
     }
 
     public async Task<bool> SoftDelete(Guid id)
     {
-        try
+        if (id == Guid.Empty)
         {
-            if (id == Guid.Empty)
-            {
-                _notifier.Handle("Invalid courier ID", NotificationType.Error);
-                return false;
-            }
-
-            var courier = await _unitOfWork.Couriers.GetById(id);
-            if (courier == null)
-            {
-                _notifier.Handle("Courier not found", NotificationType.Error);
-                return false;
-            }
-
-            using (var transaction = await _unitOfWork.BeginTransactionAsync())
-            {
-                try
-                {
-                    courier.IsDeletedToggle();
-                    await _unitOfWork.Couriers.Update(courier);
-                    var result = await _unitOfWork.SaveAsync();
-
-                    if (result > 0)
-                    {
-                        await transaction.CommitAsync();
-                        _notifier.Handle("Courier soft deleted successfully");
-                        return true;
-                    }
-                    else
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.Handle("Failed to soft delete courier, rolling back transaction", NotificationType.Error);
-                        return false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    HandleException(ex);
-                    return false;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            HandleException(ex);
+            _notifier.Handle("Invalid courier ID", NotificationType.Error);
             return false;
+        }
+
+        var courier = await _unitOfWork.Couriers.GetById(id);
+        if (courier == null)
+        {
+            _notifier.Handle("Courier not found", NotificationType.Error);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
+            {
+                courier.ToggleIsDeleted();
+                await _unitOfWork.Couriers.Update(courier);
+                var result = await _unitOfWork.SaveAsync();
+
+                if (result > 0)
+                {
+                    await transaction.CommitAsync();
+                    _notifier.Handle("Courier soft deleted successfully");
+                    return true;
+                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to soft delete courier, rolling back transaction", NotificationType.Error);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
         }
     }
 
@@ -299,12 +281,10 @@ public class CourierService : BaseService, ICourierService
                     _notifier.Handle("CNH image updated successfully");
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to update CNH image, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to update CNH image, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -326,7 +306,7 @@ public class CourierService : BaseService, ICourierService
         existingCourier.Update();
     }
 
-    private void AddCourierRegisteredEvent(Courier courier)
+    private void PublishCourierRegisteredEvent(Courier courier)
     {
         var courierRegisteredEvent = new CourierRegistered
         {
@@ -341,6 +321,6 @@ public class CourierService : BaseService, ICourierService
             UpdatedAt = courier.UpdatedAt,
             IsDeleted = courier.IsDeleted
         };
-        _messageProducer.Publish(courierRegisteredEvent, "exchange_name", "routing_key");
+        _messageProducer.PublishAsync(courierRegisteredEvent, "exchange_name", "routing_key");
     }
 }

@@ -4,11 +4,11 @@ namespace BikeRentalSystem.Api.Contracts.Request;
 
 public class RentalRequest
 {
-    public Guid CourierId { get; set; }
-    public Guid MotorcycleId { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public DateTime ExpectedEndDate { get; set; }
-    public decimal DailyRate { get; set; }
-    public RentalPlan Plan { get; set; }
+    public Guid CourierId { get; init; } = Guid.Empty;
+    public Guid MotorcycleId { get; init; } = Guid.Empty;
+    public DateOnly StartDate { get; init; } = DateOnly.MinValue;
+    public DateOnly EndDate { get; init; } = DateOnly.MinValue;
+    public DateOnly ExpectedEndDate { get; init; } = DateOnly.MinValue;
+    public decimal DailyRate { get; init; } = 0m;
+    public RentalPlan Plan { get; init; } = RentalPlan.SevenDays;
 }

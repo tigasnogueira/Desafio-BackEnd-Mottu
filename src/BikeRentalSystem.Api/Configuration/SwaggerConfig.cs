@@ -13,77 +13,85 @@ public static class SwaggerConfig
     {
         services.AddSwaggerGen(c =>
         {
-            c.OperationFilter<SwaggerDefaultValues>();
-            c.OperationFilter<FileUploadOperation>();
-
-            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Description = "Insira o token JWT desta maneira: Bearer {seu token}",
-                Name = "Authorization",
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                In = ParameterLocation.Header,
-                Type = SecuritySchemeType.ApiKey
-            });
-
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
-            {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
-                        },
-                        new string[] {}
-                    }
-            });
+            ConfigureSwaggerOperations(c);
+            ConfigureSwaggerSecurity(c);
         });
 
         return services;
     }
 
+    private static void ConfigureSwaggerOperations(SwaggerGenOptions options)
+    {
+        options.OperationFilter<SwaggerDefaultValues>();
+        options.OperationFilter<FileUploadOperation>();
+    }
+
+    private static void ConfigureSwaggerSecurity(SwaggerGenOptions options)
+    {
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Description = "Insira o token JWT desta maneira: Bearer {seu token}",
+            Name = "Authorization",
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey
+        });
+
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+    }
+
     public static IApplicationBuilder UseSwaggerConfig(this IApplicationBuilder app, IApiVersionDescriptionProvider provider)
     {
-        //app.UseMiddleware<SwaggerAuthorizedMiddleware>();
         app.UseSwagger();
-        app.UseSwaggerUI(
-            options =>
+        app.UseSwaggerUI(options =>
+        {
+            foreach (var description in provider.ApiVersionDescriptions)
             {
-                foreach (var description in provider.ApiVersionDescriptions)
-                {
-                    options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
-                }
-            });
+                options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+            }
+        });
+
         return app;
     }
 }
 
 public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
 {
-    readonly IApiVersionDescriptionProvider provider;
+    private readonly IApiVersionDescriptionProvider _provider;
 
-    public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) => this.provider = provider;
+    public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) => _provider = provider;
 
     public void Configure(SwaggerGenOptions options)
     {
-        foreach (var description in provider.ApiVersionDescriptions)
+        foreach (var description in _provider.ApiVersionDescriptions)
         {
             options.SwaggerDoc(description.GroupName, CreateInfoForApiVersion(description));
         }
     }
 
-    static OpenApiInfo CreateInfoForApiVersion(ApiVersionDescription description)
+    private static OpenApiInfo CreateInfoForApiVersion(ApiVersionDescription description)
     {
-        var info = new OpenApiInfo()
+        var info = new OpenApiInfo
         {
-            Title = "API - desenvolvedor.io",
+            Title = "Bike Rental System",
             Version = description.ApiVersion.ToString(),
-            Description = "Esta API faz parte do curso REST com ASP.NET Core WebAPI.",
-            Contact = new OpenApiContact() { Name = "Eduardo Pires", Email = "contato@desenvolvedor.io" },
-            License = new OpenApiLicense() { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
+            Description = "Desafio Backend Mottu.",
+            Contact = new OpenApiContact { Name = "Tiago Nogueira", Email = "contato.tigasnogueira@gmail.com" },
+            License = new OpenApiLicense { Name = "MIT", Url = new Uri("https://opensource.org/licenses/MIT") }
         };
 
         if (description.IsDeprecated)
@@ -106,15 +114,19 @@ public class SwaggerDefaultValues : IOperationFilter
         foreach (var responseType in context.ApiDescription.SupportedResponseTypes)
         {
             var responseKey = responseType.IsDefaultResponse ? "default" : responseType.StatusCode.ToString();
-            var response = operation.Responses[responseKey];
-
-            foreach (var contentType in response.Content.Keys)
-                if (responseType.ApiResponseFormats.All(x => x.MediaType != contentType))
-                    response.Content.Remove(contentType);
+            if (operation.Responses.TryGetValue(responseKey, out var response))
+            {
+                foreach (var contentType in response.Content.Keys)
+                {
+                    if (responseType.ApiResponseFormats.All(x => x.MediaType != contentType))
+                    {
+                        response.Content.Remove(contentType);
+                    }
+                }
+            }
         }
 
-        if (operation.Parameters == null)
-            return;
+        if (operation.Parameters == null) return;
 
         foreach (var parameter in operation.Parameters)
         {
@@ -130,28 +142,6 @@ public class SwaggerDefaultValues : IOperationFilter
 
             parameter.Required |= description.IsRequired;
         }
-    }
-}
-
-public class SwaggerAuthorizedMiddleware
-{
-    private readonly RequestDelegate _next;
-
-    public SwaggerAuthorizedMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
-    public async Task Invoke(HttpContext context)
-    {
-        if (context.Request.Path.StartsWithSegments("/swagger")
-            && !context.User.Identity.IsAuthenticated)
-        {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            return;
-        }
-
-        await _next.Invoke(context);
     }
 }
 

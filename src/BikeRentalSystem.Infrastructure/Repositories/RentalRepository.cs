@@ -46,7 +46,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         try
         {
             _notifier.Handle($"Getting active {nameof(Rental)}.");
-            return await _dbSet.Where(r => r.EndDate == DateTime.MinValue).ToListAsync();
+            return await _dbSet.Where(r => r.EndDate > DateTime.UtcNow).ToListAsync();
         }
         catch (Exception ex)
         {

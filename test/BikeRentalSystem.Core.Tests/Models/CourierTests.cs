@@ -1,4 +1,4 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Tests.Helpers;
@@ -21,7 +21,7 @@ public class CourierTests
         // Arrange
         var name = "John Doe";
         var cnpj = "12345678901234";
-        var birthDate = new DateTime(1990, 1, 1);
+        var birthDate = new DateOnly(1990, 1, 1);
         var cnhNumber = "AB123456";
         var cnhType = "A";
         var cnhImage = "cnh.png";
@@ -51,8 +51,9 @@ public class CourierTests
         courier.Update();
 
         // Assert
-        courier.UpdatedAt.Should().BeAfter(initialUpdatedAt);
-        courier.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
+        if (initialUpdatedAt.HasValue)
+            courier.UpdatedAt.Should().BeAfter(initialUpdatedAt.Value);
+        courier.UpdatedAt.Should().HaveValue().And.BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
 
     [Fact]
@@ -62,10 +63,10 @@ public class CourierTests
         var courier = new Courier();
 
         // Act & Assert
-        courier.IsDeletedToggle();
+        courier.ToggleIsDeleted();
         courier.IsDeleted.Should().BeTrue();
 
-        courier.IsDeletedToggle();
+        courier.ToggleIsDeleted();
         courier.IsDeleted.Should().BeFalse();
     }
 
@@ -75,7 +76,7 @@ public class CourierTests
         // Arrange
         var validator = new CourierValidation(_unitOfWorkMock);
         validator.ConfigureRulesForCreate();
-        var courier = new Courier("John Doe", "12345678901234", new DateTime(1990, 1, 1), "AB123456", "A", "cnh.png");
+        var courier = new Courier("John Doe", "12345678901234", new DateOnly(1990, 1, 1), "AB123456", "A", "cnh.png");
 
         // Act
         var result = await validator.ValidateAsync(courier);
@@ -90,7 +91,7 @@ public class CourierTests
         // Arrange
         var validator = new CourierValidation(_unitOfWorkMock);
         validator.ConfigureRulesForCreate();
-        var courier = new Courier("John Doe", "123", new DateTime(1990, 1, 1), "AB123456", "A", "cnh.png");
+        var courier = new Courier("John Doe", "123", new DateOnly(1990, 1, 1), "AB123456", "A", "cnh.png");
 
         // Act
         var result = await validator.ValidateAsync(courier);

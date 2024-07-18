@@ -14,7 +14,7 @@ public abstract class BaseControllerTests<T> where T : MainController
 {
     protected T controller;
     protected INotifier _notifierMock;
-    protected IUser _userMock;
+    protected IAspNetUser _userMock;
     protected DefaultHttpContext _httpContext;
 
     public BaseControllerTests()

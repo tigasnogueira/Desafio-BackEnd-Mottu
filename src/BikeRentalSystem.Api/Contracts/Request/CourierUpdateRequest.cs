@@ -2,9 +2,9 @@
 
 public class CourierUpdateRequest
 {
-    public string Name { get; set; }
-    public string Cnpj { get; set; }
-    public DateTime BirthDate { get; set; } = DateTime.MinValue;
-    public string CnhNumber { get; set; }
-    public string CnhType { get; set; }
+    public string Name { get; init; } = string.Empty;
+    public string Cnpj { get; init; } = string.Empty;
+    public DateOnly BirthDate { get; init; } = DateOnly.MinValue;
+    public string CnhNumber { get; init; } = string.Empty;
+    public string CnhType { get; init; } = string.Empty;
 }

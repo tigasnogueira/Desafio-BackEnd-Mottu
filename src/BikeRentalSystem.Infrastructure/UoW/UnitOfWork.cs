@@ -1,8 +1,9 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace BikeRentalSystem.Infrastructure.Repositories;
+namespace BikeRentalSystem.Infrastructure.UoW;
 
 public class UnitOfWork : IUnitOfWork
 {

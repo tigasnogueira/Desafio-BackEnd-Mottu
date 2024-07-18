@@ -27,7 +27,8 @@ public class RentalMapping : IEntityTypeConfiguration<Rental>
         builder.Property(r => r.CreatedAt)
             .IsRequired();
 
-        builder.Property(r => r.UpdatedAt);
+        builder.Property(r => r.UpdatedAt)
+            .IsRequired(false);
 
         builder.Property(r => r.IsDeleted)
             .IsRequired();
