@@ -22,9 +22,9 @@ public class RentalTests
         // Arrange
         var courierId = Guid.NewGuid();
         var motorcycleId = Guid.NewGuid();
-        var startDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1);
-        var endDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(8);
-        var expectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7);
+        var startDate = DateTime.UtcNow.AddDays(1);
+        var endDate = DateTime.UtcNow.AddDays(8);
+        var expectedEndDate = DateTime.UtcNow.AddDays(7);
         var dailyRate = 30m;
         var plan = RentalPlan.SevenDays;
 
@@ -79,7 +79,7 @@ public class RentalTests
     {
         // Arrange
         var validator = new RentalValidation(_unitOfWorkMock);
-        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(8), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7), 30m, RentalPlan.SevenDays);
+        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(8), DateTime.UtcNow.AddDays(7), 30m, RentalPlan.SevenDays);
 
         // Act
         var result = await validator.ValidateAsync(rental);
@@ -93,7 +93,7 @@ public class RentalTests
     {
         // Arrange
         var validator = new RentalValidation(_unitOfWorkMock);
-        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(8), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7), 30m, RentalPlan.SevenDays);
+        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(8), DateTime.UtcNow.AddDays(7), 30m, RentalPlan.SevenDays);
 
         // Act
         var result = await validator.ValidateAsync(rental);
@@ -108,7 +108,7 @@ public class RentalTests
     {
         // Arrange
         var validator = new RentalValidation(_unitOfWorkMock);
-        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), DateOnly.FromDateTime(DateTime.UtcNow), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7), 30m, RentalPlan.SevenDays);
+        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddDays(1), DateTime.UtcNow, DateTime.UtcNow.AddDays(7), 30m, RentalPlan.SevenDays);
 
         // Act
         var result = await validator.ValidateAsync(rental);
@@ -123,7 +123,7 @@ public class RentalTests
     {
         // Arrange
         var validator = new RentalValidation(_unitOfWorkMock);
-        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(8), DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7), -10m, RentalPlan.SevenDays);
+        var rental = new Rental(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(8), DateTime.UtcNow.AddDays(7), -10m, RentalPlan.SevenDays);
 
         // Act
         var result = await validator.ValidateAsync(rental);

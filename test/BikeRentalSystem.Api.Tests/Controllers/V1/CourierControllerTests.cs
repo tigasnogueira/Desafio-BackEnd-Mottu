@@ -17,16 +17,18 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
 {
     private readonly ICourierService _courierServiceMock;
     private readonly IMapper _mapperMock;
+    private readonly IRedisCacheService _redisCacheServiceMock;
 
     public CourierControllerTests() : base()
     {
         _courierServiceMock = Substitute.For<ICourierService>();
         _mapperMock = Substitute.For<IMapper>();
+        _redisCacheServiceMock = Substitute.For<IRedisCacheService>();
 
         _userMock.GetUserName().Returns("TestUser");
         _userMock.GetUserEmail().Returns("TestUser");
 
-        controller = new CourierController(_courierServiceMock, _mapperMock, _notifierMock, _userMock)
+        controller = new CourierController(_courierServiceMock, _mapperMock, _redisCacheServiceMock, _notifierMock, _userMock)
         {
             ControllerContext = new ControllerContext
             {
@@ -56,7 +58,9 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var courierId = Guid.NewGuid();
         var courier = new Courier { Id = courierId };
         var courierDto = new CourierDto { Id = courierId };
+        var cacheKey = $"Courier:{courierId}";
 
+        _redisCacheServiceMock.GetCacheValueAsync<CourierDto>(cacheKey).Returns((CourierDto)null);
         _courierServiceMock.GetById(courierId).Returns(Task.FromResult(courier));
         _mapperMock.Map<CourierDto>(courier).Returns(courierDto);
 
@@ -66,12 +70,18 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var response = okResult.Value;
         Assert.True((bool)response.GetType().GetProperty("success").GetValue(response));
         Assert.Equal(courierDto, response.GetType().GetProperty("data").GetValue(response));
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<CourierDto>(cacheKey);
+        await _redisCacheServiceMock.Received(1).SetCacheValueAsync(cacheKey, courierDto);
     }
 
     [Fact]
     public async Task GetCourierById_ShouldReturnNotFound_WhenCourierDoesNotExist()
     {
         var courierId = Guid.NewGuid();
+        var cacheKey = $"Courier:{courierId}";
+
+        _redisCacheServiceMock.GetCacheValueAsync<CourierDto>(cacheKey).Returns((CourierDto)null);
         _courierServiceMock.GetById(courierId).Returns(Task.FromResult<Courier>(null));
 
         var result = await controller.GetCourierById(courierId);
@@ -88,6 +98,8 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
 
         Assert.False((bool)successProperty.GetValue(responseObject));
         Assert.Equal("Resource not found", errorsProperty.GetValue(responseObject) as string);
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<CourierDto>(cacheKey);
     }
 
     [Fact]
@@ -98,7 +110,9 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var couriers = new List<Courier> { new Courier() };
         var paginatedResponse = new PaginatedResponse<Courier>(couriers, 1, page, pageSize);
         var paginatedDto = new PaginatedResponse<CourierDto>(new List<CourierDto> { new CourierDto() }, 1, page, pageSize);
+        var cacheKey = $"CourierList:Page:{page}:PageSize:{pageSize}";
 
+        _redisCacheServiceMock.GetCacheValueAsync<PaginatedResponse<CourierDto>>(cacheKey).Returns((PaginatedResponse<CourierDto>)null);
         _courierServiceMock.GetAllPaged(page, pageSize).Returns(Task.FromResult(paginatedResponse));
         _mapperMock.Map<PaginatedResponse<CourierDto>>(paginatedResponse).Returns(paginatedDto);
 
@@ -116,6 +130,9 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
 
         Assert.True((bool)successProperty.GetValue(responseObject));
         Assert.Equal(paginatedDto, dataProperty.GetValue(responseObject));
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<PaginatedResponse<CourierDto>>(cacheKey);
+        await _redisCacheServiceMock.Received(1).SetCacheValueAsync(cacheKey, paginatedDto);
     }
 
     [Fact]
@@ -123,7 +140,9 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     {
         var couriers = new List<Courier> { new Courier() };
         var courierDtos = new List<CourierDto> { new CourierDto() };
+        var cacheKey = "CourierList:All";
 
+        _redisCacheServiceMock.GetCacheValueAsync<IEnumerable<CourierDto>>(cacheKey).Returns((IEnumerable<CourierDto>)null);
         _courierServiceMock.GetAll().Returns(Task.FromResult((IEnumerable<Courier>)couriers));
         _mapperMock.Map<IEnumerable<CourierDto>>(couriers).Returns(courierDtos);
 
@@ -140,6 +159,9 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
 
         Assert.True((bool)successProperty.GetValue(responseObject));
         Assert.Equal(courierDtos, dataProperty.GetValue(responseObject) as IEnumerable<CourierDto>);
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<IEnumerable<CourierDto>>(cacheKey);
+        await _redisCacheServiceMock.Received(1).SetCacheValueAsync(cacheKey, courierDtos);
     }
 
     [Fact]
@@ -189,31 +211,19 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         Assert.Equal(StatusCodes.Status201Created, createdResult.StatusCode);
 
         var responseObject = createdResult.Value;
-        var outerSuccessProperty = responseObject.GetType().GetProperty("success");
-        var outerDataProperty = responseObject.GetType().GetProperty("data");
+        var successProperty = responseObject.GetType().GetProperty("success");
+        var dataProperty = responseObject.GetType().GetProperty("data");
 
-        Assert.NotNull(outerSuccessProperty);
-        Assert.NotNull(outerDataProperty);
+        Assert.NotNull(successProperty);
+        Assert.NotNull(dataProperty);
 
-        bool outerSuccessValue = (bool)outerSuccessProperty.GetValue(responseObject);
-        var outerDataValue = outerDataProperty.GetValue(responseObject);
+        bool successValue = (bool)successProperty.GetValue(responseObject);
+        var dataValue = dataProperty.GetValue(responseObject);
 
-        Assert.True(outerSuccessValue);
-        Assert.NotNull(outerDataValue);
+        Assert.True(successValue);
+        Assert.NotNull(dataValue);
 
-        var innerSuccessProperty = outerDataValue.GetType().GetProperty("success");
-        var innerDataProperty = outerDataValue.GetType().GetProperty("data");
-
-        Assert.NotNull(innerSuccessProperty);
-        Assert.NotNull(innerDataProperty);
-
-        bool innerSuccessValue = (bool)innerSuccessProperty.GetValue(outerDataValue);
-        var innerDataValue = innerDataProperty.GetValue(outerDataValue);
-
-        Assert.True(innerSuccessValue);
-        Assert.NotNull(innerDataValue);
-
-        var actualCourierDto = innerDataValue as CourierDto;
+        var actualCourierDto = dataValue as CourierDto;
         Assert.NotNull(actualCourierDto);
         Assert.Equal(courierDto.Id, actualCourierDto.Id);
         Assert.Equal(courierDto.Name, actualCourierDto.Name);
@@ -320,10 +330,17 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task GetAllCouriers_ShouldReturnBadRequest_WhenExceptionOccurs()
     {
+        var cacheKey = "CourierList:All";
+
+        // Arrange
+        _redisCacheServiceMock.GetCacheValueAsync<IEnumerable<CourierDto>>(cacheKey).Returns(Task.FromResult<IEnumerable<CourierDto>>(null));
+
         _courierServiceMock.GetAll().Throws(new Exception("Test Exception"));
 
+        // Act
         var result = await controller.GetAllCouriers(null, null);
 
+        // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
 
@@ -336,6 +353,8 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
 
         Assert.False((bool)successProperty.GetValue(responseObject));
         Assert.Equal("Test Exception", errorsProperty.GetValue(responseObject) as string);
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<IEnumerable<CourierDto>>(cacheKey);
     }
 
     [Fact]

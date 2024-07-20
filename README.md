@@ -68,7 +68,75 @@ Seu objetivo é criar uma aplicação para gerenciar aluguel de motos e entregad
 
 ## Como Executar a API
 
-Antes de iniciar a aplicação, é necessário gerar as migrações do banco de dados seguindo os passos abaixo:
+Antes de iniciar a aplicação, é necessário configurar o Redis e gerar as migrações do banco de dados seguindo os passos abaixo:
+
+### 1. Instalar e Executar o Redis no Windows
+
+#### Utilizando o Docker
+Uma das maneiras mais fáceis de executar o Redis no Windows é utilizando o Docker. Se você não tem o Docker instalado, pode baixá-lo e instalá-lo a partir do site oficial do Docker.
+
+Depois de instalar o Docker, execute o seguinte comando para baixar e iniciar o Redis:
+
+```bash
+docker run -d --name redis -p 6379:6379 redis
+```
+
+Este comando faz o seguinte:
+
+- Baixa a imagem oficial do Redis do Docker Hub.
+- Cria e inicia um contêiner chamado redis que mapeia a porta 6379 do contêiner para a porta 6379 do host.
+
+#### Utilizando o Redis no Windows Subsystem for Linux (WSL)
+Se você estiver utilizando o WSL, pode instalar o Redis diretamente no WSL. Primeiro, abra um terminal do WSL e execute os seguintes comandos:
+
+```bash
+sudo apt update
+sudo apt install redis-server
+```
+
+Configure e Inicie o Redis:
+
+Abra o arquivo de configuração do Redis:
+```bash
+sudo nano /etc/redis/redis.conf
+```
+
+Encontre a linha `supervised` no arquivo e altere para `supervised systemd`.
+
+Salve e feche o arquivo (`Ctrl+O`, `Enter`, `Ctrl+X`).
+
+Inicie o serviço do Redis:
+
+```bash
+sudo service redis-server start
+```
+
+Verifique se o Redis está rodando:
+
+Execute:
+```bash
+redis-cli ping
+```
+
+A resposta esperada é:
+```bash
+PONG
+```
+
+#### Verificar a Conexão
+Certifique-se de que o Redis está rodando corretamente. Você pode utilizar o seguinte comando para verificar a conexão:
+
+```bash
+redis-cli ping
+```
+
+A resposta esperada deve ser:
+
+```bash
+PONG
+```
+
+### 2. Configurar as migrações do banco de dados
 
 1. Navegue até a pasta `Desafio-BackEnd-Mottu\src\BikeRentalSystem.Infrastructure` e execute o terminal, Command Prompt ou PowerShell, ou clique com o botão direito no projeto `BikeRentalSystem.Infrastructure` no Visual Studio e selecione a opção "Open in Terminal".
 

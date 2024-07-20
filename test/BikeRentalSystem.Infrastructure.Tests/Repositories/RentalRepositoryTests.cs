@@ -49,9 +49,9 @@ public class RentalRepositoryTests : IDisposable
         {
             CourierId = courierId,
             MotorcycleId = Guid.NewGuid(),
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(7),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
             DailyRate = 30,
             CreatedByUser = "TestUser"
         };
@@ -59,9 +59,9 @@ public class RentalRepositoryTests : IDisposable
         {
             CourierId = courierId,
             MotorcycleId = Guid.NewGuid(),
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(7),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
             DailyRate = 30,
             CreatedByUser = "TestUser"
         };
@@ -92,8 +92,8 @@ public class RentalRepositoryTests : IDisposable
     {
         // Arrange
         var motorcycleId = Guid.NewGuid();
-        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateOnly.FromDateTime(DateTime.UtcNow), EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)), DailyRate = 30, CreatedByUser = "TestUser" };
-        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateOnly.FromDateTime(DateTime.UtcNow), EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)), DailyRate = 30, CreatedByUser = "TestUser" };
+        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30, CreatedByUser = "TestUser" };
+        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30, CreatedByUser = "TestUser" };
         await _dataContext.Rentals.AddRangeAsync(rental1, rental2);
         await _dataContext.SaveChangesAsync();
 
@@ -120,8 +120,8 @@ public class RentalRepositoryTests : IDisposable
     public async Task GetActiveRentals_ShouldReturnActiveRentals()
     {
         // Arrange
-        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-2)), EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)), ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(5)), DailyRate = 30, CreatedByUser = "TestUser" };
-        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)), EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(6)), ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(6)), DailyRate = 30, CreatedByUser = "TestUser" };
+        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow.AddDays(-2), EndDate = DateTime.UtcNow.AddDays(5), ExpectedEndDate = DateTime.UtcNow.AddDays(5), DailyRate = 30, CreatedByUser = "TestUser" };
+        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(6), ExpectedEndDate = DateTime.UtcNow.AddDays(6), DailyRate = 30, CreatedByUser = "TestUser" };
         await _dataContext.Rentals.AddRangeAsync(rental1, rental2);
         await _dataContext.SaveChangesAsync();
 
@@ -152,9 +152,9 @@ public class RentalRepositoryTests : IDisposable
         {
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            StartDate = DateTime.UtcNow.AddDays(-7),
+            EndDate = DateTime.UtcNow,
+            ExpectedEndDate = DateTime.UtcNow,
             DailyRate = 30,
             CreatedByUser = "TestUser"
         };
@@ -172,9 +172,9 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForEarlyReturn()
     {
         // Arrange
-        var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7));
-        var endDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1));
-        var expectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow);
+        var startDate = DateTime.UtcNow.AddDays(-7);
+        var endDate = DateTime.UtcNow.AddDays(-1);
+        var expectedEndDate = DateTime.UtcNow;
         var dailyRate = 30m;
         var createdByUser = "TestUser";
 
@@ -196,8 +196,8 @@ public class RentalRepositoryTests : IDisposable
         var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
-        var expectedCost = (endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue)).Days * dailyRate;
-        var penalty = (expectedEndDate.ToDateTime(TimeOnly.MinValue) - endDate.ToDateTime(TimeOnly.MinValue)).Days * dailyRate * 0.20m;
+        var expectedCost = (endDate - startDate).Days * dailyRate;
+        var penalty = (expectedEndDate - endDate).Days * dailyRate * 0.20m;
         var totalCost = expectedCost + penalty;
 
         result.Should().Be(totalCost);
@@ -207,9 +207,9 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForLateReturn()
     {
         // Arrange
-        var startDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-8));
-        var endDate = DateOnly.FromDateTime(DateTime.UtcNow);
-        var expectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var startDate = DateTime.UtcNow.AddDays(-8);
+        var endDate = DateTime.UtcNow;
+        var expectedEndDate = DateTime.UtcNow.AddDays(-1);
         var dailyRate = 30m;
         var createdByUser = "TestUser";
 
@@ -231,8 +231,8 @@ public class RentalRepositoryTests : IDisposable
         var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
-        var expectedCost = (endDate.ToDateTime(TimeOnly.MinValue) - startDate.ToDateTime(TimeOnly.MinValue)).Days * dailyRate;
-        var additionalCost = (endDate.ToDateTime(TimeOnly.MinValue) - expectedEndDate.ToDateTime(TimeOnly.MinValue)).Days * 50;
+        var expectedCost = (endDate - startDate).Days * dailyRate;
+        var additionalCost = (endDate - expectedEndDate).Days * 50;
         var totalCost = expectedCost + additionalCost;
 
         result.Should().Be(totalCost);

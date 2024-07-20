@@ -20,20 +20,30 @@ public class RentalController : MainController
 {
     private readonly IRentalService _rentalService;
     private readonly IMapper _mapper;
+    private readonly IRedisCacheService _redisCacheService;
 
     public RentalController(IRentalService rentalService,
                             IMapper mapper,
+                            IRedisCacheService redisCacheService,
                             INotifier notifier,
                             IAspNetUser user) : base(notifier, user)
     {
         _rentalService = rentalService;
         _mapper = mapper;
+        _redisCacheService = redisCacheService;
     }
 
     [HttpGet("{id:guid}")]
     [ClaimsAuthorize("Rental", "Get")]
     public async Task<IActionResult> GetRentalById(Guid id)
     {
+        var cacheKey = $"Rental:{id}";
+        var cachedRental = await _redisCacheService.GetCacheValueAsync<RentalDto>(cacheKey);
+        if (cachedRental != null)
+        {
+            return CustomResponse(cachedRental);
+        }
+
         return await HandleRequestAsync(
             async () =>
             {
@@ -43,6 +53,7 @@ public class RentalController : MainController
                     return CustomResponse("Resource not found", StatusCodes.Status404NotFound);
                 }
                 var rentalDto = _mapper.Map<RentalDto>(rental);
+                await _redisCacheService.SetCacheValueAsync(cacheKey, rentalDto);
                 return CustomResponse(rentalDto);
             },
             ex => CustomResponse(ex.Message)
@@ -56,16 +67,34 @@ public class RentalController : MainController
         return await HandleRequestAsync(
             async () =>
             {
+                string cacheKey = page.HasValue && pageSize.HasValue
+                    ? $"RentalList:Page:{page.Value}:PageSize:{pageSize.Value}"
+                    : "RentalList:All";
+
                 if (page.HasValue && pageSize.HasValue)
                 {
+                    var cachedRentals = await _redisCacheService.GetCacheValueAsync<PaginatedResponse<RentalDto>>(cacheKey);
+                    if (cachedRentals != null)
+                    {
+                        return CustomResponse(cachedRentals);
+                    }
+
                     var rentals = await _rentalService.GetAllPaged(page.Value, pageSize.Value);
                     var rentalDtos = _mapper.Map<PaginatedResponse<RentalDto>>(rentals);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, rentalDtos);
                     return CustomResponse(rentalDtos);
                 }
                 else
                 {
+                    var cachedRentals = await _redisCacheService.GetCacheValueAsync<IEnumerable<RentalDto>>(cacheKey);
+                    if (cachedRentals != null)
+                    {
+                        return CustomResponse(cachedRentals);
+                    }
+
                     var rentals = await _rentalService.GetAll();
                     var rentalDtos = _mapper.Map<IEnumerable<RentalDto>>(rentals);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, rentalDtos);
                     return CustomResponse(rentalDtos);
                 }
             },
@@ -124,17 +153,5 @@ public class RentalController : MainController
             },
             ex => CustomResponse(ex.Message)
         );
-    }
-
-    private async Task<IActionResult> HandleRequestAsync(Func<Task<IActionResult>> operation, Func<Exception, IActionResult> handleException)
-    {
-        try
-        {
-            return await operation();
-        }
-        catch (Exception ex)
-        {
-            return handleException(ex);
-        }
     }
 }

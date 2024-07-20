@@ -39,9 +39,9 @@ public class RentalServiceTests
             Id = Guid.NewGuid(),
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(8)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            StartDate = DateTime.UtcNow.AddDays(1),
+            EndDate = DateTime.UtcNow.AddDays(8),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
             DailyRate = 30m,
             Plan = RentalPlan.SevenDays
         };
@@ -72,9 +72,9 @@ public class RentalServiceTests
             Id = Guid.NewGuid(),
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(8)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            StartDate = DateTime.UtcNow.AddDays(-1),
+            EndDate = DateTime.UtcNow.AddDays(8),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
             DailyRate = 30m,
             Plan = RentalPlan.SevenDays
         };
@@ -107,9 +107,9 @@ public class RentalServiceTests
             Id = rentalId,
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(8)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7)),
+            StartDate = DateTime.UtcNow.AddDays(1),
+            EndDate = DateTime.UtcNow.AddDays(8),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
             DailyRate = 30m,
             Plan = RentalPlan.SevenDays,
             TotalCost = 210m
@@ -120,9 +120,9 @@ public class RentalServiceTests
             Id = rentalId,
             CourierId = existingRental.CourierId,
             MotorcycleId = existingRental.MotorcycleId,
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(9)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(8)),
+            StartDate = DateTime.UtcNow.AddDays(2),
+            EndDate = DateTime.UtcNow.AddDays(9),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(8),
             DailyRate = 30m,
             Plan = RentalPlan.SevenDays,
             TotalCost = 240m
@@ -151,8 +151,8 @@ public class RentalServiceTests
     {
         // Arrange
         var rentalId = Guid.NewGuid();
-        var existingRental = new Rental { Id = rentalId, StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)) };
-        var updatedRental = new Rental { Id = rentalId, StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)) };
+        var existingRental = new Rental { Id = rentalId, StartDate = DateTime.UtcNow.AddDays(1) };
+        var updatedRental = new Rental { Id = rentalId, StartDate = DateTime.UtcNow.AddDays(-1) };
 
         _unitOfWorkMock.Rentals.GetById(rentalId).Returns(Task.FromResult(existingRental));
 
@@ -179,7 +179,7 @@ public class RentalServiceTests
     {
         // Arrange
         var rentalId = Guid.NewGuid();
-        var rental = new Rental { Id = rentalId, StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)) };
+        var rental = new Rental { Id = rentalId, StartDate = DateTime.UtcNow.AddDays(1) };
 
         _unitOfWorkMock.Rentals.GetById(rentalId).Returns(Task.FromResult(rental));
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
@@ -216,9 +216,9 @@ public class RentalServiceTests
         // Arrange
         var rental = new Rental
         {
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-2)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+            StartDate = DateTime.UtcNow.AddDays(-5),
+            EndDate = DateTime.UtcNow.AddDays(-2),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(-1),
             DailyRate = 50m
         };
         var expectedCost = 150m + (50m * 0.20m);
@@ -239,9 +239,9 @@ public class RentalServiceTests
         // Arrange
         var rental = new Rental
         {
-            StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-5)),
-            EndDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(2)),
-            ExpectedEndDate = DateOnly.FromDateTime(DateTime.UtcNow),
+            StartDate = DateTime.UtcNow.AddDays(-5),
+            EndDate = DateTime.UtcNow.AddDays(2),
+            ExpectedEndDate = DateTime.UtcNow,
             DailyRate = 50m
         };
         var expectedCost = (5 * 50m) + (2 * 50);
@@ -261,7 +261,7 @@ public class RentalServiceTests
     {
         // Arrange
         var rentalId = Guid.NewGuid();
-        var rental = new Rental { Id = rentalId, StartDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)) };
+        var rental = new Rental { Id = rentalId, StartDate = DateTime.UtcNow.AddDays(1) };
 
         _unitOfWorkMock.Rentals.GetById(rentalId).Returns(Task.FromResult(rental));
 

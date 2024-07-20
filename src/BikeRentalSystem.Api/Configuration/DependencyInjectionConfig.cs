@@ -45,6 +45,7 @@ public static class DependencyInjectionConfig
 
     private static void AddSingletonServices(IServiceCollection services)
     {
+        services.AddSingleton<IRedisCacheService, RedisCacheService>();
         services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         services.AddSingleton<IMessageProducer, RabbitMQProducer>();
         services.AddSingleton<IMessageConsumer, MotorcycleRegisteredConsumer>();

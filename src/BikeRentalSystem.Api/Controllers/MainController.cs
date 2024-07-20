@@ -120,4 +120,16 @@ public abstract class MainController : Controller
             e.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
             e.Contains("cannot", StringComparison.OrdinalIgnoreCase) ||
             e.Contains("Error", StringComparison.OrdinalIgnoreCase));
+
+    protected async Task<IActionResult> HandleRequestAsync(Func<Task<IActionResult>> operation, Func<Exception, IActionResult> handleException)
+    {
+        try
+        {
+            return await operation();
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
+    }
 }

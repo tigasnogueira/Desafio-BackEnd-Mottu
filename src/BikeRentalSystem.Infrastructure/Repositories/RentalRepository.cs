@@ -46,7 +46,7 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         try
         {
             _notifier.Handle($"Getting active {nameof(Rental)}.");
-            return await _dbSet.Where(r => r.EndDate > DateOnly.FromDateTime(DateTime.UtcNow)).ToListAsync();
+            return await _dbSet.Where(r => r.EndDate > DateTime.UtcNow).ToListAsync();
         }
         catch (Exception ex)
         {
@@ -66,17 +66,17 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         {
             _notifier.Handle($"Calculating rental cost for rental with Motorcycle ID {rental.MotorcycleId} and Courier ID {rental.CourierId}.");
 
-            var daysRented = (rental.EndDate.ToDateTime(TimeOnly.MinValue) - rental.StartDate.ToDateTime(TimeOnly.MinValue)).Days;
+            var daysRented = (rental.EndDate - rental.StartDate).Days;
             var cost = daysRented * rental.DailyRate;
 
             if (rental.EndDate < rental.ExpectedEndDate)
             {
                 var penaltyRate = rental.DailyRate * 0.20m;
-                cost += penaltyRate * (rental.ExpectedEndDate.ToDateTime(TimeOnly.MinValue) - rental.EndDate.ToDateTime(TimeOnly.MinValue)).Days;
+                cost += penaltyRate * (rental.ExpectedEndDate - rental.EndDate).Days;
             }
             else if (rental.EndDate > rental.ExpectedEndDate)
             {
-                var additionalDays = (rental.EndDate.ToDateTime(TimeOnly.MinValue) - rental.ExpectedEndDate.ToDateTime(TimeOnly.MinValue)).Days;
+                var additionalDays = (rental.EndDate - rental.ExpectedEndDate).Days;
                 cost += additionalDays * 50;
             }
 

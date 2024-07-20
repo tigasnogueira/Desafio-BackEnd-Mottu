@@ -20,20 +20,30 @@ public class CourierController : MainController
 {
     private readonly ICourierService _courierService;
     private readonly IMapper _mapper;
+    private readonly IRedisCacheService _redisCacheService;
 
     public CourierController(ICourierService courierService,
                              IMapper mapper,
+                             IRedisCacheService redisCacheService,
                              INotifier notifier,
                              IAspNetUser user) : base(notifier, user)
     {
         _courierService = courierService;
         _mapper = mapper;
+        _redisCacheService = redisCacheService;
     }
 
     [HttpGet("{id:guid}")]
     [ClaimsAuthorize("Courier", "Get")]
     public async Task<IActionResult> GetCourierById(Guid id)
     {
+        var cacheKey = $"Courier:{id}";
+        var cachedCourier = await _redisCacheService.GetCacheValueAsync<CourierDto>(cacheKey);
+        if (cachedCourier != null)
+        {
+            return CustomResponse(cachedCourier);
+        }
+
         return await HandleRequestAsync(
             async () =>
             {
@@ -44,6 +54,7 @@ public class CourierController : MainController
                     return CustomResponse(null, StatusCodes.Status404NotFound);
                 }
                 var courierDto = _mapper.Map<CourierDto>(courier);
+                await _redisCacheService.SetCacheValueAsync(cacheKey, courierDto);
                 return CustomResponse(courierDto);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
@@ -57,16 +68,34 @@ public class CourierController : MainController
         return await HandleRequestAsync(
             async () =>
             {
+                string cacheKey = page.HasValue && pageSize.HasValue
+                    ? $"CourierList:Page:{page.Value}:PageSize:{pageSize.Value}"
+                    : "CourierList:All";
+
                 if (page.HasValue && pageSize.HasValue)
                 {
+                    var cachedCouriers = await _redisCacheService.GetCacheValueAsync<PaginatedResponse<CourierDto>>(cacheKey);
+                    if (cachedCouriers != null)
+                    {
+                        return CustomResponse(cachedCouriers);
+                    }
+
                     var couriers = await _courierService.GetAllPaged(page.Value, pageSize.Value);
                     var courierDtos = _mapper.Map<PaginatedResponse<CourierDto>>(couriers);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, courierDtos);
                     return CustomResponse(courierDtos);
                 }
                 else
                 {
+                    var cachedCouriers = await _redisCacheService.GetCacheValueAsync<IEnumerable<CourierDto>>(cacheKey);
+                    if (cachedCouriers != null)
+                    {
+                        return CustomResponse(cachedCouriers);
+                    }
+
                     var couriers = await _courierService.GetAll();
                     var courierDtos = _mapper.Map<IEnumerable<CourierDto>>(couriers);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, courierDtos);
                     return CustomResponse(courierDtos);
                 }
             },
@@ -90,7 +119,7 @@ public class CourierController : MainController
                 }
 
                 var createdCourierDto = _mapper.Map<CourierDto>(courier);
-                return CustomResponse(new { success = true, data = createdCourierDto }, StatusCodes.Status201Created);
+                return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
         );
@@ -145,21 +174,9 @@ public class CourierController : MainController
                         return CustomResponse("Failed to update CNH image", StatusCodes.Status400BadRequest);
                     }
                 }
-                return CustomResponse(null, StatusCodes.Status204NoContent);
+                return CustomResponse("CNH image updated successfully", StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)
         );
-    }
-
-    private async Task<IActionResult> HandleRequestAsync(Func<Task<IActionResult>> operation, Func<Exception, IActionResult> handleException)
-    {
-        try
-        {
-            return await operation();
-        }
-        catch (Exception ex)
-        {
-            return handleException(ex);
-        }
     }
 }

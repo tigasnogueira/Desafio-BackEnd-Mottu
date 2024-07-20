@@ -20,20 +20,30 @@ public class MotorcycleController : MainController
 {
     private readonly IMotorcycleService _motorcycleService;
     private readonly IMapper _mapper;
+    private readonly IRedisCacheService _redisCacheService;
 
     public MotorcycleController(IMotorcycleService motorcycleService,
                                 IMapper mapper,
+                                IRedisCacheService redisCacheService,
                                 INotifier notifier,
                                 IAspNetUser user) : base(notifier, user)
     {
         _motorcycleService = motorcycleService;
         _mapper = mapper;
+        _redisCacheService = redisCacheService;
     }
 
     [HttpGet("{id:guid}")]
     [ClaimsAuthorize("Motorcycle", "Get")]
     public async Task<IActionResult> GetMotorcycleById(Guid id)
     {
+        var cacheKey = $"Motorcycle:{id}";
+        var cachedMotorcycle = await _redisCacheService.GetCacheValueAsync<MotorcycleDto>(cacheKey);
+        if (cachedMotorcycle != null)
+        {
+            return CustomResponse(cachedMotorcycle);
+        }
+
         return await HandleRequestAsync(
             async () =>
             {
@@ -43,6 +53,7 @@ public class MotorcycleController : MainController
                     return CustomResponse("Resource not found", StatusCodes.Status404NotFound);
                 }
                 var motorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
+                await _redisCacheService.SetCacheValueAsync(cacheKey, motorcycleDto);
                 return CustomResponse(motorcycleDto);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
@@ -56,16 +67,34 @@ public class MotorcycleController : MainController
         return await HandleRequestAsync(
             async () =>
             {
+                string cacheKey = page.HasValue && pageSize.HasValue
+                    ? $"MotorcycleList:Page:{page.Value}:PageSize:{pageSize.Value}"
+                    : "MotorcycleList:All";
+
                 if (page.HasValue && pageSize.HasValue)
                 {
+                    var cachedMotorcycles = await _redisCacheService.GetCacheValueAsync<PaginatedResponse<MotorcycleDto>>(cacheKey);
+                    if (cachedMotorcycles != null)
+                    {
+                        return CustomResponse(cachedMotorcycles);
+                    }
+
                     var motorcycles = await _motorcycleService.GetAllPaged(page.Value, pageSize.Value);
                     var motorcycleDtos = _mapper.Map<PaginatedResponse<MotorcycleDto>>(motorcycles);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, motorcycleDtos);
                     return CustomResponse(motorcycleDtos);
                 }
                 else
                 {
+                    var cachedMotorcycles = await _redisCacheService.GetCacheValueAsync<IEnumerable<MotorcycleDto>>(cacheKey);
+                    if (cachedMotorcycles != null)
+                    {
+                        return CustomResponse(cachedMotorcycles);
+                    }
+
                     var motorcycles = await _motorcycleService.GetAll();
                     var motorcycleDtos = _mapper.Map<IEnumerable<MotorcycleDto>>(motorcycles);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, motorcycleDtos);
                     return CustomResponse(motorcycleDtos);
                 }
             },
@@ -122,17 +151,5 @@ public class MotorcycleController : MainController
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
         );
-    }
-
-    private async Task<IActionResult> HandleRequestAsync(Func<Task<IActionResult>> operation, Func<Exception, IActionResult> handleException)
-    {
-        try
-        {
-            return await operation();
-        }
-        catch (Exception ex)
-        {
-            return handleException(ex);
-        }
     }
 }

@@ -16,16 +16,18 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
 {
     private readonly IMotorcycleService _motorcycleServiceMock;
     private readonly IMapper _mapperMock;
+    private readonly IRedisCacheService _redisCacheServiceMock;
 
     public MotorcycleControllerTests() : base()
     {
         _motorcycleServiceMock = Substitute.For<IMotorcycleService>();
         _mapperMock = Substitute.For<IMapper>();
+        _redisCacheServiceMock = Substitute.For<IRedisCacheService>();
 
         _userMock.GetUserName().Returns("TestUser");
         _userMock.GetUserEmail().Returns("TestUser");
 
-        controller = new MotorcycleController(_motorcycleServiceMock, _mapperMock, _notifierMock, _userMock)
+        controller = new MotorcycleController(_motorcycleServiceMock, _mapperMock, _redisCacheServiceMock, _notifierMock, _userMock)
         {
             ControllerContext = new ControllerContext
             {
@@ -52,58 +54,61 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
     [Fact]
     public async Task GetMotorcycleById_ShouldReturnMotorcycle_WhenMotorcycleExists()
     {
-        // Arrange
         var motorcycleId = Guid.NewGuid();
         var motorcycle = new Motorcycle { Id = motorcycleId };
         var motorcycleDto = new MotorcycleDto { Id = motorcycleId };
+        var cacheKey = $"Motorcycle:{motorcycleId}";
 
+        _redisCacheServiceMock.GetCacheValueAsync<MotorcycleDto>(cacheKey).Returns((MotorcycleDto)null);
         _motorcycleServiceMock.GetById(motorcycleId).Returns(Task.FromResult(motorcycle));
         _mapperMock.Map<MotorcycleDto>(motorcycle).Returns(motorcycleDto);
 
-        // Act
         var result = await controller.GetMotorcycleById(motorcycleId);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
 
         var response = okResult.Value;
         Assert.True((bool)response.GetType().GetProperty("success").GetValue(response));
         Assert.Equal(motorcycleDto, response.GetType().GetProperty("data").GetValue(response));
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<MotorcycleDto>(cacheKey);
+        await _redisCacheServiceMock.Received(1).SetCacheValueAsync(cacheKey, motorcycleDto);
     }
 
     [Fact]
     public async Task GetMotorcycleById_ShouldReturnNotFound_WhenMotorcycleDoesNotExist()
     {
-        // Arrange
         var motorcycleId = Guid.NewGuid();
+        var cacheKey = $"Motorcycle:{motorcycleId}";
+
+        _redisCacheServiceMock.GetCacheValueAsync<MotorcycleDto>(cacheKey).Returns((MotorcycleDto)null);
         _motorcycleServiceMock.GetById(motorcycleId).Returns(Task.FromResult<Motorcycle>(null));
 
-        // Act
         var result = await controller.GetMotorcycleById(motorcycleId);
 
-        // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
         VerifyCommonErrorResponse(notFoundResult, "Resource not found");
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<MotorcycleDto>(cacheKey);
     }
 
     [Fact]
     public async Task GetAllMotorcycles_ShouldReturnPagedMotorcycles_WhenPagingParametersAreProvided()
     {
-        // Arrange
         var page = 1;
         var pageSize = 10;
         var motorcycles = new List<Motorcycle> { new Motorcycle() };
         var paginatedResponse = new PaginatedResponse<Motorcycle>(motorcycles, 1, page, pageSize);
         var paginatedDto = new PaginatedResponse<MotorcycleDto>(new List<MotorcycleDto> { new MotorcycleDto() }, 1, page, pageSize);
+        var cacheKey = $"MotorcycleList:Page:{page}:PageSize:{pageSize}";
 
+        _redisCacheServiceMock.GetCacheValueAsync<PaginatedResponse<MotorcycleDto>>(cacheKey).Returns((PaginatedResponse<MotorcycleDto>)null);
         _motorcycleServiceMock.GetAllPaged(page, pageSize).Returns(Task.FromResult(paginatedResponse));
         _mapperMock.Map<PaginatedResponse<MotorcycleDto>>(paginatedResponse).Returns(paginatedDto);
 
-        // Act
         var result = await controller.GetAllMotorcycles(page, pageSize);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
 
@@ -116,22 +121,24 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
 
         Assert.True((bool)successProperty.GetValue(responseObject));
         Assert.Equal(paginatedDto, dataProperty.GetValue(responseObject));
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<PaginatedResponse<MotorcycleDto>>(cacheKey);
+        await _redisCacheServiceMock.Received(1).SetCacheValueAsync(cacheKey, paginatedDto);
     }
 
     [Fact]
     public async Task GetAllMotorcycles_ShouldReturnAllMotorcycles_WhenNoPagingParametersProvided()
     {
-        // Arrange
         var motorcycles = new List<Motorcycle> { new Motorcycle() };
         var motorcycleDtos = new List<MotorcycleDto> { new MotorcycleDto() };
+        var cacheKey = "MotorcycleList:All";
 
+        _redisCacheServiceMock.GetCacheValueAsync<IEnumerable<MotorcycleDto>>(cacheKey).Returns((IEnumerable<MotorcycleDto>)null);
         _motorcycleServiceMock.GetAll().Returns(Task.FromResult((IEnumerable<Motorcycle>)motorcycles));
         _mapperMock.Map<IEnumerable<MotorcycleDto>>(motorcycles).Returns(motorcycleDtos);
 
-        // Act
         var result = await controller.GetAllMotorcycles(null, null);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(result);
         Assert.NotNull(okResult.Value);
 
@@ -144,6 +151,9 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
 
         Assert.True((bool)successProperty.GetValue(responseObject));
         Assert.Equal(motorcycleDtos, dataProperty.GetValue(responseObject) as IEnumerable<MotorcycleDto>);
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<IEnumerable<MotorcycleDto>>(cacheKey);
+        await _redisCacheServiceMock.Received(1).SetCacheValueAsync(cacheKey, motorcycleDtos);
     }
 
     [Fact]
@@ -230,7 +240,11 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
     [Fact]
     public async Task GetAllMotorcycles_ShouldReturnBadRequest_WhenExceptionOccurs()
     {
+        var cacheKey = "MotorcycleList:All";
+
         // Arrange
+        _redisCacheServiceMock.GetCacheValueAsync<IEnumerable<MotorcycleDto>>(cacheKey).Returns(Task.FromResult<IEnumerable<MotorcycleDto>>(null));
+
         _motorcycleServiceMock.GetAll().Throws(new Exception("Test Exception"));
 
         // Act
@@ -238,7 +252,19 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
 
         // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        VerifyCommonErrorResponse(badRequestResult, "Test Exception");
+        Assert.NotNull(badRequestResult.Value);
+
+        var responseObject = badRequestResult.Value;
+        var successProperty = responseObject.GetType().GetProperty("success");
+        var errorsProperty = responseObject.GetType().GetProperty("errors");
+
+        Assert.NotNull(successProperty);
+        Assert.NotNull(errorsProperty);
+
+        Assert.False((bool)successProperty.GetValue(responseObject));
+        Assert.Equal("Test Exception", errorsProperty.GetValue(responseObject) as string);
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<IEnumerable<MotorcycleDto>>(cacheKey);
     }
 
     [Fact]
