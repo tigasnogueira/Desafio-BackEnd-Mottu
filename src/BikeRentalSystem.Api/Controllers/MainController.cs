@@ -13,7 +13,7 @@ public abstract class MainController : Controller
     protected readonly IAspNetUser _user;
 
     protected Guid UserId { get; set; }
-    protected string UserName { get; set; }
+    protected string UserEmail { get; set; }
 
     protected MainController(INotifier notifier, IAspNetUser user)
     {
@@ -22,7 +22,7 @@ public abstract class MainController : Controller
         if (user.IsAuthenticated())
         {
             UserId = user.GetUserId();
-            UserName = user.GetUserName();
+            UserEmail = user.GetUserEmail();
         }
     }
 

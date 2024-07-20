@@ -6,7 +6,10 @@ namespace BikeRentalSystem.Infrastructure.Context;
 
 public class DataContext : DbContext
 {
-    public DataContext(DbContextOptions<DataContext> options) : base(options) { }
+    public DataContext(DbContextOptions<DataContext> options)
+        : base(options)
+    {
+    }
 
     public DbSet<Motorcycle> Motorcycles { get; set; }
     public DbSet<Courier> Couriers { get; set; }

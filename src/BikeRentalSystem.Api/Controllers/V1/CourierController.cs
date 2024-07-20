@@ -21,7 +21,10 @@ public class CourierController : MainController
     private readonly ICourierService _courierService;
     private readonly IMapper _mapper;
 
-    public CourierController(ICourierService courierService, IMapper mapper, INotifier notifier, IAspNetUser user) : base(notifier, user)
+    public CourierController(ICourierService courierService,
+                             IMapper mapper,
+                             INotifier notifier,
+                             IAspNetUser user) : base(notifier, user)
     {
         _courierService = courierService;
         _mapper = mapper;
@@ -80,14 +83,14 @@ public class CourierController : MainController
             async () =>
             {
                 var courier = _mapper.Map<Courier>(courierDto);
-                var success = await _courierService.Add(courier);
+                var success = await _courierService.Add(courier, UserEmail);
                 if (!success)
                 {
                     return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
                 }
 
                 var createdCourierDto = _mapper.Map<CourierDto>(courier);
-                return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
+                return CustomResponse(new { success = true, data = createdCourierDto }, StatusCodes.Status201Created);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
         );
@@ -103,7 +106,7 @@ public class CourierController : MainController
             {
                 var courier = _mapper.Map<Courier>(courierDto);
                 courier.Id = id;
-                await _courierService.Update(courier);
+                await _courierService.Update(courier, UserEmail);
 
                 var updatedCourierDto = _mapper.Map<CourierDto>(courier);
                 return CustomResponse(updatedCourierDto, StatusCodes.Status204NoContent);
@@ -119,7 +122,7 @@ public class CourierController : MainController
         return await HandleRequestAsync(
             async () =>
             {
-                await _courierService.SoftDelete(id);
+                await _courierService.SoftDelete(id, UserEmail);
                 return CustomResponse(null, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)
@@ -136,13 +139,13 @@ public class CourierController : MainController
             {
                 using (var stream = cnhImage.OpenReadStream())
                 {
-                    var result = await _courierService.AddOrUpdateCnhImage(cnpj, stream);
+                    var result = await _courierService.AddOrUpdateCnhImage(cnpj, stream, UserEmail);
                     if (!result)
                     {
                         return CustomResponse("Failed to update CNH image", StatusCodes.Status400BadRequest);
                     }
                 }
-                return CustomResponse("CNH image updated successfully", StatusCodes.Status204NoContent);
+                return CustomResponse(null, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)
         );

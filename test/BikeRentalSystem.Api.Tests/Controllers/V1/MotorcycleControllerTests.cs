@@ -21,6 +21,10 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
     {
         _motorcycleServiceMock = Substitute.For<IMotorcycleService>();
         _mapperMock = Substitute.For<IMapper>();
+
+        _userMock.GetUserName().Returns("TestUser");
+        _userMock.GetUserEmail().Returns("TestUser");
+
         controller = new MotorcycleController(_motorcycleServiceMock, _mapperMock, _notifierMock, _userMock)
         {
             ControllerContext = new ControllerContext
@@ -152,7 +156,7 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
 
         _mapperMock.Map<Motorcycle>(motorcycleRequest).Returns(motorcycle);
         _mapperMock.Map<MotorcycleDto>(motorcycle).Returns(motorcycleDto);
-        _motorcycleServiceMock.Add(motorcycle).Returns(Task.FromResult(true));
+        _motorcycleServiceMock.Add(motorcycle, "TestUser").Returns(Task.FromResult(true));
 
         // Act
         var result = await controller.CreateMotorcycle(motorcycleRequest);
@@ -182,7 +186,7 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
         var motorcycle = new Motorcycle { Id = motorcycleId };
 
         _mapperMock.Map<Motorcycle>(motorcycleUpdateRequest).Returns(motorcycle);
-        _motorcycleServiceMock.Update(motorcycle).Returns(Task.FromResult(true));
+        _motorcycleServiceMock.Update(motorcycle, "TestUser").Returns(Task.FromResult(true));
 
         // Act
         var result = await controller.UpdateMotorcycle(motorcycleId, motorcycleUpdateRequest);
@@ -196,7 +200,7 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
     {
         // Arrange
         var motorcycleId = Guid.NewGuid();
-        _motorcycleServiceMock.SoftDelete(motorcycleId).Returns(Task.FromResult(true));
+        _motorcycleServiceMock.SoftDelete(motorcycleId, "TestUser").Returns(Task.FromResult(true));
 
         // Act
         var result = await controller.SoftDeleteMotorcycle(motorcycleId);
@@ -213,7 +217,7 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
         var motorcycle = new Motorcycle();
 
         _mapperMock.Map<Motorcycle>(motorcycleRequest).Returns(motorcycle);
-        _motorcycleServiceMock.Add(motorcycle).Returns(Task.FromResult(false));
+        _motorcycleServiceMock.Add(motorcycle, "TestUser").Returns(Task.FromResult(false));
 
         // Act
         var result = await controller.CreateMotorcycle(motorcycleRequest);
@@ -257,7 +261,7 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
     {
         // Arrange
         var motorcycleRequest = new MotorcycleRequest();
-        _motorcycleServiceMock.When(x => x.Add(Arg.Any<Motorcycle>())).Do(x => throw new Exception("Test Exception"));
+        _motorcycleServiceMock.When(x => x.Add(Arg.Any<Motorcycle>(), Arg.Any<string>())).Do(x => throw new Exception("Test Exception"));
 
         // Act
         var result = await controller.CreateMotorcycle(motorcycleRequest);

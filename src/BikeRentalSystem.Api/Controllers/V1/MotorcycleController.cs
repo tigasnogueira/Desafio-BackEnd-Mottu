@@ -21,8 +21,10 @@ public class MotorcycleController : MainController
     private readonly IMotorcycleService _motorcycleService;
     private readonly IMapper _mapper;
 
-    public MotorcycleController(IMotorcycleService motorcycleService, IMapper mapper, INotifier notifier, IAspNetUser user)
-        : base(notifier, user)
+    public MotorcycleController(IMotorcycleService motorcycleService,
+                                IMapper mapper,
+                                INotifier notifier,
+                                IAspNetUser user) : base(notifier, user)
     {
         _motorcycleService = motorcycleService;
         _mapper = mapper;
@@ -79,7 +81,7 @@ public class MotorcycleController : MainController
             async () =>
             {
                 var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
-                var result = await _motorcycleService.Add(motorcycle);
+                var result = await _motorcycleService.Add(motorcycle, UserEmail);
                 if (!result)
                 {
                     return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
@@ -100,7 +102,7 @@ public class MotorcycleController : MainController
             {
                 var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
                 motorcycle.Id = id;
-                await _motorcycleService.Update(motorcycle);
+                await _motorcycleService.Update(motorcycle, UserEmail);
                 var updatedMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
                 return CustomResponse(updatedMotorcycleDto, StatusCodes.Status204NoContent);
             },
@@ -115,7 +117,7 @@ public class MotorcycleController : MainController
         return await HandleRequestAsync(
             async () =>
             {
-                await _motorcycleService.SoftDelete(id);
+                await _motorcycleService.SoftDelete(id, UserEmail);
                 return CustomResponse(null, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)

@@ -83,7 +83,7 @@ public class CourierServiceTests
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _courierService.Add(courier);
+        var result = await _courierService.Add(courier, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -108,7 +108,7 @@ public class CourierServiceTests
         validator.ValidateAsync(courier).Returns(Task.FromResult(validationResult));
 
         // Act
-        var result = await _courierService.Add(courier);
+        var result = await _courierService.Add(courier, "TestUser");
 
         // Assert
         result.Should().BeFalse();
@@ -132,7 +132,7 @@ public class CourierServiceTests
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _courierService.Update(updatedCourier);
+        var result = await _courierService.Update(updatedCourier, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -159,7 +159,7 @@ public class CourierServiceTests
         validator.ValidateAsync(updatedCourier).Returns(Task.FromResult(validationResult));
 
         // Act
-        var result = await _courierService.Update(updatedCourier);
+        var result = await _courierService.Update(updatedCourier, "TestUser");
 
         // Assert
         result.Should().BeFalse();
@@ -180,7 +180,7 @@ public class CourierServiceTests
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _courierService.SoftDelete(courierId);
+        var result = await _courierService.SoftDelete(courierId, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -197,7 +197,7 @@ public class CourierServiceTests
         _unitOfWorkMock.Couriers.GetById(courierId).Returns(Task.FromResult<Courier>(null));
 
         // Act
-        var result = await _courierService.SoftDelete(courierId);
+        var result = await _courierService.SoftDelete(courierId, "TestUser");
 
         // Assert
         result.Should().BeFalse();
@@ -217,7 +217,7 @@ public class CourierServiceTests
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _courierService.AddOrUpdateCnhImage(cnpj, new MemoryStream());
+        var result = await _courierService.AddOrUpdateCnhImage(cnpj, new MemoryStream(), "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -233,7 +233,7 @@ public class CourierServiceTests
         _unitOfWorkMock.Couriers.GetByCnpj(cnpj).Returns(Task.FromResult<Courier>(null));
 
         // Act
-        var result = await _courierService.AddOrUpdateCnhImage(cnpj, new MemoryStream());
+        var result = await _courierService.AddOrUpdateCnhImage(cnpj, new MemoryStream(), "TestUser");
 
         // Assert
         result.Should().BeFalse();

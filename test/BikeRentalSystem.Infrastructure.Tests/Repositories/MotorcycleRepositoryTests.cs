@@ -30,7 +30,7 @@ public class MotorcycleRepositoryTests : IDisposable
     public async Task GetByPlate_ShouldReturnMotorcycle_WhenPlateExists()
     {
         // Arrange
-        var motorcycle = new Motorcycle(2020, "ModelX", "ABC1234");
+        var motorcycle = new Motorcycle{ Year = 2020, Model = "ModelX", Plate = "ABC1234", CreatedByUser = "TestUser" };
         await _context.Motorcycles.AddAsync(motorcycle);
         await _context.SaveChangesAsync();
 
@@ -56,8 +56,8 @@ public class MotorcycleRepositoryTests : IDisposable
     public async Task GetAllByYear_ShouldReturnMotorcycles_WhenYearExists()
     {
         // Arrange
-        var motorcycle1 = new Motorcycle(2020, "ModelX", "ABC1234");
-        var motorcycle2 = new Motorcycle(2020, "ModelY", "XYZ5678");
+        var motorcycle1 = new Motorcycle{ Year = 2020, Model = "ModelX", Plate = "ABC1234", CreatedByUser = "TestUser" };
+        var motorcycle2 = new Motorcycle{ Year = 2020, Model = "ModelY", Plate = "XYZ5678", CreatedByUser = "TestUser" };
         await _context.Motorcycles.AddRangeAsync(motorcycle1, motorcycle2);
         await _context.SaveChangesAsync();
 
@@ -84,7 +84,7 @@ public class MotorcycleRepositoryTests : IDisposable
     public async Task GetById_ShouldReturnEntity_WhenIdExists()
     {
         // Arrange
-        var motorcycle = new Motorcycle(2020, "ModelX", "ABC1234");
+        var motorcycle = new Motorcycle{ Year = 2020, Model = "ModelX", Plate = "ABC1234", CreatedByUser = "TestUser" };
         await _context.Motorcycles.AddAsync(motorcycle);
         await _context.SaveChangesAsync();
 
@@ -110,8 +110,8 @@ public class MotorcycleRepositoryTests : IDisposable
     public async Task GetAll_ShouldReturnAllEntities()
     {
         // Arrange
-        var motorcycle1 = new Motorcycle(2020, "ModelX", "ABC1234");
-        var motorcycle2 = new Motorcycle(2021, "ModelY", "XYZ5678");
+        var motorcycle1 = new Motorcycle{ Year = 2020, Model = "ModelX", Plate = "ABC1234", CreatedByUser = "TestUser" };
+        var motorcycle2 = new Motorcycle{ Year = 2021, Model = "ModelY", Plate = "XYZ5678", CreatedByUser = "TestUser" };
         await _context.Motorcycles.AddRangeAsync(motorcycle1, motorcycle2);
         await _context.SaveChangesAsync();
 
@@ -127,7 +127,7 @@ public class MotorcycleRepositoryTests : IDisposable
     public async Task Add_ShouldAddEntity()
     {
         // Arrange
-        var motorcycle = new Motorcycle(2020, "ModelX", "ABC1234");
+        var motorcycle = new Motorcycle { Year = 2020, Model = "ModelX", Plate = "ABC1234", CreatedByUser = "TestUser" };
 
         // Act
         await _repository.Add(motorcycle);
@@ -143,7 +143,7 @@ public class MotorcycleRepositoryTests : IDisposable
     public async Task Update_ShouldUpdateEntity()
     {
         // Arrange
-        var motorcycle = new Motorcycle(2020, "ModelX", "ABC1234");
+        var motorcycle = new Motorcycle { Year = 2020, Model = "ModelX", Plate = "ABC1234", CreatedByUser = "TestUser" };
         await _context.Motorcycles.AddAsync(motorcycle);
         await _context.SaveChangesAsync();
 
@@ -162,7 +162,7 @@ public class MotorcycleRepositoryTests : IDisposable
     public async Task Delete_ShouldMarkEntityAsDeleted()
     {
         // Arrange
-        var motorcycle = new Motorcycle(2020, "ModelX", "ABC1234");
+        var motorcycle = new Motorcycle { Year = 2020, Model = "ModelX", Plate = "ABC1234", CreatedByUser = "TestUser" };
         await _context.Motorcycles.AddAsync(motorcycle);
         await _context.SaveChangesAsync();
 

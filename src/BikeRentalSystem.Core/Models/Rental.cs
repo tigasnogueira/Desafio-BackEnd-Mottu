@@ -6,9 +6,9 @@ public class Rental : EntityBase
 {
     public Guid CourierId { get; set; }
     public Guid MotorcycleId { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public DateTime ExpectedEndDate { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DateOnly EndDate { get; set; }
+    public DateOnly ExpectedEndDate { get; set; }
     public decimal DailyRate { get; set; }
     public decimal TotalCost { get; set; }
     public RentalPlan Plan { get; set; }
@@ -20,7 +20,7 @@ public class Rental : EntityBase
     {
     }
 
-    public Rental(Guid courierId, Guid motorcycleId, DateTime startDate, DateTime endDate, DateTime expectedEndDate, decimal dailyRate, RentalPlan plan)
+    public Rental(Guid courierId, Guid motorcycleId, DateOnly startDate, DateOnly endDate, DateOnly expectedEndDate, decimal dailyRate, RentalPlan plan)
     {
         CourierId = courierId;
         MotorcycleId = motorcycleId;

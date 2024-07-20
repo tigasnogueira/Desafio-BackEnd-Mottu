@@ -10,8 +10,8 @@ public interface ICourierService
     Task<PaginatedResponse<Courier>> GetAllPaged(int page, int pageSize);
     Task<Courier?> GetByCnpj(string cnpj);
     Task<Courier?> GetByCnhNumber(string cnhNumber);
-    Task<bool> Add(Courier courier);
-    Task<bool> Update(Courier courier);
-    Task<bool> SoftDelete(Guid id);
-    Task<bool> AddOrUpdateCnhImage(string cnpj, Stream cnhImageStream);
+    Task<bool> Add(Courier courier, string userEmail);
+    Task<bool> Update(Courier courier, string userEmail);
+    Task<bool> SoftDelete(Guid id, string userEmail);
+    Task<bool> AddOrUpdateCnhImage(string cnpj, Stream cnhImageStream, string userEmail);
 }

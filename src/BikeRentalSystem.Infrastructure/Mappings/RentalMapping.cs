@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BikeRentalSystem.Infrastructure.Mappings;
 
-public class RentalMapping : IEntityTypeConfiguration<Rental>
+public class RentalMapping : EntityBaseMapping<Rental>
 {
-    public void Configure(EntityTypeBuilder<Rental> builder)
+    public override void Configure(EntityTypeBuilder<Rental> builder)
     {
-        builder.ToTable("Rentals");
+        base.Configure(builder);
 
-        builder.HasKey(r => r.Id);
+        builder.ToTable("Rentals");
 
         builder.Property(r => r.StartDate)
             .IsRequired();
@@ -23,15 +23,6 @@ public class RentalMapping : IEntityTypeConfiguration<Rental>
         builder.Property(r => r.DailyRate)
             .IsRequired()
             .HasColumnType("decimal(18,2)");
-
-        builder.Property(r => r.CreatedAt)
-            .IsRequired();
-
-        builder.Property(r => r.UpdatedAt)
-            .IsRequired(false);
-
-        builder.Property(r => r.IsDeleted)
-            .IsRequired();
 
         builder.HasOne(r => r.Courier)
             .WithMany()

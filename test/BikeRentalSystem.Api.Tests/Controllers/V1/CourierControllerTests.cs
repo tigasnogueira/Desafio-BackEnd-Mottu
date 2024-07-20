@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+using System.Security.Claims;
 
 namespace BikeRentalSystem.Api.Tests.Controllers.V1;
 
@@ -21,6 +22,10 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     {
         _courierServiceMock = Substitute.For<ICourierService>();
         _mapperMock = Substitute.For<IMapper>();
+
+        _userMock.GetUserName().Returns("TestUser");
+        _userMock.GetUserEmail().Returns("TestUser");
+
         controller = new CourierController(_courierServiceMock, _mapperMock, _notifierMock, _userMock)
         {
             ControllerContext = new ControllerContext
@@ -28,6 +33,21 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
                 HttpContext = _httpContext
             }
         };
+    }
+
+    private void VerifyCommonErrorResponse(ObjectResult result, string expectedErrorMessage)
+    {
+        Assert.NotNull(result.Value);
+
+        var responseObject = result.Value;
+        var successProperty = responseObject.GetType().GetProperty("success");
+        var errorsProperty = responseObject.GetType().GetProperty("errors");
+
+        Assert.NotNull(successProperty);
+        Assert.NotNull(errorsProperty);
+
+        Assert.False((bool)successProperty.GetValue(responseObject));
+        Assert.Equal(expectedErrorMessage, errorsProperty.GetValue(responseObject) as string);
     }
 
     [Fact]
@@ -125,6 +145,7 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task CreateCourier_ShouldReturnCreated_WhenCourierIsValid()
     {
+        // Arrange
         var courierRequest = new CourierRequest
         {
             Name = "John Doe",
@@ -149,34 +170,57 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
             Id = courier.Id,
             Name = "John Doe",
             Cnpj = "12345678901234",
-            BirthDate = new DateTime(1980, 1, 1),
+            BirthDate = new DateOnly(1980, 1, 1),
             CnhNumber = "1234567890",
             CnhType = "A"
         };
 
-        var cnhImage = Substitute.For<IFormFile>();
-        var stream = new MemoryStream();
-        cnhImage.OpenReadStream().Returns(stream);
-
         _mapperMock.Map<Courier>(courierRequest).Returns(courier);
         _mapperMock.Map<CourierDto>(courier).Returns(courierDto);
-        _courierServiceMock.Add(courier).Returns(Task.FromResult(true));
+        _courierServiceMock.Add(courier, "TestUser").Returns(Task.FromResult(true));
 
+        // Act
         var result = await controller.CreateCourier(courierRequest);
 
+        // Assert
+        await _courierServiceMock.Received(1).Add(courier, "TestUser");
         var createdResult = Assert.IsType<ObjectResult>(result);
         Assert.NotNull(createdResult.Value);
         Assert.Equal(StatusCodes.Status201Created, createdResult.StatusCode);
 
         var responseObject = createdResult.Value;
-        var successProperty = responseObject.GetType().GetProperty("success");
-        var dataProperty = responseObject.GetType().GetProperty("data");
+        var outerSuccessProperty = responseObject.GetType().GetProperty("success");
+        var outerDataProperty = responseObject.GetType().GetProperty("data");
 
-        Assert.NotNull(successProperty);
-        Assert.NotNull(dataProperty);
+        Assert.NotNull(outerSuccessProperty);
+        Assert.NotNull(outerDataProperty);
 
-        Assert.True((bool)successProperty.GetValue(responseObject));
-        Assert.Equal(courierDto, dataProperty.GetValue(responseObject));
+        bool outerSuccessValue = (bool)outerSuccessProperty.GetValue(responseObject);
+        var outerDataValue = outerDataProperty.GetValue(responseObject);
+
+        Assert.True(outerSuccessValue);
+        Assert.NotNull(outerDataValue);
+
+        var innerSuccessProperty = outerDataValue.GetType().GetProperty("success");
+        var innerDataProperty = outerDataValue.GetType().GetProperty("data");
+
+        Assert.NotNull(innerSuccessProperty);
+        Assert.NotNull(innerDataProperty);
+
+        bool innerSuccessValue = (bool)innerSuccessProperty.GetValue(outerDataValue);
+        var innerDataValue = innerDataProperty.GetValue(outerDataValue);
+
+        Assert.True(innerSuccessValue);
+        Assert.NotNull(innerDataValue);
+
+        var actualCourierDto = innerDataValue as CourierDto;
+        Assert.NotNull(actualCourierDto);
+        Assert.Equal(courierDto.Id, actualCourierDto.Id);
+        Assert.Equal(courierDto.Name, actualCourierDto.Name);
+        Assert.Equal(courierDto.Cnpj, actualCourierDto.Cnpj);
+        Assert.Equal(courierDto.BirthDate, actualCourierDto.BirthDate);
+        Assert.Equal(courierDto.CnhNumber, actualCourierDto.CnhNumber);
+        Assert.Equal(courierDto.CnhType, actualCourierDto.CnhType);
     }
 
     [Fact]
@@ -185,10 +229,9 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var courierId = Guid.NewGuid();
         var courierUpdateRequest = new CourierUpdateRequest();
         var courier = new Courier { Id = courierId };
-        var cnhImage = Substitute.For<IFormFile>();
 
         _mapperMock.Map<Courier>(courierUpdateRequest).Returns(courier);
-        _courierServiceMock.Update(courier);
+        _courierServiceMock.Update(courier, "TestUser").Returns(Task.FromResult(true));
 
         var result = await controller.UpdateCourier(courierId, courierUpdateRequest);
         var noContentResult = Assert.IsType<NoContentResult>(result);
@@ -198,7 +241,7 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     public async Task SoftDeleteCourier_ShouldReturnNoContent_WhenCourierIsSoftDeleted()
     {
         var courierId = Guid.NewGuid();
-        _courierServiceMock.SoftDelete(courierId).Returns(Task.FromResult(true));
+        _courierServiceMock.SoftDelete(courierId, "TestUser").Returns(Task.FromResult(true));
 
         var result = await controller.SoftDeleteCourier(courierId);
         var noContentResult = Assert.IsType<NoContentResult>(result);
@@ -207,14 +250,25 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task AddOrUpdateCnhImage_ShouldReturnNoContent_WhenImageIsUpdated()
     {
+        // Arrange
         var cnpj = "12345678000100";
         var cnhImage = Substitute.For<IFormFile>();
         var stream = new MemoryStream();
+        var userEmail = "TestUser";
+
+        _userMock.GetUserEmail().Returns(userEmail);
+        controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+        new Claim(ClaimTypes.Email, userEmail)
+        }));
 
         cnhImage.OpenReadStream().Returns(stream);
-        _courierServiceMock.AddOrUpdateCnhImage(cnpj, Arg.Any<Stream>()).Returns(Task.FromResult(true));
+        _courierServiceMock.AddOrUpdateCnhImage(cnpj, Arg.Any<Stream>(), userEmail).Returns(Task.FromResult(true));
 
+        // Act
         var result = await controller.AddOrUpdateCnhImage(cnpj, cnhImage);
+
+        // Assert
         var noContentResult = Assert.IsType<NoContentResult>(result);
     }
 
@@ -226,7 +280,7 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var stream = new MemoryStream();
 
         cnhImage.OpenReadStream().Returns(stream);
-        _courierServiceMock.AddOrUpdateCnhImage(cnpj, Arg.Any<Stream>()).Returns(Task.FromResult(false));
+        _courierServiceMock.AddOrUpdateCnhImage(cnpj, Arg.Any<Stream>(), "TestUser").Returns(Task.FromResult(false));
 
         var result = await controller.AddOrUpdateCnhImage(cnpj, cnhImage);
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
@@ -245,7 +299,7 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var cnhImage = Substitute.For<IFormFile>();
 
         _mapperMock.Map<Courier>(courierRequest).Returns(courier);
-        _courierServiceMock.Add(courier);
+        _courierServiceMock.Add(courier, "TestUser").Returns(Task.FromResult(false));
 
         var result = await controller.CreateCourier(courierRequest);
 
@@ -266,13 +320,10 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     [Fact]
     public async Task GetAllCouriers_ShouldReturnBadRequest_WhenExceptionOccurs()
     {
-        // Arrange
         _courierServiceMock.GetAll().Throws(new Exception("Test Exception"));
 
-        // Act
         var result = await controller.GetAllCouriers(null, null);
 
-        // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         Assert.NotNull(badRequestResult.Value);
 
@@ -314,7 +365,7 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
     {
         var courierRequest = new CourierRequest();
         var cnhImage = Substitute.For<IFormFile>();
-        _courierServiceMock.When(x => x.Add(Arg.Any<Courier>())).Do(x => throw new Exception("Test Exception"));
+        _courierServiceMock.When(x => x.Add(Arg.Any<Courier>(), Arg.Any<string>())).Do(x => throw new Exception("Test Exception"));
 
         var result = await controller.CreateCourier(courierRequest);
 

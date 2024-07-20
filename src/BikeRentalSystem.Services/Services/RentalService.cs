@@ -119,7 +119,7 @@ public class RentalService : BaseService, IRentalService
         }
     }
 
-    public async Task<bool> Add(Rental rental)
+    public async Task<bool> Add(Rental rental, string userEmail)
     {
         if (rental == null)
         {
@@ -141,6 +141,7 @@ public class RentalService : BaseService, IRentalService
             {
                 var (motorcycle, courier) = await GetForeignEntities(rental.MotorcycleId, rental.CourierId);
 
+                rental.CreatedByUser = userEmail;
                 rental.Motorcycle = motorcycle;
                 rental.Courier = courier;
                 rental.TotalCost = await CalculateRentalCost(rental);
@@ -171,7 +172,7 @@ public class RentalService : BaseService, IRentalService
         }
     }
 
-    public async Task<bool> Update(Rental rental)
+    public async Task<bool> Update(Rental rental, string userEmail)
     {
         if (rental == null)
         {
@@ -198,7 +199,7 @@ public class RentalService : BaseService, IRentalService
         {
             try
             {
-                UpdateRentalDetails(existingRental, rental);
+                UpdateRentalDetails(existingRental, rental, userEmail);
 
                 _unitOfWork.Rentals.Update(existingRental);
                 var result = await _unitOfWork.SaveAsync();
@@ -226,7 +227,7 @@ public class RentalService : BaseService, IRentalService
         }
     }
 
-    public async Task<bool> SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id, string userEmail)
     {
         try
         {
@@ -247,6 +248,7 @@ public class RentalService : BaseService, IRentalService
             {
                 try
                 {
+                    rental.UpdatedByUser = userEmail;
                     rental.ToggleIsDeleted();
                     await _unitOfWork.Rentals.Update(rental);
                     var result = await _unitOfWork.SaveAsync();
@@ -285,7 +287,7 @@ public class RentalService : BaseService, IRentalService
         return (motorcycle, courier);
     }
 
-    private void UpdateRentalDetails(Rental existingRental, Rental rental)
+    private void UpdateRentalDetails(Rental existingRental, Rental rental, string userEmail)
     {
         existingRental.CourierId = rental.CourierId;
         existingRental.MotorcycleId = rental.MotorcycleId;
@@ -295,6 +297,7 @@ public class RentalService : BaseService, IRentalService
         existingRental.DailyRate = rental.DailyRate;
         existingRental.TotalCost = CalculateRentalCost(existingRental).Result;
         existingRental.Plan = rental.Plan;
+        existingRental.UpdatedByUser = userEmail;
         existingRental.Update();
     }
 
@@ -312,7 +315,9 @@ public class RentalService : BaseService, IRentalService
             TotalCost = rental.TotalCost,
             Plan = rental.Plan,
             CreatedAt = rental.CreatedAt,
+            CreatedByUser = rental.CreatedByUser,
             UpdatedAt = rental.UpdatedAt,
+            UpdatedByUser = rental.UpdatedByUser,
             IsDeleted = rental.IsDeleted
         };
         _messageProducer.PublishAsync(rentalRegisteredEvent, "exchange_name", "routing_key");

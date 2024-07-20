@@ -12,7 +12,7 @@ public interface IRentalService
     Task<IEnumerable<Rental>> GetByMotorcycleId(Guid motorcycleId);
     Task<IEnumerable<Rental>> GetActiveRentals();
     Task<decimal> CalculateRentalCost(Rental rental);
-    Task<bool> Add(Rental rental);
-    Task<bool> Update(Rental rental);
-    Task<bool> SoftDelete(Guid id);
+    Task<bool> Add(Rental rental, string userEmail);
+    Task<bool> Update(Rental rental, string userEmail);
+    Task<bool> SoftDelete(Guid id, string userEmail);
 }

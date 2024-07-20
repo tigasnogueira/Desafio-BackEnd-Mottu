@@ -7,6 +7,8 @@ public class MotorcycleDto
     public string Model { get; set; } = string.Empty;
     public string Plate { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public string CreatedByUser { get; set; } = string.Empty;
     public DateTime? UpdatedAt { get; set; }
+    public string? UpdatedByUser { get; set; }
     public bool IsDeleted { get; set; }
 }

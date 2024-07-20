@@ -2,10 +2,19 @@
 
 public abstract class EntityBase
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public Guid Id { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string CreatedByUser { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public bool IsDeleted { get; set; } = false;
+    public string? UpdatedByUser { get; set; }
+    public bool IsDeleted { get; set; }
+
+    public EntityBase()
+    {
+        Id = Guid.NewGuid();
+        CreatedAt = DateTime.UtcNow;
+        IsDeleted = false;
+    }
 
     public void Update()
     {
@@ -14,6 +23,7 @@ public abstract class EntityBase
 
     public void ToggleIsDeleted()
     {
+        Update();
         IsDeleted = !IsDeleted;
     }
 }

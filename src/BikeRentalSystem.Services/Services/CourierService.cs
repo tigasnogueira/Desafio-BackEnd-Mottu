@@ -91,7 +91,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Add(Courier courier)
+    public async Task<bool> Add(Courier courier, string userEmail)
     {
         if (courier == null)
         {
@@ -113,6 +113,8 @@ public class CourierService : BaseService, ICourierService
         {
             try
             {
+                courier.CreatedByUser = userEmail;
+
                 await _unitOfWork.Couriers.Add(courier);
                 var result = await _unitOfWork.SaveAsync();
 
@@ -137,7 +139,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Update(Courier courier)
+    public async Task<bool> Update(Courier courier, string userEmail)
     {
         if (courier == null)
         {
@@ -166,7 +168,7 @@ public class CourierService : BaseService, ICourierService
         {
             try
             {
-                UpdateCourierDetails(existingCourier, courier);
+                UpdateCourierDetails(existingCourier, courier, userEmail);
 
                 await _unitOfWork.Couriers.Update(existingCourier);
                 var result = await _unitOfWork.SaveAsync();
@@ -192,7 +194,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id, string userEmail)
     {
         if (id == Guid.Empty)
         {
@@ -235,7 +237,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> AddOrUpdateCnhImage(string cnpj, Stream cnhImageStream)
+    public async Task<bool> AddOrUpdateCnhImage(string cnpj, Stream cnhImageStream, string userEmail)
     {
         if (string.IsNullOrEmpty(cnpj))
         {
@@ -260,6 +262,8 @@ public class CourierService : BaseService, ICourierService
                     await transaction.RollbackAsync();
                     return false;
                 }
+
+                courier.UpdatedByUser = userEmail;
 
                 var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(cnpj, cnhImageStream);
                 courier.CnhImage = cnhImageUrl;
@@ -295,7 +299,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    private void UpdateCourierDetails(Courier existingCourier, Courier newCourier)
+    private void UpdateCourierDetails(Courier existingCourier, Courier newCourier, string userEmail)
     {
         existingCourier.Name = newCourier.Name;
         existingCourier.Cnpj = newCourier.Cnpj;
@@ -303,6 +307,7 @@ public class CourierService : BaseService, ICourierService
         existingCourier.CnhNumber = newCourier.CnhNumber;
         existingCourier.CnhType = newCourier.CnhType;
         existingCourier.CnhImage = newCourier.CnhImage;
+        existingCourier.UpdatedByUser = userEmail;
         existingCourier.Update();
     }
 
@@ -318,7 +323,9 @@ public class CourierService : BaseService, ICourierService
             CnhType = courier.CnhType,
             CnhImage = courier.CnhImage,
             CreatedAt = courier.CreatedAt,
+            CreatedByUser = courier.CreatedByUser,
             UpdatedAt = courier.UpdatedAt,
+            UpdatedByUser = courier.UpdatedByUser,
             IsDeleted = courier.IsDeleted
         };
         _messageProducer.PublishAsync(courierRegisteredEvent, "exchange_name", "routing_key");

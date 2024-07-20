@@ -21,11 +21,13 @@
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.18" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
+    <ProjectReference Include="..\BikeRentalSystem.Shared\BikeRentalSystem.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

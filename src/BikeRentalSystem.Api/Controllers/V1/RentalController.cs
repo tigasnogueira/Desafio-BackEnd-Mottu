@@ -21,8 +21,10 @@ public class RentalController : MainController
     private readonly IRentalService _rentalService;
     private readonly IMapper _mapper;
 
-    public RentalController(IRentalService rentalService, IMapper mapper, INotifier notifier, IAspNetUser user)
-        : base(notifier, user)
+    public RentalController(IRentalService rentalService,
+                            IMapper mapper,
+                            INotifier notifier,
+                            IAspNetUser user) : base(notifier, user)
     {
         _rentalService = rentalService;
         _mapper = mapper;
@@ -79,7 +81,7 @@ public class RentalController : MainController
             async () =>
             {
                 var rental = _mapper.Map<Rental>(rentalDto);
-                var result = await _rentalService.Add(rental);
+                var result = await _rentalService.Add(rental, UserEmail);
 
                 if (!result)
                 {
@@ -102,7 +104,7 @@ public class RentalController : MainController
             {
                 var rental = _mapper.Map<Rental>(rentalDto);
                 rental.Id = id;
-                await _rentalService.Update(rental);
+                await _rentalService.Update(rental, UserEmail);
                 var updatedRentalDto = _mapper.Map<RentalDto>(rental);
                 return CustomResponse(updatedRentalDto, StatusCodes.Status204NoContent);
             },
@@ -117,7 +119,7 @@ public class RentalController : MainController
         return await HandleRequestAsync(
             async () =>
             {
-                await _rentalService.SoftDelete(id);
+                await _rentalService.SoftDelete(id, UserEmail);
                 return CustomResponse(null, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)

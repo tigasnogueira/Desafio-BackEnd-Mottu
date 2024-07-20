@@ -49,7 +49,7 @@ public class MotorcycleServiceTests
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _motorcycleService.Add(motorcycle);
+        var result = await _motorcycleService.Add(motorcycle, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -80,7 +80,7 @@ public class MotorcycleServiceTests
         validationMock.ValidateAsync(motorcycle).Returns(Task.FromResult(validationResult));
 
         // Act
-        var result = await _motorcycleService.Add(motorcycle);
+        var result = await _motorcycleService.Add(motorcycle, "TestUser");
 
         // Assert
         result.Should().BeFalse();
@@ -102,7 +102,7 @@ public class MotorcycleServiceTests
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _motorcycleService.Update(updatedMotorcycle);
+        var result = await _motorcycleService.Update(updatedMotorcycle, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -131,7 +131,7 @@ public class MotorcycleServiceTests
         validationMock.ValidateAsync(updatedMotorcycle).Returns(Task.FromResult(validationResult));
 
         // Act
-        var result = await _motorcycleService.Update(updatedMotorcycle);
+        var result = await _motorcycleService.Update(updatedMotorcycle, "TestUser");
 
         // Assert
         result.Should().BeFalse();
@@ -184,7 +184,7 @@ public class MotorcycleServiceTests
         _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _motorcycleService.SoftDelete(motorcycleId);
+        var result = await _motorcycleService.SoftDelete(motorcycleId, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -201,7 +201,7 @@ public class MotorcycleServiceTests
         _unitOfWorkMock.Motorcycles.GetById(motorcycleId).Returns(Task.FromResult<Motorcycle>(null));
 
         // Act
-        var result = await _motorcycleService.SoftDelete(motorcycleId);
+        var result = await _motorcycleService.SoftDelete(motorcycleId, "TestUser");
 
         // Assert
         result.Should().BeFalse();

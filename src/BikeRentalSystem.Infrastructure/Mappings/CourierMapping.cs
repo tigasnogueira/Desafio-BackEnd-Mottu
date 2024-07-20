@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BikeRentalSystem.Infrastructure.Mappings;
 
-public class CourierMapping : IEntityTypeConfiguration<Courier>
+public class CourierMapping : EntityBaseMapping<Courier>
 {
-    public void Configure(EntityTypeBuilder<Courier> builder)
+    public override void Configure(EntityTypeBuilder<Courier> builder)
     {
-        builder.ToTable("Couriers");
+        base.Configure(builder);
 
-        builder.HasKey(c => c.Id);
+        builder.ToTable("Couriers");
 
         builder.Property(c => c.Name)
             .IsRequired()
@@ -40,14 +40,5 @@ public class CourierMapping : IEntityTypeConfiguration<Courier>
         builder.Property(c => c.CnhImage)
             .HasMaxLength(255)
             .IsRequired(false);
-
-        builder.Property(c => c.CreatedAt)
-            .IsRequired();
-
-        builder.Property(c => c.UpdatedAt)
-            .IsRequired(false);
-
-        builder.Property(c => c.IsDeleted)
-            .IsRequired();
     }
 }

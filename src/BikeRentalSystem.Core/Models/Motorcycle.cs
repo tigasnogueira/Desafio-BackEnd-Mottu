@@ -6,7 +6,7 @@ public class Motorcycle : EntityBase
     public string Model { get; set; } = string.Empty;
     public string Plate { get; set; } = string.Empty;
 
-    public Motorcycle()
+    public Motorcycle() 
     {
     }
 

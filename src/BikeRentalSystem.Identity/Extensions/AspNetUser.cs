@@ -22,7 +22,7 @@ public class AspNetUser : IAspNetUser
 
     public string GetUserName()
     {
-        return IsAuthenticated() ? _accessor.HttpContext?.User?.Identity?.Name ?? string.Empty : string.Empty;
+        return IsAuthenticated() ? _accessor.HttpContext?.User?.GetUserName() ?? string.Empty : string.Empty;
     }
 
     public string GetUserEmail()
@@ -56,6 +56,17 @@ public static class ClaimsPrincipalExtensions
         }
 
         var claim = principal.FindFirst(ClaimTypes.NameIdentifier);
+        return claim?.Value;
+    }
+
+    public static string? GetUserName(this ClaimsPrincipal principal)
+    {
+        if (principal == null)
+        {
+            throw new ArgumentNullException(nameof(principal));
+        }
+
+        var claim = principal.FindFirst(ClaimTypes.Name);
         return claim?.Value;
     }
 

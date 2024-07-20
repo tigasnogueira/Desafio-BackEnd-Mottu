@@ -91,7 +91,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    public async Task<bool> Add(Motorcycle motorcycle)
+    public async Task<bool> Add(Motorcycle motorcycle, string userEmail)
     {
         if (motorcycle == null)
         {
@@ -113,6 +113,8 @@ public class MotorcycleService : BaseService, IMotorcycleService
         {
             try
             {
+                motorcycle.CreatedByUser = userEmail;
+
                 await _unitOfWork.Motorcycles.Add(motorcycle);
                 var result = await _unitOfWork.SaveAsync();
 
@@ -144,7 +146,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    public async Task<bool> Update(Motorcycle motorcycle)
+    public async Task<bool> Update(Motorcycle motorcycle, string userEmail)
     {
         if (motorcycle == null)
         {
@@ -173,7 +175,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         {
             try
             {
-                UpdateMotorcycleDetails(existingMotorcycle, motorcycle);
+                UpdateMotorcycleDetails(existingMotorcycle, motorcycle, userEmail);
 
                 await _unitOfWork.Motorcycles.Update(existingMotorcycle);
                 var result = await _unitOfWork.SaveAsync();
@@ -201,7 +203,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    public async Task<bool> SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id, string userEmail)
     {
         try
         {
@@ -222,6 +224,8 @@ public class MotorcycleService : BaseService, IMotorcycleService
             {
                 try
                 {
+                    motorcycle.UpdatedByUser = userEmail;
+
                     motorcycle.ToggleIsDeleted();
                     await _unitOfWork.Motorcycles.Update(motorcycle);
                     var result = await _unitOfWork.SaveAsync();
@@ -252,11 +256,12 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    private void UpdateMotorcycleDetails(Motorcycle existingMotorcycle, Motorcycle updatedMotorcycle)
+    private void UpdateMotorcycleDetails(Motorcycle existingMotorcycle, Motorcycle updatedMotorcycle, string userEmail)
     {
         existingMotorcycle.Year = updatedMotorcycle.Year;
         existingMotorcycle.Model = updatedMotorcycle.Model;
         existingMotorcycle.Plate = updatedMotorcycle.Plate;
+        existingMotorcycle.UpdatedByUser = userEmail;
         existingMotorcycle.Update();
     }
 
@@ -269,7 +274,9 @@ public class MotorcycleService : BaseService, IMotorcycleService
             Model = motorcycle.Model,
             Plate = motorcycle.Plate,
             CreatedAt = motorcycle.CreatedAt,
+            CreatedByUser = motorcycle.CreatedByUser,
             UpdatedAt = motorcycle.UpdatedAt,
+            UpdatedByUser = motorcycle.UpdatedByUser,
             IsDeleted = motorcycle.IsDeleted
         };
         _messageProducer.PublishAsync(motorcycleRegisteredEvent, "exchange_name", "routing_key");

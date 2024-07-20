@@ -21,6 +21,10 @@ public class RentalControllerTests : BaseControllerTests<RentalController>
     {
         _rentalServiceMock = Substitute.For<IRentalService>();
         _mapperMock = Substitute.For<IMapper>();
+
+        _userMock.GetUserName().Returns("TestUser");
+        _userMock.GetUserEmail().Returns("TestUser");
+
         controller = new RentalController(_rentalServiceMock, _mapperMock, _notifierMock, _userMock)
         {
             ControllerContext = new ControllerContext
@@ -152,7 +156,7 @@ public class RentalControllerTests : BaseControllerTests<RentalController>
 
         _mapperMock.Map<Rental>(rentalRequest).Returns(rental);
         _mapperMock.Map<RentalDto>(rental).Returns(rentalDto);
-        _rentalServiceMock.Add(rental).Returns(Task.FromResult(true));
+        _rentalServiceMock.Add(rental, "TestUser").Returns(Task.FromResult(true));
 
         // Act
         var result = await controller.CreateRental(rentalRequest);
@@ -182,7 +186,7 @@ public class RentalControllerTests : BaseControllerTests<RentalController>
         var rental = new Rental { Id = rentalId };
 
         _mapperMock.Map<Rental>(rentalUpdateRequest).Returns(rental);
-        _rentalServiceMock.Update(rental).Returns(Task.FromResult(true));
+        _rentalServiceMock.Update(rental, "TestUser").Returns(Task.FromResult(true));
 
         // Act
         var result = await controller.UpdateRental(rentalId, rentalUpdateRequest);
@@ -196,7 +200,7 @@ public class RentalControllerTests : BaseControllerTests<RentalController>
     {
         // Arrange
         var rentalId = Guid.NewGuid();
-        _rentalServiceMock.SoftDelete(rentalId).Returns(Task.FromResult(true));
+        _rentalServiceMock.SoftDelete(rentalId, "TestUser").Returns(Task.FromResult(true));
 
         // Act
         var result = await controller.SoftDeleteRental(rentalId);
@@ -213,7 +217,7 @@ public class RentalControllerTests : BaseControllerTests<RentalController>
         var rental = new Rental();
 
         _mapperMock.Map<Rental>(rentalRequest).Returns(rental);
-        _rentalServiceMock.Add(rental).Returns(Task.FromResult(false));
+        _rentalServiceMock.Add(rental, "TestUser").Returns(Task.FromResult(false));
 
         // Act
         var result = await controller.CreateRental(rentalRequest);
@@ -257,7 +261,7 @@ public class RentalControllerTests : BaseControllerTests<RentalController>
     {
         // Arrange
         var rentalRequest = new RentalRequest();
-        _rentalServiceMock.When(x => x.Add(Arg.Any<Rental>())).Do(x => throw new Exception("Test Exception"));
+        _rentalServiceMock.When(x => x.Add(Arg.Any<Rental>(), Arg.Any<string>())).Do(x => throw new Exception("Test Exception"));
 
         // Act
         var result = await controller.CreateRental(rentalRequest);

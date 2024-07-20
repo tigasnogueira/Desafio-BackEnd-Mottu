@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
+using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Identity.Interfaces;
 using BikeRentalSystem.Identity.ViewModels;
 using Microsoft.AspNetCore.Authorization;

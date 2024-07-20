@@ -206,6 +206,12 @@ public class AuthService : BaseService, IAuthService
         try
         {
             var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+            {
+                HandleException(new Exception("User not found."));
+                return null;
+            }
+
             var claims = await _userManager.GetClaimsAsync(user);
             var userRoles = await _userManager.GetRolesAsync(user);
 

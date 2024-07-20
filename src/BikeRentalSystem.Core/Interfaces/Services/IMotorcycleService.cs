@@ -10,7 +10,7 @@ public interface IMotorcycleService
     Task<PaginatedResponse<Motorcycle>> GetAllPaged(int page, int pageSize);
     Task<Motorcycle?> GetByPlate(string plate);
     Task<IEnumerable<Motorcycle>> GetAllByYear(int year);
-    Task<bool> Add(Motorcycle motorcycle);
-    Task<bool> Update(Motorcycle motorcycle);
-    Task<bool> SoftDelete(Guid id);
+    Task<bool> Add(Motorcycle motorcycle, string userEmail);
+    Task<bool> Update(Motorcycle motorcycle, string userEmail);
+    Task<bool> SoftDelete(Guid id, string userEmail);
 }

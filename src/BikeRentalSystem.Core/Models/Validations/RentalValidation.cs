@@ -23,7 +23,7 @@ public class RentalValidation : AbstractValidator<Rental>
 
         RuleFor(r => r.StartDate)
             .NotEmpty().WithMessage("The Start Date cannot be empty.")
-            .GreaterThan(DateTime.Now.Date).WithMessage("The Start Date must be in the future.");
+            .GreaterThan(DateOnly.FromDateTime(DateTime.UtcNow)).WithMessage("The Start Date must be in the future.");
 
         RuleFor(r => r.EndDate)
             .NotEmpty().WithMessage("The End Date cannot be empty.")
