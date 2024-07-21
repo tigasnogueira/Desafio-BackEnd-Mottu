@@ -4,12 +4,12 @@ using Microsoft.Extensions.Logging;
 
 namespace BikeRentalSystem.Messaging.Services;
 
-public class RabbitMQConsumerHostedService : BackgroundService
+public class RabbitMQHostedServiceConsumer : BackgroundService
 {
     private readonly IEnumerable<IMessageConsumer> _consumers;
-    private readonly ILogger<RabbitMQConsumerHostedService> _logger;
+    private readonly ILogger<RabbitMQHostedServiceConsumer> _logger;
 
-    public RabbitMQConsumerHostedService(IEnumerable<IMessageConsumer> consumers, ILogger<RabbitMQConsumerHostedService> logger)
+    public RabbitMQHostedServiceConsumer(IEnumerable<IMessageConsumer> consumers, ILogger<RabbitMQHostedServiceConsumer> logger)
     {
         _consumers = consumers ?? throw new ArgumentNullException(nameof(consumers));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

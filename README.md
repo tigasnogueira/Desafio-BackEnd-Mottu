@@ -123,19 +123,6 @@ A resposta esperada é:
 PONG
 ```
 
-#### Verificar a Conexão
-Certifique-se de que o Redis está rodando corretamente. Você pode utilizar o seguinte comando para verificar a conexão:
-
-```bash
-redis-cli ping
-```
-
-A resposta esperada deve ser:
-
-```bash
-PONG
-```
-
 ### 2. Configurar as migrações do banco de dados
 
 1. Navegue até a pasta `Desafio-BackEnd-Mottu\src\BikeRentalSystem.Infrastructure` e execute o terminal, Command Prompt ou PowerShell, ou clique com o botão direito no projeto `BikeRentalSystem.Infrastructure` no Visual Studio e selecione a opção "Open in Terminal".

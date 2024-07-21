@@ -9,8 +9,8 @@ namespace BikeRentalSystem.Messaging.Tests.Services;
 public class RabbitMQConsumerHostedServiceTests
 {
     private readonly IEnumerable<IMessageConsumer> _consumers;
-    private readonly ILogger<RabbitMQConsumerHostedService> _logger;
-    private readonly RabbitMQConsumerHostedService _service;
+    private readonly ILogger<RabbitMQHostedServiceConsumer> _logger;
+    private readonly RabbitMQHostedServiceConsumer _service;
 
     public RabbitMQConsumerHostedServiceTests()
     {
@@ -20,15 +20,15 @@ public class RabbitMQConsumerHostedServiceTests
             Substitute.For<IMessageConsumer>()
         };
 
-        _logger = Substitute.For<ILogger<RabbitMQConsumerHostedService>>();
-        _service = new RabbitMQConsumerHostedService(_consumers, _logger);
+        _logger = Substitute.For<ILogger<RabbitMQHostedServiceConsumer>>();
+        _service = new RabbitMQHostedServiceConsumer(_consumers, _logger);
     }
 
     [Fact]
     public void Constructor_ShouldThrowArgumentNullException_WhenConsumersIsNull()
     {
         // Act
-        Action act = () => new RabbitMQConsumerHostedService(null, _logger);
+        Action act = () => new RabbitMQHostedServiceConsumer(null, _logger);
 
         // Assert
         act.Should().Throw<ArgumentNullException>().WithMessage("*consumers*");
@@ -38,7 +38,7 @@ public class RabbitMQConsumerHostedServiceTests
     public void Constructor_ShouldThrowArgumentNullException_WhenLoggerIsNull()
     {
         // Act
-        Action act = () => new RabbitMQConsumerHostedService(_consumers, null);
+        Action act = () => new RabbitMQHostedServiceConsumer(_consumers, null);
 
         // Assert
         act.Should().Throw<ArgumentNullException>().WithMessage("*logger*");
@@ -72,7 +72,7 @@ public class RabbitMQConsumerHostedServiceTests
         var failingConsumer = Substitute.For<IMessageConsumer>();
         failingConsumer.ConsumeAsync().Returns(Task.FromException(new Exception("Consume failed")));
 
-        var serviceWithFailingConsumer = new RabbitMQConsumerHostedService(new List<IMessageConsumer> { failingConsumer }, _logger);
+        var serviceWithFailingConsumer = new RabbitMQHostedServiceConsumer(new List<IMessageConsumer> { failingConsumer }, _logger);
 
         // Act
         Func<Task> act = async () => await serviceWithFailingConsumer.StartAsync(stoppingToken);
