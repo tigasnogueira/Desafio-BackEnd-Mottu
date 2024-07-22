@@ -12,7 +12,7 @@ public class CourierRegisteredConsumer : IMessageConsumer
 {
     private readonly IModel _channel;
     private readonly ILogger<CourierRegisteredConsumer> _logger;
-    private readonly string _queueName = "rental_queue";
+    private readonly string _queueName = "courier_queue";
 
     public CourierRegisteredConsumer(IModel channel, ILogger<CourierRegisteredConsumer> logger)
     {
@@ -32,14 +32,18 @@ public class CourierRegisteredConsumer : IMessageConsumer
                 var courierRegisteredEvent = JsonConvert.DeserializeObject<CourierRegistered>(message);
 
                 await ProcessMessageAsync(courierRegisteredEvent);
+
+                _channel.BasicAck(ea.DeliveryTag, false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message");
+
+                _channel.BasicNack(ea.DeliveryTag, false, true);
             }
         };
 
-        _channel.BasicConsume(_queueName, true, consumer);
+        _channel.BasicConsume(_queueName, false, consumer);
         await Task.CompletedTask;
     }
 

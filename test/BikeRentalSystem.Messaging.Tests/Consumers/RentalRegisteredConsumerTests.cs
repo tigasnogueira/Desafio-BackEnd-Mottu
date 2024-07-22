@@ -49,15 +49,18 @@ public class RentalRegisteredConsumerTests
         // Arrange
         EventingBasicConsumer registeredConsumer = null;
 
-        _channel.When(x => x.BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>()))
-                .Do(x => registeredConsumer = x.Arg<IBasicConsumer>() as EventingBasicConsumer);
+        _channel.When(x => x.BasicConsume("rental_queue", false, Arg.Any<IBasicConsumer>()))
+                .Do(callInfo =>
+                {
+                    registeredConsumer = callInfo.Arg<IBasicConsumer>() as EventingBasicConsumer;
+                });
 
         // Act
         await _consumer.ConsumeAsync();
 
         // Assert
         Assert.NotNull(registeredConsumer);
-        _channel.Received(1).BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>());
+        _channel.Received(1).BasicConsume("rental_queue", false, Arg.Any<IBasicConsumer>());
     }
 
     [Fact]
@@ -70,7 +73,7 @@ public class RentalRegisteredConsumerTests
 
         EventingBasicConsumer registeredConsumer = null;
 
-        _channel.When(x => x.BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>()))
+        _channel.When(x => x.BasicConsume("rental_queue", false, Arg.Any<IBasicConsumer>()))
                 .Do(x => registeredConsumer = x.Arg<IBasicConsumer>() as EventingBasicConsumer);
 
         // Act
@@ -98,7 +101,7 @@ public class RentalRegisteredConsumerTests
 
         EventingBasicConsumer registeredConsumer = null;
 
-        _channel.When(x => x.BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>()))
+        _channel.When(x => x.BasicConsume("rental_queue", false, Arg.Any<IBasicConsumer>()))
                 .Do(x => registeredConsumer = x.Arg<IBasicConsumer>() as EventingBasicConsumer);
 
         // Act

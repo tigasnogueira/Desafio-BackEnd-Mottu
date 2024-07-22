@@ -328,6 +328,6 @@ public class CourierService : BaseService, ICourierService
             UpdatedByUser = courier.UpdatedByUser,
             IsDeleted = courier.IsDeleted
         };
-        _messageProducer.PublishAsync(courierRegisteredEvent, "exchange_name", "routing_key");
+        _messageProducer.PublishAsync(courierRegisteredEvent, "courier_exchange", "courier_routingKey");
     }
 }

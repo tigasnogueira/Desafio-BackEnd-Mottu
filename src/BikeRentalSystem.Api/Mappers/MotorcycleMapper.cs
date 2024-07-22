@@ -18,6 +18,8 @@ public class MotorcycleMapper : Profile
         CreateMap<Motorcycle, MotorcycleUpdateRequest>().ReverseMap();
         CreateMap<Motorcycle, MotorcycleDto>().ReverseMap();
 
+        CreateMap<MotorcycleNotification, MotorcycleNotificationDto>().ReverseMap();
+
         CreateMap<PaginatedResponse<Motorcycle>, PaginatedResponse<MotorcycleDto>>()
             .ForMember(dest => dest.Items, opt => opt.MapFrom(src => src.Items))
             .ForMember(dest => dest.PageNumber, opt => opt.MapFrom(src => src.PageNumber))

@@ -102,6 +102,33 @@ public class MotorcycleController : MainController
         );
     }
 
+    [HttpGet("{id:guid}/notification")]
+    [ClaimsAuthorize("Motorcycle", "Get")]
+    public async Task<IActionResult> GetMotorcycleNotification(Guid id)
+    {
+        var cacheKey = $"MotorcycleNotification:{id}";
+        var cachedNotification = await _redisCacheService.GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey);
+        if (cachedNotification != null)
+        {
+            return CustomResponse(cachedNotification);
+        }
+
+        return await HandleRequestAsync(
+            async () =>
+            {
+                var notification = await _motorcycleService.GetMotorcycleNotification(id);
+                if (notification == null)
+                {
+                    return CustomResponse("Resource not found", StatusCodes.Status404NotFound);
+                }
+                var notificationDto = _mapper.Map<MotorcycleNotificationDto>(notification);
+                await _redisCacheService.SetCacheValueAsync(cacheKey, notificationDto);
+                return CustomResponse(notificationDto);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );  
+    }
+
     [HttpPost]
     [ClaimsAuthorize("Motorcycle", "Add")]
     public async Task<IActionResult> CreateMotorcycle(MotorcycleRequest motorcycleDto)

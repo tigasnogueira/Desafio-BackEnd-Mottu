@@ -320,6 +320,6 @@ public class RentalService : BaseService, IRentalService
             UpdatedByUser = rental.UpdatedByUser,
             IsDeleted = rental.IsDeleted
         };
-        _messageProducer.PublishAsync(rentalRegisteredEvent, "exchange_name", "routing_key");
+        _messageProducer.PublishAsync(rentalRegisteredEvent, "rental_exchange", "rental_routingKey");
     }
 }

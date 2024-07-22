@@ -27,8 +27,9 @@ public class RabbitMQProducer : IMessageProducer
         try
         {
             var messageBody = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(message));
-            await Task.Run(() => _channel.BasicPublish(exchange, routingKey, null, messageBody));
+            _channel.BasicPublish(exchange, routingKey, null, messageBody);
             _logger.LogInformation("Message published to exchange {Exchange} with routing key {RoutingKey}", exchange, routingKey);
+            await Task.CompletedTask;
         }
         catch (Exception ex)
         {

@@ -8,22 +8,14 @@ public static class RabbitMQConfig
 {
     public static void AddRabbitMQ(this IServiceCollection services, IConfiguration configuration)
     {
-        var hostName = configuration["RabbitMqSettings:HostName"];
-        var port = configuration["RabbitMqSettings:Port"];
-        var userName = configuration["RabbitMqSettings:UserName"];
-        var password = configuration["RabbitMqSettings:Password"];
-
-        if (string.IsNullOrEmpty(hostName) || string.IsNullOrEmpty(port) || string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
-        {
-            throw new ArgumentException("RabbitMQ settings are not properly configured.");
-        }
+        var rabbitMQSettings = configuration.GetSection("RabbitMqSettings").Get<RabbitMQSettings>();
 
         var factory = new ConnectionFactory()
         {
-            HostName = hostName,
-            Port = int.Parse(port),
-            UserName = userName,
-            Password = password
+            HostName = rabbitMQSettings.HostName,
+            Port = rabbitMQSettings.Port,
+            UserName = rabbitMQSettings.UserName,
+            Password = rabbitMQSettings.Password
         };
 
         services.AddSingleton(factory);
@@ -37,7 +29,21 @@ public static class RabbitMQConfig
         services.AddSingleton<IModel>(sp =>
         {
             var connection = sp.GetRequiredService<IConnection>();
-            return connection.CreateModel();
+            var channel = connection.CreateModel();
+
+            channel.ExchangeDeclare("courier_exchange", ExchangeType.Direct, true);
+            channel.ExchangeDeclare("motorcycle_exchange", ExchangeType.Direct, true);
+            channel.ExchangeDeclare("rental_exchange", ExchangeType.Direct, true);
+
+            channel.QueueDeclare("courier_queue", true, false, false, null);
+            channel.QueueDeclare("motorcycle_queue", true, false, false, null);
+            channel.QueueDeclare("rental_queue", true, false, false, null);
+
+            channel.QueueBind("courier_queue", "courier_exchange", "courier_routingKey");
+            channel.QueueBind("motorcycle_queue", "motorcycle_exchange", "motorcycle_routingKey");
+            channel.QueueBind("rental_queue", "rental_exchange", "rental_routingKey");
+
+            return channel;
         });
     }
 }

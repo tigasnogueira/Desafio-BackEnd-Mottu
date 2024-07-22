@@ -32,14 +32,18 @@ public class RentalRegisteredConsumer : IMessageConsumer
                 var rentalRegisteredEvent = JsonConvert.DeserializeObject<RentalRegistered>(message);
 
                 await ProcessMessageAsync(rentalRegisteredEvent);
+
+                _channel.BasicAck(ea.DeliveryTag, false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing message");
+
+                _channel.BasicNack(ea.DeliveryTag, false, true);
             }
         };
 
-        _channel.BasicConsume(_queueName, true, consumer);
+        _channel.BasicConsume(_queueName, false, consumer);
         await Task.CompletedTask;
     }
 

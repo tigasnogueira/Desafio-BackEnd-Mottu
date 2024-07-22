@@ -14,6 +14,7 @@ public class DataContext : DbContext
     public DbSet<Motorcycle> Motorcycles { get; set; }
     public DbSet<Courier> Couriers { get; set; }
     public DbSet<Rental> Rentals { get; set; }
+    public DbSet<MotorcycleNotification> MotorcycleNotifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,5 +23,6 @@ public class DataContext : DbContext
         modelBuilder.ApplyConfiguration(new MotorcycleMapping());
         modelBuilder.ApplyConfiguration(new CourierMapping());
         modelBuilder.ApplyConfiguration(new RentalMapping());
+        modelBuilder.ApplyConfiguration(new MotorcycleNotificationMapping());
     }
 }

@@ -50,14 +50,14 @@ public class CourierRegisteredConsumerTests
         // Arrange
         EventingBasicConsumer capturedConsumer = null;
 
-        _channel.When(x => x.BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>()))
+        _channel.When(x => x.BasicConsume("courier_queue", false, Arg.Any<IBasicConsumer>()))
                 .Do(x => capturedConsumer = x.Arg<EventingBasicConsumer>());
 
         // Act
         await _consumer.ConsumeAsync();
 
         // Assert
-        _channel.Received(1).BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>());
+        _channel.Received(1).BasicConsume("courier_queue", false, Arg.Any<IBasicConsumer>());
         capturedConsumer.Should().NotBeNull();
     }
 
@@ -74,12 +74,12 @@ public class CourierRegisteredConsumerTests
 
         var consumer = new EventingBasicConsumer(_channel);
 
-        _channel.When(x => x.BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>()))
+        _channel.When(x => x.BasicConsume("courier_queue", false, Arg.Any<IBasicConsumer>()))
                 .Do(x => consumer = x.Arg<EventingBasicConsumer>());
 
         // Act
         await _consumer.ConsumeAsync();
-        consumer.HandleBasicDeliver("consumerTag", 0, false, "exchange", "routingKey", null, basicDeliverEventArgs.Body);
+        consumer.HandleBasicDeliver("consumerTag", 0, false, "courier_exchange", "courier_routingKey", null, basicDeliverEventArgs.Body);
 
         // Assert
         _logger.Received(1).Log(
@@ -103,12 +103,12 @@ public class CourierRegisteredConsumerTests
 
         var consumer = new EventingBasicConsumer(_channel);
 
-        _channel.When(x => x.BasicConsume("rental_queue", true, Arg.Any<IBasicConsumer>()))
+        _channel.When(x => x.BasicConsume("courier_queue", false, Arg.Any<IBasicConsumer>()))
                 .Do(x => consumer = x.Arg<EventingBasicConsumer>());
 
         // Act
         await _consumer.ConsumeAsync();
-        consumer.HandleBasicDeliver("consumerTag", 0, false, "exchange", "routingKey", null, basicDeliverEventArgs.Body);
+        consumer.HandleBasicDeliver("consumerTag", 0, false, "courier_exchange", "courier_routingKey", null, basicDeliverEventArgs.Body);
 
         // Assert
         _logger.Received(1).LogError(Arg.Any<Exception>(), "Error processing message");

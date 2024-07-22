@@ -91,6 +91,20 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
+    public async Task<MotorcycleNotification> GetMotorcycleNotification(Guid id)
+    {
+        try
+        {
+            _notifier.Handle("Getting motorcycle notification by ID");
+            return await _unitOfWork.MotorcycleNotifications.GetByMotorcycleId(id);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            throw;
+        }
+    }
+
     public async Task<bool> Add(Motorcycle motorcycle, string userEmail)
     {
         if (motorcycle == null)
@@ -124,12 +138,6 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     _notifier.Handle("Motorcycle added successfully");
 
                     PublishMotorcycleRegisteredEvent(motorcycle);
-
-                    if (motorcycle.Year == 2024)
-                    {
-                        _notifier.Handle("Motorcycle year is 2024, sending notification");
-                    }
-
                     return true;
                 }
 
@@ -279,6 +287,6 @@ public class MotorcycleService : BaseService, IMotorcycleService
             UpdatedByUser = motorcycle.UpdatedByUser,
             IsDeleted = motorcycle.IsDeleted
         };
-        _messageProducer.PublishAsync(motorcycleRegisteredEvent, "exchange_name", "routing_key");
+        _messageProducer.PublishAsync(motorcycleRegisteredEvent, "motorcycle_exchange", "motorcycle_routingKey");
     }
 }

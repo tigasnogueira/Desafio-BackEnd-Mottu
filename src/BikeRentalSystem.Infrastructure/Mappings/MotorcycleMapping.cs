@@ -25,5 +25,10 @@ public class MotorcycleMapping : EntityBaseMapping<Motorcycle>
 
         builder.HasIndex(m => m.Plate)
             .IsUnique();
+
+        builder.HasOne(m => m.MotorcycleNotification)
+            .WithOne(n => n.Motorcycle)
+            .HasForeignKey<MotorcycleNotification>(n => n.MotorcycleId)
+            .IsRequired(false);
     }
 }

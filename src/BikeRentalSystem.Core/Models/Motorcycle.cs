@@ -6,7 +6,9 @@ public class Motorcycle : EntityBase
     public string Model { get; set; } = string.Empty;
     public string Plate { get; set; } = string.Empty;
 
-    public Motorcycle() 
+    public virtual MotorcycleNotification? MotorcycleNotification { get; set; }
+
+    public Motorcycle()
     {
     }
 

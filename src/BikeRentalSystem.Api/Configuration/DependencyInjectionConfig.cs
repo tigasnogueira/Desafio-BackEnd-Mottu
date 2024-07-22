@@ -64,6 +64,7 @@ public static class DependencyInjectionConfig
         services.TryAddScoped<IMotorcycleRepository, MotorcycleRepository>();
         services.TryAddScoped<ICourierRepository, CourierRepository>();
         services.TryAddScoped<IRentalRepository, RentalRepository>();
+        services.TryAddScoped<IMotorcycleNotificationRepository, MotorcycleNotificationRepository>();
         services.TryAddScoped<IAspNetUser, AspNetUser>();
         services.TryAddScoped<IAuthService, AuthService>();
         services.TryAddScoped<RoleManager<IdentityRole>>();

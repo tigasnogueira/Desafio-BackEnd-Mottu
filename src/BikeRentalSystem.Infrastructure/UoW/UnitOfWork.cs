@@ -13,16 +13,19 @@ public class UnitOfWork : IUnitOfWork
     public IMotorcycleRepository Motorcycles { get; }
     public ICourierRepository Couriers { get; }
     public IRentalRepository Rentals { get; }
+    public IMotorcycleNotificationRepository MotorcycleNotifications { get; }
 
     public UnitOfWork(DataContext dataContext,
         IMotorcycleRepository motorcycleRepository,
         ICourierRepository courierRepository,
-        IRentalRepository rentalRepository)
+        IRentalRepository rentalRepository,
+        IMotorcycleNotificationRepository motorcycleNotifications)
     {
         _dataContext = dataContext;
         Motorcycles = motorcycleRepository;
         Couriers = courierRepository;
         Rentals = rentalRepository;
+        MotorcycleNotifications = motorcycleNotifications;
     }
 
     public async Task<int> SaveAsync()
