@@ -2,6 +2,7 @@
 using BikeRentalSystem.Infrastructure.Context;
 using BikeRentalSystem.Shared.Configurations;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using System.Text.Json.Serialization;
 
 namespace BikeRentalSystem.Api.Configuration;
@@ -19,6 +20,7 @@ public class ApiSettings
         services.AddSingleton(configuration);
 
         ConfigureDatabase(services, configuration);
+        ConfigureRedis(services, configuration);
         ConfigureAzureBlobStorage(services, configuration);
         ConfigureControllers(services);
         ConfigureAdditionalServices(services, configuration);
@@ -39,6 +41,22 @@ public class ApiSettings
         var connectionString = configuration.GetSection("DatabaseSettings:DefaultConnection").Value;
         services.AddDbContext<DataContext>(options =>
             options.UseNpgsql(connectionString));
+    }
+
+    private static void ConfigureRedis(IServiceCollection services, IConfiguration configuration)
+    {
+        var redisHost = configuration["RedisSettings:Host"];
+        var redisPort = configuration["RedisSettings:Port"];
+
+        services.AddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            var configurationOptions = new ConfigurationOptions
+            {
+                EndPoints = { $"{redisHost}:{redisPort}" },
+                AbortOnConnectFail = false
+            };
+            return ConnectionMultiplexer.Connect(configurationOptions);
+        });
     }
 
     private static void ConfigureAzureBlobStorage(IServiceCollection services, IConfiguration configuration)

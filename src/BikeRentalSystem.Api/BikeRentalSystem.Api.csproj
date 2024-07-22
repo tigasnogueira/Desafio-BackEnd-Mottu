@@ -15,7 +15,10 @@
 	<ItemGroup>
 		<PackageReference Include="Asp.Versioning.Mvc" Version="7.1.1" />
 		<PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="7.1.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.AzureStorage" Version="7.0.0" />
 		<PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="7.1.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" Version="7.0.0" />
+		<PackageReference Include="AspNetCore.HealthChecks.Redis" Version="7.0.1" />
 		<PackageReference Include="AspNetCore.HealthChecks.UI" Version="7.0.2" />
 		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="7.1.0" />
 		<PackageReference Include="AspNetCore.HealthChecks.UI.Core" Version="7.0.0" />
@@ -24,6 +27,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.20" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.20" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.20" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.20">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -37,6 +41,7 @@
 		<PackageReference Include="Scrutor" Version="4.2.2" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.6.3" />
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

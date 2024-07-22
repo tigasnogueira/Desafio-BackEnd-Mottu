@@ -1,5 +1,4 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Services;
-using BikeRentalSystem.Infrastructure.Redis;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 
@@ -9,9 +8,9 @@ public class RedisCacheService : IRedisCacheService
 {
     private readonly IDatabase _database;
 
-    public RedisCacheService()
+    public RedisCacheService(IConnectionMultiplexer connectionMultiplexer)
     {
-        _database = RedisConnection.Connection.GetDatabase();
+        _database = connectionMultiplexer.GetDatabase();
     }
 
     public async Task<T> GetCacheValueAsync<T>(string key)

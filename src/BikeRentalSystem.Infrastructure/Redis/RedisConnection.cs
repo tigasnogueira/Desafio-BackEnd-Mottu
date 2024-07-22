@@ -4,12 +4,16 @@ namespace BikeRentalSystem.Infrastructure.Redis;
 
 public class RedisConnection
 {
-    private static Lazy<ConnectionMultiplexer> lazyConnection = new Lazy<ConnectionMultiplexer>(() =>
+    private static Lazy<ConnectionMultiplexer> lazyConnection;
+
+    public static void Initialize(ConfigurationOptions configurationOptions)
     {
-        var configuration = ConfigurationOptions.Parse("localhost:6379");
-        configuration.AbortOnConnectFail = false;
-        return ConnectionMultiplexer.Connect(configuration);
-    });
+        lazyConnection = new Lazy<ConnectionMultiplexer>(() =>
+        {
+            configurationOptions.AbortOnConnectFail = false;
+            return ConnectionMultiplexer.Connect(configurationOptions);
+        });
+    }
 
     public static ConnectionMultiplexer Connection => lazyConnection.Value;
 }

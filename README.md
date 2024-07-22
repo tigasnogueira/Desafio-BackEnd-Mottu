@@ -430,7 +430,6 @@ The response of this request is documented as a JSON schema:
           "status": {
             "type": "string"
           }
-          // Additional properties based on the actual response
         }
       }
     },
@@ -812,7 +811,6 @@ The response for this request is a JSON object conforming to the following schem
       "type": "boolean",
       "description": "Indicates if pets are allowed in the rental property"
     }
-    // Additional properties may be present based on the specific rental details
   },
   "required": ["rentalId", "address", "price", "bedrooms", "bathrooms", "sqft", "petsAllowed"]
 }
@@ -848,7 +846,7 @@ The response of this request is a JSON object representing the list of rentals. 
       "items": {
         "type": "object",
         "properties": {
-          // Define the properties of each rental object here
+
         }
       }
     },
