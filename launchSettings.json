@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Docker",
+        "APP_SECRET": "YourVeryStrongSecretKeyThatIsAtLeast32CharactersLong",
+        "AZURE_CONNECTION_STRING": "AzureConnectionString"
+      },
+      "serviceActions": {
+        "bikerentalsystem.api": "StartDebugging"
+      }
+    }
+  }
+}

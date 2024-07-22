@@ -1,4 +1,4 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Tests.Helpers;
@@ -45,7 +45,8 @@ public class MotorcycleTests
         motorcycle.Update();
 
         // Assert
-        motorcycle.UpdatedAt.Should().BeAfter(initialUpdatedAt);
+        if (initialUpdatedAt.HasValue) { 
+            motorcycle.UpdatedAt.Should().BeAfter(initialUpdatedAt.Value);}
         motorcycle.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
     }
 
@@ -56,10 +57,10 @@ public class MotorcycleTests
         var motorcycle = new Motorcycle();
 
         // Act & Assert
-        motorcycle.IsDeletedToggle();
+        motorcycle.ToggleIsDeleted();
         motorcycle.IsDeleted.Should().BeTrue();
 
-        motorcycle.IsDeletedToggle();
+        motorcycle.ToggleIsDeleted();
         motorcycle.IsDeleted.Should().BeFalse();
     }
 

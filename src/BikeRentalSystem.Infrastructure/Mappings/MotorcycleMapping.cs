@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace BikeRentalSystem.Infrastructure.Mappings;
 
-public class MotorcycleMapping : IEntityTypeConfiguration<Motorcycle>
+public class MotorcycleMapping : EntityBaseMapping<Motorcycle>
 {
-    public void Configure(EntityTypeBuilder<Motorcycle> builder)
+    public override void Configure(EntityTypeBuilder<Motorcycle> builder)
     {
-        builder.ToTable("Motorcycles");
+        base.Configure(builder);
 
-        builder.HasKey(m => m.Id);
+        builder.ToTable("Motorcycles");
 
         builder.Property(m => m.Year)
             .IsRequired();
@@ -26,12 +26,9 @@ public class MotorcycleMapping : IEntityTypeConfiguration<Motorcycle>
         builder.HasIndex(m => m.Plate)
             .IsUnique();
 
-        builder.Property(m => m.CreatedAt)
-            .IsRequired();
-
-        builder.Property(m => m.UpdatedAt);
-
-        builder.Property(m => m.IsDeleted)
-            .IsRequired();
+        builder.HasOne(m => m.MotorcycleNotification)
+            .WithOne(n => n.Motorcycle)
+            .HasForeignKey<MotorcycleNotification>(n => n.MotorcycleId)
+            .IsRequired(false);
     }
 }

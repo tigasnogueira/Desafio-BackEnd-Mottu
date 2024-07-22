@@ -5,18 +5,19 @@ using System.Security.Claims;
 
 namespace BikeRentalSystem.Identity.Extensions;
 
-public class CustomAuthorization
+public static class CustomAuthorization
 {
     public static bool ValidateUserClaims(HttpContext context, string claimName, string claimValue)
     {
-        return context.User.Identity.IsAuthenticated &&
+        return context.User.Identity?.IsAuthenticated == true &&
                context.User.Claims.Any(c => c.Type == claimName && c.Value.Contains(claimValue));
     }
 }
 
 public class ClaimsAuthorizeAttribute : TypeFilterAttribute
 {
-    public ClaimsAuthorizeAttribute(string claimName, string claimValue) : base(typeof(RequireClaimFilter))
+    public ClaimsAuthorizeAttribute(string claimName, string claimValue)
+        : base(typeof(RequireClaimFilter))
     {
         Arguments = new object[] { new Claim(claimName, claimValue) };
     }
@@ -28,12 +29,12 @@ public class RequireClaimFilter : IAuthorizationFilter
 
     public RequireClaimFilter(Claim claim)
     {
-        _claim = claim;
+        _claim = claim ?? throw new ArgumentNullException(nameof(claim));
     }
 
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        if (!context.HttpContext.User.Identity.IsAuthenticated)
+        if (context.HttpContext.User.Identity?.IsAuthenticated != true)
         {
             context.Result = new StatusCodeResult(StatusCodes.Status401Unauthorized);
             return;

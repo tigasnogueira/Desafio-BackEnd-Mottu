@@ -1,7 +1,7 @@
 ﻿using BikeRentalSystem.Core.Common;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
@@ -17,8 +17,8 @@ public class MotorcycleService : BaseService, IMotorcycleService
 
     public MotorcycleService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
     {
-        _unitOfWork = unitOfWork;
-        _messageProducer = messageProducer;
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _messageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
     }
 
     public async Task<Motorcycle> GetById(Guid id)
@@ -91,7 +91,21 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    public async Task<bool> Add(Motorcycle motorcycle)
+    public async Task<MotorcycleNotification> GetMotorcycleNotification(Guid id)
+    {
+        try
+        {
+            _notifier.Handle("Getting motorcycle notification by ID");
+            return await _unitOfWork.MotorcycleNotifications.GetByMotorcycleId(id);
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            throw;
+        }
+    }
+
+    public async Task<bool> Add(Motorcycle motorcycle, string userEmail)
     {
         if (motorcycle == null)
         {
@@ -113,6 +127,8 @@ public class MotorcycleService : BaseService, IMotorcycleService
         {
             try
             {
+                motorcycle.CreatedByUser = userEmail;
+
                 await _unitOfWork.Motorcycles.Add(motorcycle);
                 var result = await _unitOfWork.SaveAsync();
 
@@ -121,21 +137,13 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     await transaction.CommitAsync();
                     _notifier.Handle("Motorcycle added successfully");
 
-                    AddMotorcycleRegisteredEvent(motorcycle);
-
-                    if (motorcycle.Year == 2024)
-                    {
-                        _notifier.Handle("Motorcycle year is 2024, sending notification");
-                    }
-
+                    PublishMotorcycleRegisteredEvent(motorcycle);
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to add motorcycle, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to add motorcycle, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -146,7 +154,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    public async Task<bool> Update(Motorcycle motorcycle)
+    public async Task<bool> Update(Motorcycle motorcycle, string userEmail)
     {
         if (motorcycle == null)
         {
@@ -175,9 +183,9 @@ public class MotorcycleService : BaseService, IMotorcycleService
         {
             try
             {
-                UpdateMotorcycleDetails(existingMotorcycle, motorcycle);
+                UpdateMotorcycleDetails(existingMotorcycle, motorcycle, userEmail);
 
-                _unitOfWork.Motorcycles.Update(existingMotorcycle);
+                await _unitOfWork.Motorcycles.Update(existingMotorcycle);
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
@@ -185,16 +193,14 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     await transaction.CommitAsync();
                     _notifier.Handle("Motorcycle updated successfully");
 
-                    AddMotorcycleRegisteredEvent(existingMotorcycle);
+                    PublishMotorcycleRegisteredEvent(existingMotorcycle);
 
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to update motorcycle, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to update motorcycle, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -205,7 +211,7 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    public async Task<bool> SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id, string userEmail)
     {
         try
         {
@@ -226,7 +232,9 @@ public class MotorcycleService : BaseService, IMotorcycleService
             {
                 try
                 {
-                    motorcycle.IsDeletedToggle();
+                    motorcycle.UpdatedByUser = userEmail;
+
+                    motorcycle.ToggleIsDeleted();
                     await _unitOfWork.Motorcycles.Update(motorcycle);
                     var result = await _unitOfWork.SaveAsync();
 
@@ -236,12 +244,10 @@ public class MotorcycleService : BaseService, IMotorcycleService
                         _notifier.Handle("Motorcycle soft deleted successfully");
                         return true;
                     }
-                    else
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.Handle("Failed to soft delete motorcycle, rolling back transaction", NotificationType.Error);
-                        return false;
-                    }
+
+                    await transaction.RollbackAsync();
+                    _notifier.Handle("Failed to soft delete motorcycle, rolling back transaction", NotificationType.Error);
+                    return false;
                 }
                 catch (Exception ex)
                 {
@@ -258,15 +264,16 @@ public class MotorcycleService : BaseService, IMotorcycleService
         }
     }
 
-    private void UpdateMotorcycleDetails(Motorcycle existingMotorcycle, Motorcycle updatedMotorcycle)
+    private void UpdateMotorcycleDetails(Motorcycle existingMotorcycle, Motorcycle updatedMotorcycle, string userEmail)
     {
         existingMotorcycle.Year = updatedMotorcycle.Year;
         existingMotorcycle.Model = updatedMotorcycle.Model;
         existingMotorcycle.Plate = updatedMotorcycle.Plate;
+        existingMotorcycle.UpdatedByUser = userEmail;
         existingMotorcycle.Update();
     }
 
-    private void AddMotorcycleRegisteredEvent(Motorcycle motorcycle)
+    private void PublishMotorcycleRegisteredEvent(Motorcycle motorcycle)
     {
         var motorcycleRegisteredEvent = new MotorcycleRegistered
         {
@@ -275,9 +282,11 @@ public class MotorcycleService : BaseService, IMotorcycleService
             Model = motorcycle.Model,
             Plate = motorcycle.Plate,
             CreatedAt = motorcycle.CreatedAt,
+            CreatedByUser = motorcycle.CreatedByUser,
             UpdatedAt = motorcycle.UpdatedAt,
+            UpdatedByUser = motorcycle.UpdatedByUser,
             IsDeleted = motorcycle.IsDeleted
         };
-        _messageProducer.Publish(motorcycleRegisteredEvent, "exchange_name", "routing_key");
+        _messageProducer.PublishAsync(motorcycleRegisteredEvent, "motorcycle_exchange", "motorcycle_routingKey");
     }
 }

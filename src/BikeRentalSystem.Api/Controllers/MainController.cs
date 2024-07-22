@@ -10,12 +10,20 @@ namespace BikeRentalSystem.Api.Controllers;
 public abstract class MainController : Controller
 {
     protected readonly INotifier _notifier;
-    protected readonly IUser _user;
+    protected readonly IAspNetUser _user;
 
-    protected MainController(INotifier notifier, IUser user)
+    protected Guid UserId { get; set; }
+    protected string UserEmail { get; set; }
+
+    protected MainController(INotifier notifier, IAspNetUser user)
     {
         _notifier = notifier;
-        _user = user;
+
+        if (user.IsAuthenticated())
+        {
+            UserId = user.GetUserId();
+            UserEmail = user.GetUserEmail();
+        }
     }
 
     protected ActionResult CustomResponse(object? result = null, int? statusCode = null)
@@ -25,44 +33,29 @@ public abstract class MainController : Controller
 
         if (statusCode.HasValue)
         {
-            if (statusCode == StatusCodes.Status404NotFound)
+            return statusCode.Value switch
             {
-                return NotFound(new { success = false, errors = result ?? "Resource not found" });
-            }
-            if (statusCode == StatusCodes.Status201Created)
-            {
-                return StatusCode(StatusCodes.Status201Created, new { success = true, data = result });
-            }
-            if (statusCode == StatusCodes.Status204NoContent)
-            {
-                return NoContent();
-            }
-            if (statusCode == StatusCodes.Status400BadRequest)
-            {
-                return BadRequest(new { success = false, errors = result ?? "Bad request" });
-            }
-            return StatusCode(statusCode.Value, new { success = true, data = result });
+                StatusCodes.Status404NotFound => NotFound(new { success = false, errors = result ?? "Resource not found" }),
+                StatusCodes.Status201Created => StatusCode(StatusCodes.Status201Created, new { success = true, data = result }),
+                StatusCodes.Status204NoContent => NoContent(),
+                StatusCodes.Status400BadRequest => BadRequest(new { success = false, errors = result ?? "Bad request" }),
+                _ => StatusCode(statusCode.Value, new { success = true, data = result })
+            };
         }
 
-        if (result is string errorMessage && HttpContext.Request.Method != "GET")
+        return HttpContext.Request.Method switch
         {
-            return BadRequest(new { success = false, errors = errorMessage });
-        }
+            "GET" => result == null ? NotFound(new { success = false, errors = "Resource not found" }) : Ok(new { success = true, data = result }),
+            "POST" => result == null ? Conflict(new { success = false, errors = "Resource conflict" }) : StatusCode(201, new { success = true, data = result }),
+            "PUT" or "PATCH" => result == null ? NotFound(new { success = false, errors = "Resource not found" }) : Ok(new { success = true, data = result }),
+            "DELETE" => NoContent(),
+            _ => Ok(new { success = true, data = result })
+        };
+    }
 
-        switch (HttpContext.Request.Method)
-        {
-            case "GET":
-                return result == null ? NotFound(new { success = false, errors = "Resource not found" }) : Ok(new { success = true, data = result });
-            case "POST":
-                return result == null ? Conflict(new { success = false, errors = "Resource conflict" }) : StatusCode(201, new { success = true, data = result });
-            case "PUT":
-            case "PATCH":
-                return result == null ? NotFound(new { success = false, errors = "Resource not found" }) : Ok(new { success = true, data = result });
-            case "DELETE":
-                return NoContent();
-            default:
-                return Ok(new { success = true, data = result });
-        }
+    protected ActionResult CustomResponse(string errorMessage)
+    {
+        return BadRequest(new { success = false, errors = errorMessage });
     }
 
     protected ActionResult CustomResponse(ModelStateDictionary modelState)
@@ -89,7 +82,7 @@ public abstract class MainController : Controller
         var errors = modelState.Values.SelectMany(e => e.Errors);
         foreach (var error in errors)
         {
-            var errorMsg = error.Exception == null ? error.ErrorMessage : error.Exception.Message;
+            var errorMsg = error.Exception?.Message ?? error.ErrorMessage;
             var errorType = NotificationType.Error;
             NotifyError(errorMsg, errorType);
         }
@@ -127,4 +120,16 @@ public abstract class MainController : Controller
             e.Contains("invalid", StringComparison.OrdinalIgnoreCase) ||
             e.Contains("cannot", StringComparison.OrdinalIgnoreCase) ||
             e.Contains("Error", StringComparison.OrdinalIgnoreCase));
+
+    protected async Task<IActionResult> HandleRequestAsync(Func<Task<IActionResult>> operation, Func<Exception, IActionResult> handleException)
+    {
+        try
+        {
+            return await operation();
+        }
+        catch (Exception ex)
+        {
+            return handleException(ex);
+        }
+    }
 }

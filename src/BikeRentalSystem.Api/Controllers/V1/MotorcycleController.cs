@@ -20,109 +20,163 @@ public class MotorcycleController : MainController
 {
     private readonly IMotorcycleService _motorcycleService;
     private readonly IMapper _mapper;
+    private readonly IRedisCacheService _redisCacheService;
 
-    public MotorcycleController(IMotorcycleService motorcycleService, IMapper mapper, INotifier notifier, IUser user) : base(notifier, user)
+    public MotorcycleController(IMotorcycleService motorcycleService,
+                                IMapper mapper,
+                                IRedisCacheService redisCacheService,
+                                INotifier notifier,
+                                IAspNetUser user) : base(notifier, user)
     {
         _motorcycleService = motorcycleService;
         _mapper = mapper;
+        _redisCacheService = redisCacheService;
     }
 
     [HttpGet("{id:guid}")]
     [ClaimsAuthorize("Motorcycle", "Get")]
     public async Task<IActionResult> GetMotorcycleById(Guid id)
     {
-        try
+        var cacheKey = $"Motorcycle:{id}";
+        var cachedMotorcycle = await _redisCacheService.GetCacheValueAsync<MotorcycleDto>(cacheKey);
+        if (cachedMotorcycle != null)
         {
-            var motorcycle = await _motorcycleService.GetById(id);
-            if (motorcycle == null)
+            return CustomResponse(cachedMotorcycle);
+        }
+
+        return await HandleRequestAsync(
+            async () =>
             {
-                return CustomResponse("Resource not found", StatusCodes.Status404NotFound);
-            }
-            var motorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
-            return CustomResponse(motorcycleDto);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+                var motorcycle = await _motorcycleService.GetById(id);
+                if (motorcycle == null)
+                {
+                    return CustomResponse("Resource not found", StatusCodes.Status404NotFound);
+                }
+                var motorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
+                await _redisCacheService.SetCacheValueAsync(cacheKey, motorcycleDto);
+                return CustomResponse(motorcycleDto);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
     }
 
     [AllowAnonymous]
     [HttpGet("list")]
     public async Task<IActionResult> GetAllMotorcycles([FromQuery] int? page, [FromQuery] int? pageSize)
     {
-        try
-        {
-            if (page.HasValue && pageSize.HasValue)
+        return await HandleRequestAsync(
+            async () =>
             {
-                var motorcycles = await _motorcycleService.GetAllPaged(page.Value, pageSize.Value);
-                var motorcycleDtos = _mapper.Map<PaginatedResponse<MotorcycleDto>>(motorcycles);
-                return CustomResponse(motorcycleDtos);
-            }
-            else
-            {
-                var motorcycles = await _motorcycleService.GetAll();
-                var motorcycleDtos = _mapper.Map<IEnumerable<MotorcycleDto>>(motorcycles);
-                return CustomResponse(motorcycleDtos);
-            }
-        }
-        catch (Exception ex)
+                string cacheKey = page.HasValue && pageSize.HasValue
+                    ? $"MotorcycleList:Page:{page.Value}:PageSize:{pageSize.Value}"
+                    : "MotorcycleList:All";
+
+                if (page.HasValue && pageSize.HasValue)
+                {
+                    var cachedMotorcycles = await _redisCacheService.GetCacheValueAsync<PaginatedResponse<MotorcycleDto>>(cacheKey);
+                    if (cachedMotorcycles != null)
+                    {
+                        return CustomResponse(cachedMotorcycles);
+                    }
+
+                    var motorcycles = await _motorcycleService.GetAllPaged(page.Value, pageSize.Value);
+                    var motorcycleDtos = _mapper.Map<PaginatedResponse<MotorcycleDto>>(motorcycles);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, motorcycleDtos);
+                    return CustomResponse(motorcycleDtos);
+                }
+                else
+                {
+                    var cachedMotorcycles = await _redisCacheService.GetCacheValueAsync<IEnumerable<MotorcycleDto>>(cacheKey);
+                    if (cachedMotorcycles != null)
+                    {
+                        return CustomResponse(cachedMotorcycles);
+                    }
+
+                    var motorcycles = await _motorcycleService.GetAll();
+                    var motorcycleDtos = _mapper.Map<IEnumerable<MotorcycleDto>>(motorcycles);
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, motorcycleDtos);
+                    return CustomResponse(motorcycleDtos);
+                }
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
+    }
+
+    [HttpGet("{id:guid}/notification")]
+    [ClaimsAuthorize("Motorcycle", "Get")]
+    public async Task<IActionResult> GetMotorcycleNotification(Guid id)
+    {
+        var cacheKey = $"MotorcycleNotification:{id}";
+        var cachedNotification = await _redisCacheService.GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey);
+        if (cachedNotification != null)
         {
-            return CustomResponse(ex.Message);
+            return CustomResponse(cachedNotification);
         }
+
+        return await HandleRequestAsync(
+            async () =>
+            {
+                var notification = await _motorcycleService.GetMotorcycleNotification(id);
+                if (notification == null)
+                {
+                    return CustomResponse("Resource not found", StatusCodes.Status404NotFound);
+                }
+                var notificationDto = _mapper.Map<MotorcycleNotificationDto>(notification);
+                await _redisCacheService.SetCacheValueAsync(cacheKey, notificationDto);
+                return CustomResponse(notificationDto);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );  
     }
 
     [HttpPost]
     [ClaimsAuthorize("Motorcycle", "Add")]
     public async Task<IActionResult> CreateMotorcycle(MotorcycleRequest motorcycleDto)
     {
-        try
-        {
-            var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
-            var result = await _motorcycleService.Add(motorcycle);
-            if (!result)
+        return await HandleRequestAsync(
+            async () =>
             {
-                return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
-            }
-            var createdMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
-            return CustomResponse(createdMotorcycleDto, StatusCodes.Status201Created);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+                var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
+                var result = await _motorcycleService.Add(motorcycle, UserEmail);
+                if (!result)
+                {
+                    return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
+                }
+                var createdMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
+                return CustomResponse(createdMotorcycleDto, StatusCodes.Status201Created);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
     }
 
     [HttpPut("{id:guid}")]
     [ClaimsAuthorize("Motorcycle", "Update")]
     public async Task<IActionResult> UpdateMotorcycle(Guid id, MotorcycleUpdateRequest motorcycleDto)
     {
-        try
-        {
-            var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
-            motorcycle.Id = id;
-            await _motorcycleService.Update(motorcycle);
-            var updatedMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
-            return CustomResponse(updatedMotorcycleDto, StatusCodes.Status204NoContent);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+        return await HandleRequestAsync(
+            async () =>
+            {
+                var motorcycle = _mapper.Map<Motorcycle>(motorcycleDto);
+                motorcycle.Id = id;
+                await _motorcycleService.Update(motorcycle, UserEmail);
+                var updatedMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
+                return CustomResponse(updatedMotorcycleDto, StatusCodes.Status204NoContent);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
     }
 
     [HttpPatch("{id:guid}/status")]
     [ClaimsAuthorize("Motorcycle", "Delete")]
     public async Task<IActionResult> SoftDeleteMotorcycle(Guid id)
     {
-        try
-        {
-            await _motorcycleService.SoftDelete(id);
-            return CustomResponse(null, StatusCodes.Status204NoContent);
-        }
-        catch (Exception ex)
-        {
-            return CustomResponse(ex.Message);
-        }
+        return await HandleRequestAsync(
+            async () =>
+            {
+                await _motorcycleService.SoftDelete(id, UserEmail);
+                return CustomResponse(null, StatusCodes.Status204NoContent);
+            },
+            ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
+        );
     }
 }

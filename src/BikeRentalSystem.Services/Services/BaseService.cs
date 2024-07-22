@@ -9,23 +9,23 @@ namespace BikeRentalSystem.RentalServices.Services;
 
 public class BaseService
 {
-    protected INotifier _notifier;
+    protected readonly INotifier _notifier;
 
     public BaseService(INotifier notifier)
     {
-        _notifier = notifier;
+        _notifier = notifier ?? throw new ArgumentNullException(nameof(notifier));
     }
 
-    protected List<string> ExecuteValidation<TV, TE>(TV validation, TE entity)
+    protected async Task<List<string>> ExecuteValidationAsync<TV, TE>(TV validation, TE entity)
         where TV : AbstractValidator<TE>
         where TE : EntityBase
     {
-        var validator = validation.ValidateAsync(entity);
+        var validationResult = await validation.ValidateAsync(entity);
         var errors = new List<string>();
 
-        if (validator.Result.IsValid) return errors;
+        if (validationResult.IsValid) return errors;
 
-        foreach (var error in validator.Result.Errors)
+        foreach (var error in validationResult.Errors)
         {
             var errorMessage = $"Property: {error.PropertyName} - Error: {error.ErrorMessage}";
             _notifier.Handle(errorMessage);
@@ -37,8 +37,7 @@ public class BaseService
 
     protected void HandleException(Exception exception)
     {
-        if (exception == null)
-            throw new ArgumentNullException(nameof(exception));
+        if (exception == null) throw new ArgumentNullException(nameof(exception));
 
         string friendlyMessage = GenerateFriendlyMessage(exception);
         _notifier.Handle(friendlyMessage, NotificationType.Error);

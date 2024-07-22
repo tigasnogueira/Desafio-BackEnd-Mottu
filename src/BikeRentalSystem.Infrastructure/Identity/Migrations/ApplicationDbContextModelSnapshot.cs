@@ -167,15 +167,15 @@ namespace BikeRentalSystem.Infrastructure.Identity.Migrations
                         {
                             Id = "1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f03ddfe4-7c06-4d9e-8e1a-c6ca69ad8ded",
+                            ConcurrencyStamp = "cfeac1ed-df79-4cd3-ad08-5758e3eb9b70",
                             Email = "admin@example.com",
                             EmailConfirmed = true,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@EXAMPLE.COM",
                             NormalizedUserName = "ADMIN@EXAMPLE.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMjCNCIbwN8wNNgXvhcl2VWKnqBfAFIFgEzBrWvrgxsdis/Dsb0oBbLHdIIwjyFGjQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECZn3wiwyqQiJ0pjiB5awKXXorYbQDyhLkVlqmzkmECDWXDVN5Me2KKHuGLWXkXK2g==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5df8cf16-e551-43fd-8d23-9c275720ef34",
+                            SecurityStamp = "d9fa0776-f9c7-476a-bed6-935ad327decc",
                             TwoFactorEnabled = false,
                             UserName = "admin@example.com"
                         });

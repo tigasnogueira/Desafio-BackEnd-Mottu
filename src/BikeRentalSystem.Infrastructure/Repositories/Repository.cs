@@ -6,7 +6,6 @@ using BikeRentalSystem.Core.Notifications;
 using BikeRentalSystem.Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace BikeRentalSystem.Infrastructure.Repositories;
 
@@ -147,9 +146,8 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
     {
         try
         {
-            entity.Update();
+            _notifier.Handle($"Updating {typeof(TEntity).Name}.");
             _dataContext.Entry(entity).State = EntityState.Modified;
-            await _dataContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -164,7 +162,6 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         {
             _notifier.Handle($"Updating range of {typeof(TEntity).Name}.");
             _dbSet.UpdateRange(entities);
-            await _dataContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -173,11 +170,12 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         }
     }
 
-    public virtual async void Delete(TEntity entity)
+    public virtual async Task Delete(TEntity entity)
     {
         try
         {
-            entity.IsDeletedToggle();
+            _notifier.Handle($"Deleting {typeof(TEntity).Name}.");
+            entity.ToggleIsDeleted();
             await Update(entity);
         }
         catch (Exception ex)
@@ -187,13 +185,14 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         }
     }
 
-    public virtual async void DeleteRange(IEnumerable<TEntity> entities)
+    public virtual async Task DeleteRange(IEnumerable<TEntity> entities)
     {
         try
         {
+            _notifier.Handle($"Deleting range of {typeof(TEntity).Name}.");
             foreach (var entity in entities)
             {
-                entity.IsDeletedToggle();
+                entity.ToggleIsDeleted();
             }
             await UpdateRange(entities);
         }
@@ -202,34 +201,5 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
             _notifier.Handle($"Error deleting range of {typeof(TEntity).Name}: {ex.Message}", NotificationType.Error);
             throw;
         }
-    }
-
-    public void Detach(TEntity entity)
-    {
-        _dataContext.Entry(entity).State = EntityState.Detached;
-    }
-
-    public void AttachWithoutIdentity(TEntity entity, int updatedById)
-    {
-        _dbSet.Attach(entity);
-        var properties = _dataContext.Entry(entity).Properties;
-
-        foreach (var property in properties)
-        {
-            if (property.Metadata.PropertyInfo.GetCustomAttribute<IgnoreOnUpdateAttribute>() != null)
-            {
-                property.IsModified = false;
-            }
-            else if (property.Metadata.IsPrimaryKey() && property.Metadata.ValueGenerated == Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.OnAdd)
-            {
-                property.IsModified = false;
-            }
-            else
-            {
-                property.IsModified = true;
-            }
-        }
-
-        entity.Update();
     }
 }

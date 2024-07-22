@@ -2,16 +2,13 @@
 
 public class PaginatedResponse<TEntity>
 {
-    public List<TEntity> Items { get; set; }
+    public List<TEntity> Items { get; set; } = new();
     public int? PageNumber { get; set; }
     public int? PageSize { get; set; }
     public int TotalItems { get; set; }
     public int TotalPages { get; set; }
 
-    public PaginatedResponse()
-    {
-        Items = new List<TEntity>();
-    }
+    public PaginatedResponse() { }
 
     public PaginatedResponse(List<TEntity> items, int count, int? pageNumber, int? pageSize)
     {

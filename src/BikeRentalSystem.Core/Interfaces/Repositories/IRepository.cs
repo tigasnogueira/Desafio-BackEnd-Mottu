@@ -5,7 +5,7 @@ namespace BikeRentalSystem.Core.Interfaces.Repositories;
 
 public interface IRepository<TEntity> where TEntity : class
 {
-    Task<TEntity> GetById(Guid id);
+    Task<TEntity?> GetById(Guid id);
     Task<IEnumerable<TEntity>> GetAll();
     Task<PaginatedResponse<TEntity>> GetAllPaged(int pageNumber, int pageSize);
     Task<PaginatedResponse<TEntity>> GetFilteredAsync(List<Expression<Func<TEntity, bool>>> filters, int pageNumber, int pageSize);
@@ -14,6 +14,6 @@ public interface IRepository<TEntity> where TEntity : class
     Task AddRange(IEnumerable<TEntity> entities);
     Task Update(TEntity entity);
     Task UpdateRange(IEnumerable<TEntity> entities);
-    void Delete(TEntity entity);
-    void DeleteRange(IEnumerable<TEntity> entities);
+    Task Delete(TEntity entity);
+    Task DeleteRange(IEnumerable<TEntity> entities);
 }

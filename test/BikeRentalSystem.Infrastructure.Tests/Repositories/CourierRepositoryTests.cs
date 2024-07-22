@@ -27,7 +27,7 @@ public class CourierRepositoryTests : IDisposable
     public void Dispose()
     {
         _dataContext.Database.EnsureDeleted();
-        _dataContext.Database.EnsureCreated();
+        _dataContext.Dispose();
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public class CourierRepositoryTests : IDisposable
     {
         // Arrange
         var cnpj = "12345678901234";
-        var courier = new Courier { Cnpj = cnpj, CnhNumber = "AB123456", Name = "John Doe", CnhType = "A" };
+        var courier = new Courier { Cnpj = cnpj, CnhNumber = "AB123456", Name = "John Doe", CnhType = "A", CreatedByUser = "TestUser" };
         await _dataContext.Couriers.AddAsync(courier);
         await _dataContext.SaveChangesAsync();
 
@@ -67,7 +67,7 @@ public class CourierRepositoryTests : IDisposable
     {
         // Arrange
         var cnpj = "12345678901234";
-        var courier = new Courier { Cnpj = cnpj, Name = "John Doe", CnhType = "A", CnhNumber = "AB123456" };
+        var courier = new Courier { Cnpj = cnpj, Name = "John Doe", CnhType = "A", CnhNumber = "AB123456", CreatedByUser = "TestUser" };
         await _dataContext.Couriers.AddAsync(courier);
         await _dataContext.SaveChangesAsync();
 
@@ -94,7 +94,7 @@ public class CourierRepositoryTests : IDisposable
     {
         // Arrange
         var cnhNumber = "AB123456";
-        var courier = new Courier { CnhNumber = cnhNumber, Name = "John Doe", CnhType = "A", Cnpj = "12345678901234" };
+        var courier = new Courier { CnhNumber = cnhNumber, Name = "John Doe", CnhType = "A", Cnpj = "12345678901234", CreatedByUser = "TestUser" };
         await _dataContext.Couriers.AddAsync(courier);
         await _dataContext.SaveChangesAsync();
 

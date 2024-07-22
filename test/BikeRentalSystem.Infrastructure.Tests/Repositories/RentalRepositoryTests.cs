@@ -4,6 +4,7 @@ using BikeRentalSystem.Core.Tests.Helpers;
 using BikeRentalSystem.Infrastructure.Context;
 using BikeRentalSystem.Infrastructure.Repositories;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 
 namespace BikeRentalSystem.Infrastructure.Tests.Repositories;
 
@@ -23,16 +24,47 @@ public class RentalRepositoryTests : IDisposable
     public void Dispose()
     {
         _dataContext.Database.EnsureDeleted();
-        _dataContext.Database.EnsureCreated();
+        _dataContext.Dispose();
     }
 
     [Fact]
     public async Task GetByCourierId_ShouldReturnRentals_WhenCourierIdExists()
     {
         // Arrange
-        var courierId = Guid.NewGuid();
-        var rental1 = new Rental { CourierId = courierId, MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30 };
-        var rental2 = new Rental { CourierId = courierId, MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30 };
+        var courier = new Courier
+        {
+            Name = "Test Courier",
+            Cnpj = "12345678901234",
+            BirthDate = new DateOnly(1990, 1, 1),
+            CnhNumber = "CNH12345",
+            CnhType = "A",
+            CreatedByUser = "TestUser"
+        };
+        await _dataContext.Couriers.AddAsync(courier);
+        await _dataContext.SaveChangesAsync();
+
+        var courierId = courier.Id;
+
+        var rental1 = new Rental
+        {
+            CourierId = courierId,
+            MotorcycleId = Guid.NewGuid(),
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(7),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
+            DailyRate = 30,
+            CreatedByUser = "TestUser"
+        };
+        var rental2 = new Rental
+        {
+            CourierId = courierId,
+            MotorcycleId = Guid.NewGuid(),
+            StartDate = DateTime.UtcNow,
+            EndDate = DateTime.UtcNow.AddDays(7),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(7),
+            DailyRate = 30,
+            CreatedByUser = "TestUser"
+        };
         await _dataContext.Rentals.AddRangeAsync(rental1, rental2);
         await _dataContext.SaveChangesAsync();
 
@@ -41,7 +73,7 @@ public class RentalRepositoryTests : IDisposable
 
         // Assert
         result.Should().NotBeNull();
-        result.Count().Should().Be(2);
+        result.Count().Should().Be(2, because: "we have just added two rentals for this courier");
     }
 
     [Fact]
@@ -60,8 +92,8 @@ public class RentalRepositoryTests : IDisposable
     {
         // Arrange
         var motorcycleId = Guid.NewGuid();
-        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30 };
-        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30 };
+        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30, CreatedByUser = "TestUser" };
+        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = motorcycleId, StartDate = DateTime.UtcNow, EndDate = DateTime.UtcNow.AddDays(7), DailyRate = 30, CreatedByUser = "TestUser" };
         await _dataContext.Rentals.AddRangeAsync(rental1, rental2);
         await _dataContext.SaveChangesAsync();
 
@@ -88,8 +120,8 @@ public class RentalRepositoryTests : IDisposable
     public async Task GetActiveRentals_ShouldReturnActiveRentals()
     {
         // Arrange
-        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.MinValue, DailyRate = 30 };
-        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow, EndDate = DateTime.MinValue, DailyRate = 30 };
+        var rental1 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow.AddDays(-2), EndDate = DateTime.UtcNow.AddDays(5), ExpectedEndDate = DateTime.UtcNow.AddDays(5), DailyRate = 30, CreatedByUser = "TestUser" };
+        var rental2 = new Rental { CourierId = Guid.NewGuid(), MotorcycleId = Guid.NewGuid(), StartDate = DateTime.UtcNow.AddDays(-1), EndDate = DateTime.UtcNow.AddDays(6), ExpectedEndDate = DateTime.UtcNow.AddDays(6), DailyRate = 30, CreatedByUser = "TestUser" };
         await _dataContext.Rentals.AddRangeAsync(rental1, rental2);
         await _dataContext.SaveChangesAsync();
 
@@ -116,22 +148,21 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForOnTimeReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
         var rental = new Rental
         {
-            Id = rentalId,
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
             StartDate = DateTime.UtcNow.AddDays(-7),
             EndDate = DateTime.UtcNow,
             ExpectedEndDate = DateTime.UtcNow,
-            DailyRate = 30
+            DailyRate = 30,
+            CreatedByUser = "TestUser"
         };
         await _dataContext.Rentals.AddAsync(rental);
         await _dataContext.SaveChangesAsync();
 
         // Act
-        var result = await _repository.CalculateRentalCost(rentalId);
+        var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
         result.Should().Be(210); // 7 days * 30 = 210
@@ -141,28 +172,28 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForEarlyReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
         var startDate = DateTime.UtcNow.AddDays(-7);
-        var endDate = DateTime.UtcNow.AddDays(-1); // Retorno antecipado
+        var endDate = DateTime.UtcNow.AddDays(-1);
         var expectedEndDate = DateTime.UtcNow;
         var dailyRate = 30m;
+        var createdByUser = "TestUser";
 
         var rental = new Rental
         {
-            Id = rentalId,
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
             StartDate = startDate,
             EndDate = endDate,
             ExpectedEndDate = expectedEndDate,
-            DailyRate = dailyRate
+            DailyRate = dailyRate,
+            CreatedByUser = createdByUser
         };
 
         await _dataContext.Rentals.AddAsync(rental);
         await _dataContext.SaveChangesAsync();
 
         // Act
-        var result = await _repository.CalculateRentalCost(rentalId);
+        var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
         var expectedCost = (endDate - startDate).Days * dailyRate;
@@ -176,28 +207,28 @@ public class RentalRepositoryTests : IDisposable
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForLateReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
         var startDate = DateTime.UtcNow.AddDays(-8);
         var endDate = DateTime.UtcNow;
         var expectedEndDate = DateTime.UtcNow.AddDays(-1);
         var dailyRate = 30m;
+        var createdByUser = "TestUser";
 
         var rental = new Rental
         {
-            Id = rentalId,
             CourierId = Guid.NewGuid(),
             MotorcycleId = Guid.NewGuid(),
             StartDate = startDate,
             EndDate = endDate,
             ExpectedEndDate = expectedEndDate,
-            DailyRate = dailyRate
+            DailyRate = dailyRate,
+            CreatedByUser = createdByUser
         };
 
         await _dataContext.Rentals.AddAsync(rental);
         await _dataContext.SaveChangesAsync();
 
         // Act
-        var result = await _repository.CalculateRentalCost(rentalId);
+        var result = await _repository.CalculateRentalCost(rental);
 
         // Assert
         var expectedCost = (endDate - startDate).Days * dailyRate;
@@ -208,9 +239,12 @@ public class RentalRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task CalculateRentalCost_ShouldThrowException_WhenRentalNotFound()
+    public async Task CalculateRentalCost_ShouldThrowException_WhenRentalIsNull()
     {
+        // Arrange
+        Rental rental = null;
+
         // Act & Assert
-        await Assert.ThrowsAsync<Exception>(async () => await _repository.CalculateRentalCost(Guid.NewGuid()));
+        await Assert.ThrowsAsync<ArgumentNullException>(async () => await _repository.CalculateRentalCost(rental));
     }
 }

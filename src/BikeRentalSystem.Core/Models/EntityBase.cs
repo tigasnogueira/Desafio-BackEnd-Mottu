@@ -4,7 +4,9 @@ public abstract class EntityBase
 {
     public Guid Id { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public string CreatedByUser { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string? UpdatedByUser { get; set; }
     public bool IsDeleted { get; set; }
 
     public EntityBase()
@@ -19,13 +21,9 @@ public abstract class EntityBase
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void IsDeletedToggle()
+    public void ToggleIsDeleted()
     {
+        Update();
         IsDeleted = !IsDeleted;
     }
-}
-
-[AttributeUsage(AttributeTargets.Property)]
-public class IgnoreOnUpdateAttribute : Attribute
-{
 }

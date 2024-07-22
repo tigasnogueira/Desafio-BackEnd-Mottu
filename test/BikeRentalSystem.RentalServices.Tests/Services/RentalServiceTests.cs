@@ -1,6 +1,6 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Enums;
 using BikeRentalSystem.Core.Notifications;
@@ -48,13 +48,13 @@ public class RentalServiceTests
 
         var validationResult = new ValidationResult();
         var validatorMock = Substitute.For<AbstractValidator<Rental>>();
-        validatorMock.ValidateAsync(rental).Returns(validationResult);
+        validatorMock.ValidateAsync(rental).Returns(Task.FromResult(validationResult));
 
         _unitOfWorkMock.Rentals.Add(rental).Returns(Task.CompletedTask);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _rentalService.Add(rental);
+        var result = await _rentalService.Add(rental, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -85,10 +85,10 @@ public class RentalServiceTests
         });
 
         var validatorMock = Substitute.For<AbstractValidator<Rental>>();
-        validatorMock.ValidateAsync(rental).Returns(validationResult);
+        validatorMock.ValidateAsync(rental).Returns(Task.FromResult(validationResult));
 
         // Act
-        var result = await _rentalService.Add(rental);
+        var result = await _rentalService.Add(rental, "TestUser");
 
         // Assert
         result.Should().BeFalse();
@@ -130,14 +130,14 @@ public class RentalServiceTests
 
         var validationResult = new ValidationResult();
 
-        var validationMock = Substitute.For<AbstractValidator<Rental>>();
-        validationMock.ValidateAsync(updatedRental).Returns(validationResult);
+        var validatorMock = Substitute.For<AbstractValidator<Rental>>();
+        validatorMock.ValidateAsync(updatedRental).Returns(Task.FromResult(validationResult));
 
-        _unitOfWorkMock.Rentals.GetById(rentalId).Returns(existingRental);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.Rentals.GetById(rentalId).Returns(Task.FromResult(existingRental));
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _rentalService.Update(updatedRental);
+        var result = await _rentalService.Update(updatedRental, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -154,7 +154,7 @@ public class RentalServiceTests
         var existingRental = new Rental { Id = rentalId, StartDate = DateTime.UtcNow.AddDays(1) };
         var updatedRental = new Rental { Id = rentalId, StartDate = DateTime.UtcNow.AddDays(-1) };
 
-        _unitOfWorkMock.Rentals.GetById(rentalId).Returns(existingRental);
+        _unitOfWorkMock.Rentals.GetById(rentalId).Returns(Task.FromResult(existingRental));
 
         var validationResult = new ValidationResult(new List<ValidationFailure>
         {
@@ -162,10 +162,10 @@ public class RentalServiceTests
         });
 
         var validatorMock = Substitute.For<AbstractValidator<Rental>>();
-        validatorMock.ValidateAsync(updatedRental).Returns(validationResult);
+        validatorMock.ValidateAsync(updatedRental).Returns(Task.FromResult(validationResult));
 
         // Act
-        var result = await _rentalService.Update(updatedRental);
+        var result = await _rentalService.Update(updatedRental, "TestUser");
 
         // Assert
         result.Should().BeFalse();
@@ -181,11 +181,11 @@ public class RentalServiceTests
         var rentalId = Guid.NewGuid();
         var rental = new Rental { Id = rentalId, StartDate = DateTime.UtcNow.AddDays(1) };
 
-        _unitOfWorkMock.Rentals.GetById(rentalId).Returns(rental);
-        _unitOfWorkMock.SaveAsync().Returns(1);
+        _unitOfWorkMock.Rentals.GetById(rentalId).Returns(Task.FromResult(rental));
+        _unitOfWorkMock.SaveAsync().Returns(Task.FromResult(1));
 
         // Act
-        var result = await _rentalService.SoftDelete(rentalId);
+        var result = await _rentalService.SoftDelete(rentalId, "TestUser");
 
         // Assert
         result.Should().BeTrue();
@@ -202,45 +202,58 @@ public class RentalServiceTests
         _unitOfWorkMock.Rentals.GetById(rentalId).Returns(Task.FromResult<Rental>(null));
 
         // Act
-        var result = await _rentalService.SoftDelete(rentalId);
+        var result = await _rentalService.SoftDelete(rentalId, "TestUser");
 
         // Assert
         result.Should().BeFalse();
         _notifierMock.Received().Handle("Rental not found", NotificationType.Error);
+        _unitOfWorkMock.Rentals.DidNotReceive().Update(Arg.Any<Rental>());
     }
 
     [Fact]
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForEarlyReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
-        var expectedCost = 150m;
+        var rental = new Rental
+        {
+            StartDate = DateTime.UtcNow.AddDays(-5),
+            EndDate = DateTime.UtcNow.AddDays(-2),
+            ExpectedEndDate = DateTime.UtcNow.AddDays(-1),
+            DailyRate = 50m
+        };
+        var expectedCost = 150m + (50m * 0.20m);
 
-        _unitOfWorkMock.Rentals.CalculateRentalCost(rentalId).Returns(expectedCost);
+        _unitOfWorkMock.Rentals.CalculateRentalCost(rental).Returns(Task.FromResult(expectedCost));
 
         // Act
-        var result = await _rentalService.CalculateRentalCost(rentalId);
+        var result = await _rentalService.CalculateRentalCost(rental);
 
         // Assert
         result.Should().Be(expectedCost);
-        _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rentalId);
+        await _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rental);
     }
 
     [Fact]
     public async Task CalculateRentalCost_ShouldReturnCorrectCost_ForLateReturn()
     {
         // Arrange
-        var rentalId = Guid.NewGuid();
-        var expectedCost = 330m;
+        var rental = new Rental
+        {
+            StartDate = DateTime.UtcNow.AddDays(-5),
+            EndDate = DateTime.UtcNow.AddDays(2),
+            ExpectedEndDate = DateTime.UtcNow,
+            DailyRate = 50m
+        };
+        var expectedCost = (5 * 50m) + (2 * 50);
 
-        _unitOfWorkMock.Rentals.CalculateRentalCost(rentalId).Returns(expectedCost);
+        _unitOfWorkMock.Rentals.CalculateRentalCost(rental).Returns(Task.FromResult(expectedCost));
 
         // Act
-        var result = await _rentalService.CalculateRentalCost(rentalId);
+        var result = await _rentalService.CalculateRentalCost(rental);
 
         // Assert
         result.Should().Be(expectedCost);
-        _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rentalId);
+        await _unitOfWorkMock.Rentals.Received(1).CalculateRentalCost(rental);
     }
 
     [Fact]

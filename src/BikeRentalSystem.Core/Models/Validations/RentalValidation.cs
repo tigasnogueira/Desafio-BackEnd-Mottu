@@ -1,4 +1,4 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.UoW;
 using FluentValidation;
 
 namespace BikeRentalSystem.Core.Models.Validations;
@@ -23,7 +23,7 @@ public class RentalValidation : AbstractValidator<Rental>
 
         RuleFor(r => r.StartDate)
             .NotEmpty().WithMessage("The Start Date cannot be empty.")
-            .Must(date => date.Date > DateTime.Now.Date).WithMessage("The Start Date must be in the future.");
+            .GreaterThan(DateTime.UtcNow).WithMessage("The Start Date must be in the future.");
 
         RuleFor(r => r.EndDate)
             .NotEmpty().WithMessage("The End Date cannot be empty.")

@@ -28,8 +28,8 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTime>("BirthDate")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<DateOnly>("BirthDate")
+                        .HasColumnType("date");
 
                     b.Property<string>("CnhImage")
                         .HasMaxLength(255)
@@ -53,6 +53,11 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedByUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -61,8 +66,12 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
@@ -84,6 +93,11 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedByUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
@@ -97,8 +111,12 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<int>("Year")
                         .HasColumnType("integer");
@@ -109,6 +127,46 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Motorcycles", (string)null);
+                });
+
+            modelBuilder.Entity("BikeRentalSystem.Core.Models.MotorcycleNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CreatedByUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("MotorcycleId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MotorcycleId")
+                        .IsUnique();
+
+                    b.ToTable("MotorcycleNotifications", (string)null);
                 });
 
             modelBuilder.Entity("BikeRentalSystem.Core.Models.Rental", b =>
@@ -123,10 +181,15 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedByUser")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<decimal>("DailyRate")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime>("EndDate")
+                    b.Property<DateTime?>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("ExpectedEndDate")
@@ -147,8 +210,12 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedByUser")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.HasKey("Id");
 
@@ -157,6 +224,15 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                     b.HasIndex("MotorcycleId");
 
                     b.ToTable("Rentals", (string)null);
+                });
+
+            modelBuilder.Entity("BikeRentalSystem.Core.Models.MotorcycleNotification", b =>
+                {
+                    b.HasOne("BikeRentalSystem.Core.Models.Motorcycle", "Motorcycle")
+                        .WithOne("MotorcycleNotification")
+                        .HasForeignKey("BikeRentalSystem.Core.Models.MotorcycleNotification", "MotorcycleId");
+
+                    b.Navigation("Motorcycle");
                 });
 
             modelBuilder.Entity("BikeRentalSystem.Core.Models.Rental", b =>
@@ -176,6 +252,11 @@ namespace BikeRentalSystem.Infrastructure.Migrations
                     b.Navigation("Courier");
 
                     b.Navigation("Motorcycle");
+                });
+
+            modelBuilder.Entity("BikeRentalSystem.Core.Models.Motorcycle", b =>
+                {
+                    b.Navigation("MotorcycleNotification");
                 });
 #pragma warning restore 612, 618
         }

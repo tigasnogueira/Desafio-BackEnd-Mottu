@@ -1,0 +1,791 @@
+{
+	"info": {
+		"_postman_id": "a645bbc5-456a-4816-a584-b3bfdbb0874d",
+		"name": "Desafio Backend Mottu",
+		"description": "Collection de endpoints para a AuthController do Desafio Backend Mottu em .NET 7",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24682277"
+	},
+	"item": [
+		{
+			"name": "AuthController",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"confirmPassword\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"auth",
+								"register"
+							]
+						},
+						"description": "### Register User\n\nThis endpoint allows users to register with the application.\n\n#### Request Body\n\n- `email` (string, required): The email address of the user.\n    \n- `password` (string, required): The password for the user account.\n    \n- `confirmPassword` (string, required): The confirmation of the password.\n    \n\n#### Response\n\nThe response of this request is a JSON schema representing the structure of the response data."
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.globals.set(\"accessToken\", pm.response.json().accessToken);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"P@ssw0rd!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"auth",
+								"login"
+							]
+						},
+						"description": "\nThis endpoint allows users to authenticate and login to the system. The HTTP POST request should be made to {{baseUrl}}/api/v1.0/auth/login with the following payload in the raw request body type:\n\n```json\n{\n  \"email\": \"\",\n  \"password\": \"\"\n}\n```\n\n### Response\nThe response of this request is a JSON schema representing the authentication token and user details upon successful login. The schema for the response will include the structure and data types of the returned JSON object.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Add Role",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"roleName\": \"Admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/auth/add-role",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"auth",
+								"add-role"
+							]
+						},
+						"description": "\n### Add Role\nThis endpoint is used to add a new role.\n\n#### Request Body\n- `roleName` (string, required): The name of the role to be added.\n\n#### Response\nThe response of this request is a JSON schema.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Roles and Claims",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": \"user-id\",\n  \"roles\": [\"Admin\", \"User\"],\n  \"claims\": [\n    {\n      \"type\": \"permission\",\n      \"value\": \"read\"\n    },\n    {\n      \"type\": \"permission\",\n      \"value\": \"write\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/auth/assign-roles-claims",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"auth",
+								"assign-roles-claims"
+							]
+						},
+						"description": "\nThe `POST` request to `/api/v1.0/auth/assign-roles-claims` endpoint is used to assign roles and claims to a user.\n\n### Request Body\n- `userId` (string, required): The ID of the user to whom the roles and claims are being assigned.\n- `roles` (array of strings, required): An array of roles to be assigned to the user.\n- `claims` (array of objects, required): An array of claims containing type and value for the user.\n\n### Response\nThe response of this request is a JSON schema representing the structure of the response object. This schema defines the properties and their data types that can be expected in the response.\n\nExample JSON Schema:\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n  }\n}\n```\n"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints da AuthController"
+		},
+		{
+			"name": "CourierController",
+			"item": [
+				{
+					"name": "Get Courier By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/couriers/{{courierId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"couriers",
+								"{{courierId}}"
+							]
+						},
+						"description": "\n### Get Courier Details\nThis endpoint retrieves details of a specific courier identified by the `courierId`.\n\n#### Request\n- Method: GET\n- URL: `{{baseUrl}}/api/v1.0/couriers/{{courierId}}`\n\n#### Response\nThe response of this request is a JSON object conforming to the following schema:\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"courierId\": {\n      \"type\": \"string\"\n    },\n    \"name\": {\n      \"type\": \"string\"\n    },\n    \"phone\": {\n      \"type\": \"string\"\n    },\n    \"email\": {\n      \"type\": \"string\"\n    },\n    \"status\": {\n      \"type\": \"string\"\n    },\n    \"location\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"latitude\": {\n          \"type\": \"number\"\n        },\n        \"longitude\": {\n          \"type\": \"number\"\n        }\n      }\n    },\n    \"lastUpdated\": {\n      \"type\": \"string\",\n      \"format\": \"date-time\"\n    }\n  }\n}\n```\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Couriers",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/couriers/list?page={{page}}&pageSize={{pageSize}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"couriers",
+								"list"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "pageSize",
+									"value": "{{pageSize}}",
+									"description": "Number of items per page"
+								}
+							]
+						},
+						"description": "\nThis endpoint makes an HTTP GET request to retrieve a list of couriers. The request includes query parameters for pagination, where \"page\" specifies the page number and \"pageSize\" specifies the number of items per page.\n\nThe response of this request is documented as a JSON schema:\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"couriers\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"courierId\": {\n            \"type\": \"string\"\n          },\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"contactNumber\": {\n            \"type\": \"string\"\n          },\n          \"email\": {\n            \"type\": \"string\"\n          },\n          \"status\": {\n            \"type\": \"string\"\n          }\n          // Additional properties based on the actual response\n        }\n      }\n    },\n    \"totalCouriers\": {\n      \"type\": \"integer\"\n    }\n  }\n}\n```\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Courier",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "Name",
+									"value": "John Doe 1",
+									"type": "text"
+								},
+								{
+									"key": "Cnpj",
+									"value": "12345678902349",
+									"type": "text"
+								},
+								{
+									"key": "BirthDate",
+									"value": "1982-01-01",
+									"type": "text"
+								},
+								{
+									"key": "CnhNumber",
+									"value": "1234567898",
+									"type": "text"
+								},
+								{
+									"key": "CnhType",
+									"value": "A+B",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/couriers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"couriers"
+							]
+						},
+						"description": "\nThis endpoint allows the creation of new couriers via a POST request to the specified URL. The request should include the necessary details of the courier to be created.\n\n### Response\nThe response of this request is a JSON schema representing the structure of the response data that will be returned upon successful creation of a new courier.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Courier",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "Name",
+									"value": "John Doe 1 Updated",
+									"type": "text"
+								},
+								{
+									"key": "Cnpj",
+									"value": "12345678902349",
+									"type": "text"
+								},
+								{
+									"key": "BirthDate",
+									"value": "1982-01-01",
+									"type": "text"
+								},
+								{
+									"key": "CnhNumber",
+									"value": "1234567898",
+									"type": "text"
+								},
+								{
+									"key": "CnhType",
+									"value": "A+B",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/couriers/{{courierId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"couriers",
+								"{{courierId}}"
+							]
+						},
+						"description": "\nThis endpoint allows the user to update a specific courier by making an HTTP PUT request to the provided URL. The request should include the courier ID in the URL path and the payload in form-data format.\n\n### Response\nThe response of this request is a JSON schema representing the structure of the data that will be returned. This schema can be used to understand the expected format of the response data.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Soft Delete Courier",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/couriers/{{courierId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"couriers",
+								"{{courierId}}"
+							]
+						},
+						"description": "\nThis API endpoint allows you to update specific details of a courier using the HTTP PATCH method. You need to provide the ID of the courier in the URL.\n\n### Request Parameters\n- `courierId`: The ID of the courier to be updated.\n\n### Response\nThe response of this request is a JSON schema representing the updated courier details. The schema will outline the structure and data types of the updated courier information.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Add or Update CNH Image",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cnhImage",
+									"type": "file",
+									"src": "/E:/Arquivos/4Ucode/Teste Mottu Desafio Backend/cnhtest.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/couriers/{{cnpj}}/cnh",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"couriers",
+								"{{cnpj}}",
+								"cnh"
+							]
+						},
+						"description": "\nThis endpoint allows you to update the CNH (National Driver's License) information for a specific courier identified by their CNPJ number. The HTTP PATCH request should be made to {{baseUrl}}/api/v1.0/couriers/{{cnpj}}/cnh.\n\n### Request Body\nThe request should include a form-data body with the necessary fields to update the CNH information.\n\n### Response\nThe response of this request is a JSON schema representing the structure of the response data that will be returned upon a successful update of the CNH information for the courier.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\n      \"type\": \"string\"\n    },\n    \"message\": {\n      \"type\": \"string\"\n    }\n    // Additional properties may be present based on the specific response data\n  }\n}\n```\n"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints da CourierController"
+		},
+		{
+			"name": "MotorcycleController",
+			"item": [
+				{
+					"name": "Get Motorcycle By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/motorcycles/{{motorcycleId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"motorcycles",
+								"{{motorcycleId}}"
+							]
+						},
+						"description": "\nThis endpoint retrieves information about a specific motorcycle identified by the provided motorcycleId.\n\n### Response\nThe response of this request is a JSON object conforming to the following schema:\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"motorcycleId\": {\n      \"type\": \"string\"\n    },\n    \"brand\": {\n      \"type\": \"string\"\n    },\n    \"model\": {\n      \"type\": \"string\"\n    },\n    \"year\": {\n      \"type\": \"integer\"\n    },\n    \"engine\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"type\": {\n          \"type\": \"string\"\n        },\n        \"displacement\": {\n          \"type\": \"number\"\n        }\n      }\n    },\n    \"colors\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    }\n  }\n}\n```\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Motorcycles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/motorcycles/list?page={{page}}&pageSize={{pageSize}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"motorcycles",
+								"list"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "pageSize",
+									"value": "{{pageSize}}",
+									"description": "Number of items per page"
+								}
+							]
+						},
+						"description": "\nThis endpoint sends an HTTP GET request to retrieve a list of motorcycles. The request includes query parameters for the page number and page size.\n\n### Response\nThe response of this request is a JSON object representing the list of motorcycles. To document the response as a JSON schema, the following keys and their data types can be used:\n\n- `motorcycles`: An array of objects representing the motorcycles.\n  - `id`: (type: string) The unique identifier of the motorcycle.\n  - `brand`: (type: string) The brand of the motorcycle.\n  - `model`: (type: string) The model of the motorcycle.\n  - `year`: (type: number) The manufacturing year of the motorcycle.\n  - `engineSize`: (type: string) The engine size of the motorcycle.\n  - `color`: (type: string) The color of the motorcycle.\n  - `price`: (type: number) The price of the motorcycle.\n\nExample response:\n```json\n{\n  \"motorcycles\": [\n    {\n      \"id\": \"abc123\",\n      \"brand\": \"Honda\",\n      \"model\": \"CBR600RR\",\n      \"year\": 2020,\n      \"engineSize\": \"600cc\",\n      \"color\": \"Red\",\n      \"price\": 8000\n    },\n    {\n      \"id\": \"def456\",\n      \"brand\": \"Yamaha\",\n      \"model\": \"YZF-R6\",\n      \"year\": 2019,\n      \"engineSize\": \"600cc\",\n      \"color\": \"Blue\",\n      \"price\": 7500\n    }\n  ]\n}\n```\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Motorcycle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"year\": 2021,\n  \"model\": \"Yamaha\",\n  \"plate\": \"ABC-9001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/motorcycles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"motorcycles"
+							]
+						},
+						"description": "\n### Create a New Motorcycle\n\nThis endpoint allows you to create a new motorcycle.\n\n#### Request Body\n- `year` (number, required): The year of the motorcycle.\n- `model` (string, required): The model of the motorcycle.\n- `plate` (string, required): The license plate of the motorcycle.\n\n#### Response\nThe response for this request can be documented as a JSON schema.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Motorcycle",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"year\": 2022,\n  \"model\": \"Yamaha\",\n  \"plate\": \"ABC-9001\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/motorcycles/{{motorcycleId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"motorcycles",
+								"{{motorcycleId}}"
+							]
+						},
+						"description": "\n### Update Motorcycle Details\n\nThis endpoint allows the client to update the details of a specific motorcycle.\n\n#### Request\n\n- Method: PUT\n- URL: `{{baseUrl}}/api/v1.0/motorcycles/{{motorcycleId}}`\n\n##### Request Body\n- Type: JSON\n    - `year` (number): The year of the motorcycle.\n    - `model` (string): The model of the motorcycle.\n    - `plate` (string): The license plate of the motorcycle.\n\n#### Response\n\nThe response of this request is a JSON schema representing the updated details of the motorcycle. The specific structure of the response will depend on the data that is updated.\n\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Soft Delete Motorcycle",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/motorcycles/{{motorcycleId}}/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"motorcycles",
+								"{{motorcycleId}}",
+								"status"
+							]
+						},
+						"description": "\nThis endpoint allows the user to update the status of a specific motorcycle using a PATCH request. The request should be made to the specified URL with the motorcycleId as a path parameter. Upon successful execution, the response will be in the form of a JSON schema documenting the structure of the response data.\n"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints da MotorcycleController"
+		},
+		{
+			"name": "RentalController",
+			"item": [
+				{
+					"name": "Get Rental By ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/rentals/{{rentalId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"rentals",
+								"{{rentalId}}"
+							]
+						},
+						"description": "\nThis endpoint retrieves the details of a specific rental identified by the `rentalId`.\n\n### Response\nThe response for this request is a JSON object conforming to the following schema:\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"rentalId\": {\n      \"type\": \"string\",\n      \"description\": \"The unique identifier of the rental\"\n    },\n    \"address\": {\n      \"type\": \"string\",\n      \"description\": \"The address of the rental property\"\n    },\n    \"price\": {\n      \"type\": \"number\",\n      \"description\": \"The rental price\"\n    },\n    \"bedrooms\": {\n      \"type\": \"integer\",\n      \"description\": \"The number of bedrooms in the rental property\"\n    },\n    \"bathrooms\": {\n      \"type\": \"integer\",\n      \"description\": \"The number of bathrooms in the rental property\"\n    },\n    \"sqft\": {\n      \"type\": \"integer\",\n      \"description\": \"The square footage of the rental property\"\n    },\n    \"petsAllowed\": {\n      \"type\": \"boolean\",\n      \"description\": \"Indicates if pets are allowed in the rental property\"\n    }\n    // Additional properties may be present based on the specific rental details\n  },\n  \"required\": [\"rentalId\", \"address\", \"price\", \"bedrooms\", \"bathrooms\", \"sqft\", \"petsAllowed\"]\n}\n```\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Rentals",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/rentals/list?page={{page}}&pageSize={{pageSize}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"rentals",
+								"list"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "pageSize",
+									"value": "{{pageSize}}",
+									"description": "Number of items per page"
+								}
+							]
+						},
+						"description": "\nThis endpoint makes an HTTP GET request to retrieve a list of rentals. The request includes query parameters for the page number and page size.\n\n### Response\nThe response of this request is a JSON object representing the list of rentals. To document the response as a JSON schema, you can use the following structure:\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"rentals\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          // Define the properties of each rental object here\n        }\n      }\n    },\n    \"totalRentals\": {\n      \"type\": \"integer\"\n    },\n    \"page\": {\n      \"type\": \"integer\"\n    },\n    \"pageSize\": {\n      \"type\": \"integer\"\n    }\n  }\n}\n```\n\nReplace \"// Define the properties of each rental object here\" with the specific properties of each rental object, such as id, address, price, etc.\n\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Rental",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"courierId\": \"{{courierId}}\",\n  \"motorcycleId\": \"{{motorcycleId}}\",\n  \"startDate\": \"2024-07-19T00:00:00Z\",\n  \"endDate\": \"2024-07-27T00:00:00Z\",\n  \"expectedEndDate\": \"2024-07-26T00:00:00Z\",\n  \"dailyRate\": 30.0,\n  \"plan\": \"SevenDays\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/rentals",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"rentals"
+							]
+						},
+						"description": "\nThis endpoint makes an HTTP POST request to create a new rental in the system. The request should include the courier ID, motorcycle ID, start date, end date, expected end date, daily rate, and the rental plan.\n\n### Request Body\n- courierId (string): The ID of the courier associated with the rental.\n- motorcycleId (string): The ID of the motorcycle being rented.\n- startDate (string): The start date of the rental period.\n- endDate (string): The end date of the rental period.\n- expectedEndDate (string): The expected end date of the rental period.\n- dailyRate (number): The daily rental rate for the motorcycle.\n- plan (string): The rental plan chosen for the rental.\n\n### Response\nThe response of this request is a JSON schema representing the structure of the response object. The schema will define the properties and data types of the response object returned upon successful creation of the rental.\n\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Rental",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"courierId\": \"{{courierId}}\",\n  \"motorcycleId\": \"{{motorcycleId}}\",\n  \"startDate\": \"2024-07-18T00:00:00Z\",\n  \"endDate\": \"2024-07-26T00:00:00Z\",\n  \"expectedEndDate\": \"2024-07-25T00:00:00Z\",\n  \"dailyRate\": 30.0,\n  \"plan\": \"SevenDays\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/rentals/{{rentalId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"rentals",
+								"{{rentalId}}"
+							]
+						},
+						"description": "\nThis endpoint allows the user to update a specific rental by sending an HTTP PUT request to the specified URL. The request should include the rental ID in the URL and a JSON payload in the request body with the fields: courierId, motorcycleId, startDate, endDate, expectedEndDate, dailyRate, and plan.\n\n### Response\nThe response of this request is a JSON schema representing the structure of the data that will be returned. This schema can be used to understand the format of the response data and validate it against the expected structure.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Soft Delete Rental",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/rentals/{{rentalId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"rentals",
+								"{{rentalId}}"
+							]
+						},
+						"description": "\nThis endpoint allows the user to update specific details of a rental using the rentalId as a reference. The HTTP PATCH request should be made to the specified URL with the necessary parameters to update the rental information.\n\n### Response\nThe response of this request is a JSON schema representing the updated rental details. The schema will outline the structure of the response data, including the type and format of each field returned after the successful update.\n"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints da RentalController"
+		}
+	],
+	"auth": {
+		"type": "bearer"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://localhost:7069"
+		},
+		{
+			"key": "accessToken",
+			"value": ""
+		},
+		{
+			"key": "courierId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "motorcycleId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "rentalId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "page",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "pageSize",
+			"value": "10",
+			"type": "string"
+		},
+		{
+			"key": "cnpj",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

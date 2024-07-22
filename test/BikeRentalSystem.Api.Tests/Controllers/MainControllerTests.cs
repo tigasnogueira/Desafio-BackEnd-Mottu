@@ -16,7 +16,7 @@ public class MainControllerTests
 {
     private readonly MainController _mainController;
     private readonly INotifier _notifierMock;
-    private readonly IUser _userMock;
+    private readonly IAspNetUser _userMock;
     private readonly DefaultHttpContext _httpContext;
 
     public MainControllerTests()

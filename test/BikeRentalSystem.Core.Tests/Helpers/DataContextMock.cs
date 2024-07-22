@@ -9,7 +9,7 @@ public static class DataContextMock
     public static DataContext Create()
     {
         var options = new DbContextOptionsBuilder<DataContext>()
-            .UseInMemoryDatabase(databaseName: "BikeRentalSystemTest")
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
 

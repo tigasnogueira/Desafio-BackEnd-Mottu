@@ -20,7 +20,7 @@ public class NotifierTests
     }
 
     [Fact]
-    public void HandleMessage_ShouldAddNotification()
+    public void HandleMessage_ShouldAddInformationNotification()
     {
         var notifier = new Notifier();
         var message = "Test message";
@@ -33,7 +33,7 @@ public class NotifierTests
     }
 
     [Fact]
-    public void HandleMessageWithType_ShouldAddNotification()
+    public void HandleMessageWithType_ShouldAddTypedNotification()
     {
         var notifier = new Notifier();
         var message = "Test error";
@@ -47,7 +47,7 @@ public class NotifierTests
     }
 
     [Fact]
-    public void HandleException_ShouldAddNotification()
+    public void HandleException_ShouldAddErrorNotification()
     {
         var notifier = new Notifier();
         var exception = new InvalidOperationException("Invalid operation");
@@ -72,7 +72,7 @@ public class NotifierTests
     }
 
     [Fact]
-    public void Handle_ValidationResult_ShouldAddNotifications()
+    public void HandleValidationResult_ShouldAddNotifications()
     {
         var notifier = new Notifier();
         var validationResult = new ValidationResult(new[]

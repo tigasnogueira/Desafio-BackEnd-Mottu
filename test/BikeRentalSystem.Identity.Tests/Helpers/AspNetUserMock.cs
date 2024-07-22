@@ -6,9 +6,9 @@ namespace BikeRentalSystem.Identity.Tests.Helpers;
 
 public static class AspNetUserMock
 {
-    public static IUser Create()
+    public static IAspNetUser Create()
     {
-        var userMock = Substitute.For<IUser>();
+        var userMock = Substitute.For<IAspNetUser>();
         userMock.Name.Returns("Test User");
         userMock.GetUserId().Returns(Guid.NewGuid());
         userMock.GetUserEmail().Returns("testuser@example.com");

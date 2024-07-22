@@ -2,5 +2,5 @@
 
 public interface IMessageConsumer
 {
-    void Consume();
+    Task ConsumeAsync();
 }

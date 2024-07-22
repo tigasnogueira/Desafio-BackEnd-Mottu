@@ -10,7 +10,7 @@ public class IdentityUserConfiguration : IEntityTypeConfiguration<IdentityUser>
     {
         var adminUser = new IdentityUser
         {
-            Id = "1",
+            Id = Guid.NewGuid().ToString(),
             UserName = "admin@example.com",
             NormalizedUserName = "ADMIN@EXAMPLE.COM",
             Email = "admin@example.com",

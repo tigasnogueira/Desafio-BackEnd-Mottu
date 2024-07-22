@@ -1,12 +1,12 @@
 ﻿using BikeRentalSystem.Api.Controllers;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Identity.Tests.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
 using BikeRentalSystem.Core.Tests.Helpers;
+using BikeRentalSystem.Core.Interfaces;
 
 namespace BikeRentalSystem.Api.Tests.Controllers;
 
@@ -14,7 +14,7 @@ public abstract class BaseControllerTests<T> where T : MainController
 {
     protected T controller;
     protected INotifier _notifierMock;
-    protected IUser _userMock;
+    protected IAspNetUser _userMock;
     protected DefaultHttpContext _httpContext;
 
     public BaseControllerTests()

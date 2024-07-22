@@ -1,7 +1,7 @@
 ﻿using BikeRentalSystem.Core.Common;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
@@ -17,8 +17,8 @@ public class RentalService : BaseService, IRentalService
 
     public RentalService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
     {
-        _unitOfWork = unitOfWork;
-        _messageProducer = messageProducer;
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _messageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
     }
 
     public async Task<Rental> GetById(Guid id)
@@ -105,13 +105,12 @@ public class RentalService : BaseService, IRentalService
         }
     }
 
-    public async Task<decimal> CalculateRentalCost(Guid rentalId)
+    public async Task<decimal> CalculateRentalCost(Rental rental)
     {
         try
         {
             _notifier.Handle("Calculating rental cost");
-            var rentalCost = await _unitOfWork.Rentals.CalculateRentalCost(rentalId);
-            return rentalCost;
+            return await _unitOfWork.Rentals.CalculateRentalCost(rental);
         }
         catch (Exception ex)
         {
@@ -120,7 +119,7 @@ public class RentalService : BaseService, IRentalService
         }
     }
 
-    public async Task<bool> Add(Rental rental)
+    public async Task<bool> Add(Rental rental, string userEmail)
     {
         if (rental == null)
         {
@@ -140,12 +139,12 @@ public class RentalService : BaseService, IRentalService
         {
             try
             {
-                var (motorcycles, couriers) = await GetForeignEntities(rental.MotorcycleId, rental.CourierId);
+                var (motorcycle, courier) = await GetForeignEntities(rental.MotorcycleId, rental.CourierId);
 
-                rental.Motorcycle = motorcycles;
-                rental.Courier = couriers;
-
-                rental.TotalCost = CalculateRentalCost(rental.Id).Result;
+                rental.CreatedByUser = userEmail;
+                rental.Motorcycle = motorcycle;
+                rental.Courier = courier;
+                rental.TotalCost = await CalculateRentalCost(rental);
 
                 await _unitOfWork.Rentals.Add(rental);
                 var result = await _unitOfWork.SaveAsync();
@@ -155,16 +154,14 @@ public class RentalService : BaseService, IRentalService
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental added successfully");
 
-                    AddRentalRegisteredEvent(rental);
+                    PublishRentalRegisteredEvent(rental);
 
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to add rental, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to add rental, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -175,7 +172,7 @@ public class RentalService : BaseService, IRentalService
         }
     }
 
-    public async Task<bool> Update(Rental rental)
+    public async Task<bool> Update(Rental rental, string userEmail)
     {
         if (rental == null)
         {
@@ -202,7 +199,7 @@ public class RentalService : BaseService, IRentalService
         {
             try
             {
-                UpdateRentalDetails(existingRental, rental);
+                UpdateRentalDetails(existingRental, rental, userEmail);
 
                 _unitOfWork.Rentals.Update(existingRental);
                 var result = await _unitOfWork.SaveAsync();
@@ -212,16 +209,14 @@ public class RentalService : BaseService, IRentalService
                     await transaction.CommitAsync();
                     _notifier.Handle("Rental updated successfully");
 
-                    AddRentalRegisteredEvent(existingRental);
+                    PublishRentalRegisteredEvent(existingRental);
 
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to update rental, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to update rental, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -232,7 +227,7 @@ public class RentalService : BaseService, IRentalService
         }
     }
 
-    public async Task<bool> SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id, string userEmail)
     {
         try
         {
@@ -253,7 +248,8 @@ public class RentalService : BaseService, IRentalService
             {
                 try
                 {
-                    rental.IsDeletedToggle();
+                    rental.UpdatedByUser = userEmail;
+                    rental.ToggleIsDeleted();
                     await _unitOfWork.Rentals.Update(rental);
                     var result = await _unitOfWork.SaveAsync();
 
@@ -263,12 +259,10 @@ public class RentalService : BaseService, IRentalService
                         _notifier.Handle("Rental soft deleted successfully");
                         return true;
                     }
-                    else
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.Handle("Failed to soft delete rental, rolling back transaction", NotificationType.Error);
-                        return false;
-                    }
+
+                    await transaction.RollbackAsync();
+                    _notifier.Handle("Failed to soft delete rental, rolling back transaction", NotificationType.Error);
+                    return false;
                 }
                 catch (Exception ex)
                 {
@@ -293,7 +287,7 @@ public class RentalService : BaseService, IRentalService
         return (motorcycle, courier);
     }
 
-    private void UpdateRentalDetails(Rental existingRental, Rental rental)
+    private void UpdateRentalDetails(Rental existingRental, Rental rental, string userEmail)
     {
         existingRental.CourierId = rental.CourierId;
         existingRental.MotorcycleId = rental.MotorcycleId;
@@ -301,12 +295,13 @@ public class RentalService : BaseService, IRentalService
         existingRental.EndDate = rental.EndDate;
         existingRental.ExpectedEndDate = rental.ExpectedEndDate;
         existingRental.DailyRate = rental.DailyRate;
-        existingRental.TotalCost = CalculateRentalCost(existingRental.Id).Result;
+        existingRental.TotalCost = CalculateRentalCost(existingRental).Result;
         existingRental.Plan = rental.Plan;
+        existingRental.UpdatedByUser = userEmail;
         existingRental.Update();
     }
 
-    private void AddRentalRegisteredEvent(Rental rental)
+    private void PublishRentalRegisteredEvent(Rental rental)
     {
         var rentalRegisteredEvent = new RentalRegistered
         {
@@ -320,9 +315,11 @@ public class RentalService : BaseService, IRentalService
             TotalCost = rental.TotalCost,
             Plan = rental.Plan,
             CreatedAt = rental.CreatedAt,
+            CreatedByUser = rental.CreatedByUser,
             UpdatedAt = rental.UpdatedAt,
+            UpdatedByUser = rental.UpdatedByUser,
             IsDeleted = rental.IsDeleted
         };
-        _messageProducer.Publish(rentalRegisteredEvent, "exchange_name", "routing_key");
+        _messageProducer.PublishAsync(rentalRegisteredEvent, "rental_exchange", "rental_routingKey");
     }
 }

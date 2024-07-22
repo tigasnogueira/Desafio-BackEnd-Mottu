@@ -13,11 +13,11 @@ namespace BikeRentalSystem.Api.Controllers.V1;
 public class AuthController : MainController
 {
     private readonly IAuthService _authService;
-    private readonly ILogger _logger;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(INotifier notifier,
                           IAuthService authenticationService,
-                          IUser user,
+                          IAspNetUser user,
                           ILogger<AuthController> logger) : base(notifier, user)
     {
         _authService = authenticationService;
@@ -27,107 +27,131 @@ public class AuthController : MainController
     [HttpPost("register")]
     public async Task<ActionResult> Register(RegisterUserViewModel registerUser)
     {
-        try
-        {
-            if (!ModelState.IsValid) return CustomResponse(ModelState);
-
-            var result = await _authService.RegisterAsync(registerUser);
-            if (result)
+        return await HandleAuthOperationAsync(
+            async () =>
             {
-                _logger.LogInformation($"User {registerUser.Email} registered successfully");
-                return CustomResponse(await _authService.GenerateJwtAsync(registerUser.Email));
-            }
+                if (!ModelState.IsValid) return CustomResponse(ModelState);
 
-            NotifyError("Error registering the user.");
-            return CustomResponse(registerUser);
-        }
-        catch (Exception ex)
-        {
-            NotifyError("An error occurred while registering the user.");
-            _logger.LogError(ex, "An error occurred while registering the user.");
-            return CustomResponse(registerUser);
-        }
+                var result = await _authService.RegisterAsync(registerUser);
+                if (result)
+                {
+                    _logger.LogInformation($"User {registerUser.Email} registered successfully");
+                    return CustomResponse(await _authService.GenerateJwtAsync(registerUser.Email));
+                }
+
+                NotifyError("Error registering the user.");
+                _logger.LogError("Error registering the user.");
+                return CustomResponse("Error registering the user", StatusCodes.Status400BadRequest);
+            },
+            ex =>
+            {
+                NotifyError("An error occurred while registering the user.");
+                _logger.LogError(ex, "An error occurred while registering the user.");
+                return CustomResponse("An error occurred while registering the user", StatusCodes.Status500InternalServerError);
+            }
+        );
     }
 
     [HttpPost("login")]
     public async Task<ActionResult> Login(LoginUserViewModel loginUser)
     {
-        try
-        {
-            if (!ModelState.IsValid) return CustomResponse(ModelState);
-
-            var result = await _authService.LoginAsync(loginUser);
-            if (result != null)
+        return await HandleAuthOperationAsync(
+            async () =>
             {
-                _logger.LogInformation($"User {loginUser.Email} logged in successfully");
-                return CustomResponse(result);
-            }
+                if (!ModelState.IsValid) return CustomResponse(ModelState);
 
-            NotifyError("Incorrect username or password");
-            return CustomResponse(loginUser);
-        }
-        catch (Exception ex)
-        {
-            NotifyError("An error occurred while logging in.");
-            _logger.LogError(ex, "An error occurred while logging in.");
-            return CustomResponse(loginUser);
-        }
+                var result = await _authService.LoginAsync(loginUser);
+                if (result != null)
+                {
+                    _logger.LogInformation($"User {loginUser.Email} logged in successfully");
+                    return CustomResponse(result);
+                }
+
+                NotifyError("Incorrect username or password");
+                _logger.LogError("Incorrect username or password");
+                return CustomResponse("Incorrect username or password", StatusCodes.Status400BadRequest);
+            },
+            ex =>
+            {
+                NotifyError("An error occurred while logging in.");
+                _logger.LogError(ex, "An error occurred while logging in.");
+                return CustomResponse("An error occurred while logging in.", StatusCodes.Status500InternalServerError);
+            }
+        );
     }
 
     [HttpPost("add-role")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult> AddRole([FromBody] string roleName)
     {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(roleName))
+        return await HandleAuthOperationAsync(
+            async () =>
             {
-                NotifyError("Role name is required.");
+                if (string.IsNullOrWhiteSpace(roleName))
+                {
+                    NotifyError("Role name is required.");
+                    return CustomResponse(roleName);
+                }
+
+                var result = await _authService.AddRoleAsync(roleName);
+                if (result)
+                {
+                    _logger.LogInformation($"Role {roleName} added successfully");
+                    return CustomResponse(result);
+                }
+
+                NotifyError("Error adding role.");
+                _logger.LogError("An error occurred while adding the role.");
+                return CustomResponse(roleName);
+            },
+            ex =>
+            {
+                NotifyError("An error occurred while adding the role.");
+                _logger.LogError(ex, "An error occurred while adding the role.");
                 return CustomResponse(roleName);
             }
-
-            var result = await _authService.AddRoleAsync(roleName);
-            if (result)
-            {
-                _logger.LogInformation($"Role {roleName} added successfully");
-                return CustomResponse(result);
-            }
-
-            NotifyError("Error adding role.");
-            return CustomResponse(roleName);
-        }
-        catch (Exception ex)
-        {
-            NotifyError("An error occurred while adding the role.");
-            _logger.LogError(ex, "An error occurred while adding the role.");
-            return CustomResponse(roleName);
-        }
+        );
     }
 
     [HttpPost("assign-roles-claims")]
     [Authorize(Roles = "Admin")]
     public async Task<ActionResult> AssignRolesAndClaims(AssignRolesAndClaimsViewModel model)
     {
+        return await HandleAuthOperationAsync(
+            async () =>
+            {
+                if (!ModelState.IsValid) return CustomResponse(ModelState);
+
+                var result = await _authService.AssignRolesAndClaimsAsync(model.UserId, model.Roles, model.Claims);
+
+                if (!result)
+                {
+                    NotifyError("Error assigning roles and/or claims.");
+                    _logger.LogError("Error assigning roles and/or claims.");
+                    return CustomResponse("Error assigning roles and/or claims.");
+                }
+
+                _logger.LogInformation($"Roles and/or claims assigned successfully to user {model.UserId}");
+                return CustomResponse(result);
+            },
+            ex =>
+            {
+                NotifyError("An error occurred while assigning roles and claims.");
+                _logger.LogError(ex, "An error occurred while assigning roles and claims.");
+                return CustomResponse("An error occurred while assigning roles and claims.");
+            }
+        );
+    }
+
+    private async Task<ActionResult> HandleAuthOperationAsync(Func<Task<ActionResult>> operation, Func<Exception, ActionResult> handleException)
+    {
         try
         {
-            if (!ModelState.IsValid) return CustomResponse(ModelState);
-
-            var result = await _authService.AssignRolesAndClaimsAsync(model.UserId, model.Roles, model.Claims);
-
-            if (!result)
-            {
-                NotifyError("Error assigning roles and/or claims.");
-                return CustomResponse(model);
-            }
-
-            _logger.LogInformation($"Roles and/or claims assigned successfully to user {model.UserId}");
-            return CustomResponse(result);
+            return await operation();
         }
         catch (Exception ex)
         {
-            NotifyError("An error occurred while assigning roles and claims.");
-            _logger.LogError(ex, "An error occurred while assigning roles and claims.");
-            return CustomResponse(model);
+            return handleException(ex);
         }
     }
 }

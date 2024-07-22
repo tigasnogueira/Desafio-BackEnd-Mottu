@@ -1,4 +1,4 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.UoW;
 using FluentValidation;
 
 namespace BikeRentalSystem.Core.Models.Validations;

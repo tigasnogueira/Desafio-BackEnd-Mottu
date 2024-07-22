@@ -1,5 +1,6 @@
 ﻿using BikeRentalSystem.Core.Common;
 using BikeRentalSystem.Core.Interfaces.Repositories;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using Microsoft.EntityFrameworkCore.Storage;
 using NSubstitute;

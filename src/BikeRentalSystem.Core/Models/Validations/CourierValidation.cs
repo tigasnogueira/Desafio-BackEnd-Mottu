@@ -1,4 +1,4 @@
-﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+﻿using BikeRentalSystem.Core.Interfaces.UoW;
 using FluentValidation;
 using FluentValidation.Results;
 
@@ -62,12 +62,12 @@ public class CourierValidation : AbstractValidator<Courier>
     public void ConfigureCommonRules()
     {
         RuleFor(c => c.Name)
-        .NotEmpty().WithMessage("The Name cannot be empty.")
-        .Length(1, 100).WithMessage("The Name must be between 1 and 100 characters.");
+            .NotEmpty().WithMessage("The Name cannot be empty.")
+            .Length(1, 100).WithMessage("The Name must be between 1 and 100 characters.");
 
         RuleFor(c => c.BirthDate)
             .NotEmpty().WithMessage("The Date of Birth cannot be empty.")
-            .LessThan(DateTime.Now).WithMessage("The Date of Birth must be in the past.");
+            .LessThan(DateOnly.FromDateTime(DateTime.Now.Date)).WithMessage("The Date of Birth must be in the past.");
 
         RuleFor(c => c.CnhType)
             .NotEmpty().WithMessage("The CNH Type cannot be empty.")

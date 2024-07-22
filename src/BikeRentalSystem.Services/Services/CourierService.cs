@@ -1,7 +1,7 @@
 ﻿using BikeRentalSystem.Core.Common;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Repositories;
 using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Core.Models.Validations;
 using BikeRentalSystem.Core.Notifications;
@@ -17,8 +17,8 @@ public class CourierService : BaseService, ICourierService
 
     public CourierService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
     {
-        _unitOfWork = unitOfWork;
-        _messageProducer = messageProducer;
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _messageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
     }
 
     public async Task<Courier> GetById(Guid id)
@@ -91,7 +91,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Add(Courier courier, Stream cnhImageStream = null)
+    public async Task<bool> Add(Courier courier, string userEmail)
     {
         if (courier == null)
         {
@@ -113,39 +113,22 @@ public class CourierService : BaseService, ICourierService
         {
             try
             {
+                courier.CreatedByUser = userEmail;
+
                 await _unitOfWork.Couriers.Add(courier);
-
-                if (cnhImageStream != null)
-                {
-                    var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(courier.Cnpj, cnhImageStream);
-                    courier.CnhImage = cnhImageUrl;
-
-                    var imageValidationResult = await validator.ValidateImageAsync(courier);
-                    if (!imageValidationResult.IsValid)
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.NotifyValidationErrors(imageValidationResult);
-                        return false;
-                    }
-                }
-
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier added successfully");
-
-                    AddCourierRegisteredEvent(courier);
-
+                    PublishCourierRegisteredEvent(courier);
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to add courier, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to add courier, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -156,7 +139,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> Update(Courier courier, Stream cnhImageStream = null)
+    public async Task<bool> Update(Courier courier, string userEmail)
     {
         if (courier == null)
         {
@@ -185,40 +168,22 @@ public class CourierService : BaseService, ICourierService
         {
             try
             {
-                if (cnhImageStream != null)
-                {
-                    var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(courier.Cnpj, cnhImageStream);
-                    existingCourier.CnhImage = cnhImageUrl;
+                UpdateCourierDetails(existingCourier, courier, userEmail);
 
-                    var imageValidationResult = await validator.ValidateImageAsync(existingCourier);
-                    if (!imageValidationResult.IsValid)
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.NotifyValidationErrors(imageValidationResult);
-                        return false;
-                    }
-                }
-
-                UpdateCourierDetails(existingCourier, courier);
-
-                _unitOfWork.Couriers.Update(existingCourier);
+                await _unitOfWork.Couriers.Update(existingCourier);
                 var result = await _unitOfWork.SaveAsync();
 
                 if (result > 0)
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier updated successfully");
-
-                    AddCourierRegisteredEvent(courier);
-
+                    PublishCourierRegisteredEvent(courier);
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to update courier, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to update courier, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -229,60 +194,50 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    public async Task<bool> SoftDelete(Guid id)
+    public async Task<bool> SoftDelete(Guid id, string userEmail)
     {
-        try
+        if (id == Guid.Empty)
         {
-            if (id == Guid.Empty)
-            {
-                _notifier.Handle("Invalid courier ID", NotificationType.Error);
-                return false;
-            }
-
-            var courier = await _unitOfWork.Couriers.GetById(id);
-            if (courier == null)
-            {
-                _notifier.Handle("Courier not found", NotificationType.Error);
-                return false;
-            }
-
-            using (var transaction = await _unitOfWork.BeginTransactionAsync())
-            {
-                try
-                {
-                    courier.IsDeletedToggle();
-                    await _unitOfWork.Couriers.Update(courier);
-                    var result = await _unitOfWork.SaveAsync();
-
-                    if (result > 0)
-                    {
-                        await transaction.CommitAsync();
-                        _notifier.Handle("Courier soft deleted successfully");
-                        return true;
-                    }
-                    else
-                    {
-                        await transaction.RollbackAsync();
-                        _notifier.Handle("Failed to soft delete courier, rolling back transaction", NotificationType.Error);
-                        return false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await transaction.RollbackAsync();
-                    HandleException(ex);
-                    return false;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            HandleException(ex);
+            _notifier.Handle("Invalid courier ID", NotificationType.Error);
             return false;
+        }
+
+        var courier = await _unitOfWork.Couriers.GetById(id);
+        if (courier == null)
+        {
+            _notifier.Handle("Courier not found", NotificationType.Error);
+            return false;
+        }
+
+        using (var transaction = await _unitOfWork.BeginTransactionAsync())
+        {
+            try
+            {
+                courier.ToggleIsDeleted();
+                await _unitOfWork.Couriers.Update(courier);
+                var result = await _unitOfWork.SaveAsync();
+
+                if (result > 0)
+                {
+                    await transaction.CommitAsync();
+                    _notifier.Handle("Courier soft deleted successfully");
+                    return true;
+                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to soft delete courier, rolling back transaction", NotificationType.Error);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                HandleException(ex);
+                return false;
+            }
         }
     }
 
-    public async Task<bool> AddOrUpdateCnhImage(string cnpj, Stream cnhImageStream)
+    public async Task<bool> AddOrUpdateCnhImage(string cnpj, Stream cnhImageStream, string userEmail)
     {
         if (string.IsNullOrEmpty(cnpj))
         {
@@ -308,6 +263,8 @@ public class CourierService : BaseService, ICourierService
                     return false;
                 }
 
+                courier.UpdatedByUser = userEmail;
+
                 var cnhImageUrl = await _unitOfWork.Couriers.AddOrUpdateCnhImage(cnpj, cnhImageStream);
                 courier.CnhImage = cnhImageUrl;
 
@@ -328,12 +285,10 @@ public class CourierService : BaseService, ICourierService
                     _notifier.Handle("CNH image updated successfully");
                     return true;
                 }
-                else
-                {
-                    await transaction.RollbackAsync();
-                    _notifier.Handle("Failed to update CNH image, rolling back transaction", NotificationType.Error);
-                    return false;
-                }
+
+                await transaction.RollbackAsync();
+                _notifier.Handle("Failed to update CNH image, rolling back transaction", NotificationType.Error);
+                return false;
             }
             catch (Exception ex)
             {
@@ -344,7 +299,7 @@ public class CourierService : BaseService, ICourierService
         }
     }
 
-    private void UpdateCourierDetails(Courier existingCourier, Courier newCourier)
+    private void UpdateCourierDetails(Courier existingCourier, Courier newCourier, string userEmail)
     {
         existingCourier.Name = newCourier.Name;
         existingCourier.Cnpj = newCourier.Cnpj;
@@ -352,10 +307,11 @@ public class CourierService : BaseService, ICourierService
         existingCourier.CnhNumber = newCourier.CnhNumber;
         existingCourier.CnhType = newCourier.CnhType;
         existingCourier.CnhImage = newCourier.CnhImage;
+        existingCourier.UpdatedByUser = userEmail;
         existingCourier.Update();
     }
 
-    private void AddCourierRegisteredEvent(Courier courier)
+    private void PublishCourierRegisteredEvent(Courier courier)
     {
         var courierRegisteredEvent = new CourierRegistered
         {
@@ -367,9 +323,11 @@ public class CourierService : BaseService, ICourierService
             CnhType = courier.CnhType,
             CnhImage = courier.CnhImage,
             CreatedAt = courier.CreatedAt,
+            CreatedByUser = courier.CreatedByUser,
             UpdatedAt = courier.UpdatedAt,
+            UpdatedByUser = courier.UpdatedByUser,
             IsDeleted = courier.IsDeleted
         };
-        _messageProducer.Publish(courierRegisteredEvent, "exchange_name", "routing_key");
+        _messageProducer.PublishAsync(courierRegisteredEvent, "courier_exchange", "courier_routingKey");
     }
 }
