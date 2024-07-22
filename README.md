@@ -538,7 +538,6 @@ The response of this request is a JSON schema representing the structure of the 
     "message": {
       "type": "string"
     }
-    // Additional properties may be present based on the specific response data
   }
 }
 ```
