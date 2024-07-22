@@ -1,7 +1,6 @@
 ﻿using Asp.Versioning;
 using BikeRentalSystem.Core.Interfaces;
 using BikeRentalSystem.Core.Interfaces.Notifications;
-using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Identity.Interfaces;
 using BikeRentalSystem.Identity.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -41,13 +40,14 @@ public class AuthController : MainController
                 }
 
                 NotifyError("Error registering the user.");
-                return CustomResponse(registerUser);
+                _logger.LogError("Error registering the user.");
+                return CustomResponse("Error registering the user", StatusCodes.Status400BadRequest);
             },
             ex =>
             {
                 NotifyError("An error occurred while registering the user.");
                 _logger.LogError(ex, "An error occurred while registering the user.");
-                return CustomResponse(registerUser);
+                return CustomResponse("An error occurred while registering the user", StatusCodes.Status500InternalServerError);
             }
         );
     }
@@ -68,13 +68,14 @@ public class AuthController : MainController
                 }
 
                 NotifyError("Incorrect username or password");
-                return CustomResponse(loginUser);
+                _logger.LogError("Incorrect username or password");
+                return CustomResponse("Incorrect username or password", StatusCodes.Status400BadRequest);
             },
             ex =>
             {
                 NotifyError("An error occurred while logging in.");
                 _logger.LogError(ex, "An error occurred while logging in.");
-                return CustomResponse(loginUser);
+                return CustomResponse("An error occurred while logging in.", StatusCodes.Status500InternalServerError);
             }
         );
     }
@@ -100,6 +101,7 @@ public class AuthController : MainController
                 }
 
                 NotifyError("Error adding role.");
+                _logger.LogError("An error occurred while adding the role.");
                 return CustomResponse(roleName);
             },
             ex =>
@@ -125,7 +127,8 @@ public class AuthController : MainController
                 if (!result)
                 {
                     NotifyError("Error assigning roles and/or claims.");
-                    return CustomResponse(model);
+                    _logger.LogError("Error assigning roles and/or claims.");
+                    return CustomResponse("Error assigning roles and/or claims.");
                 }
 
                 _logger.LogInformation($"Roles and/or claims assigned successfully to user {model.UserId}");
@@ -135,7 +138,7 @@ public class AuthController : MainController
             {
                 NotifyError("An error occurred while assigning roles and claims.");
                 _logger.LogError(ex, "An error occurred while assigning roles and claims.");
-                return CustomResponse(model);
+                return CustomResponse("An error occurred while assigning roles and claims.");
             }
         );
     }

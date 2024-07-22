@@ -25,15 +25,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Configuration\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\..\src\BikeRentalSystem.Api\BikeRentalSystem.Api.csproj" />
     <ProjectReference Include="..\..\src\BikeRentalSystem.Core\BikeRentalSystem.Core.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.Core.Tests\BikeRentalSystem.Core.Tests.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.Identity.Tests\BikeRentalSystem.Identity.Tests.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.RentalServices.Tests\BikeRentalSystem.RentalServices.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Helpers\" />
   </ItemGroup>
 
 </Project>

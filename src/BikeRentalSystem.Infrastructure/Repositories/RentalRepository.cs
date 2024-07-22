@@ -66,17 +66,23 @@ public class RentalRepository : Repository<Rental>, IRentalRepository
         {
             _notifier.Handle($"Calculating rental cost for rental with Motorcycle ID {rental.MotorcycleId} and Courier ID {rental.CourierId}.");
 
-            var daysRented = (rental.EndDate - rental.StartDate).Days;
+            if (!rental.EndDate.HasValue)
+            {
+                throw new InvalidOperationException("Rental EndDate must be specified to calculate the cost.");
+            }
+
+            var endDate = rental.EndDate.Value;
+            var daysRented = (endDate - rental.StartDate).Days;
             var cost = daysRented * rental.DailyRate;
 
-            if (rental.EndDate < rental.ExpectedEndDate)
+            if (endDate < rental.ExpectedEndDate)
             {
                 var penaltyRate = rental.DailyRate * 0.20m;
-                cost += penaltyRate * (rental.ExpectedEndDate - rental.EndDate).Days;
+                cost += penaltyRate * (rental.ExpectedEndDate - endDate).Days;
             }
-            else if (rental.EndDate > rental.ExpectedEndDate)
+            else if (endDate > rental.ExpectedEndDate)
             {
-                var additionalDays = (rental.EndDate - rental.ExpectedEndDate).Days;
+                var additionalDays = (endDate - rental.ExpectedEndDate).Days;
                 cost += additionalDays * 50;
             }
 

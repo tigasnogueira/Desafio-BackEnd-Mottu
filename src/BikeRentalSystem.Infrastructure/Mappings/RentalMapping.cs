@@ -15,7 +15,8 @@ public class RentalMapping : EntityBaseMapping<Rental>
         builder.Property(r => r.StartDate)
             .IsRequired();
 
-        builder.Property(r => r.EndDate);
+        builder.Property(r => r.EndDate)
+            .IsRequired(false);
 
         builder.Property(r => r.ExpectedEndDate)
             .IsRequired();

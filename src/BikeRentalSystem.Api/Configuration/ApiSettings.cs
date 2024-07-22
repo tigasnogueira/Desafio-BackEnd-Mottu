@@ -10,6 +10,11 @@ public class ApiSettings
 {
     public void ConfigureServices(IServiceCollection services, IConfiguration configuration, IWebHostEnvironment environment)
     {
+        if (configuration == null)
+        {
+            throw new ArgumentNullException(nameof(configuration));
+        }
+
         configuration = BuildConfiguration(environment);
         services.AddSingleton(configuration);
 
