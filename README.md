@@ -692,9 +692,9 @@ The response for this request can be documented as a JSON schema.
 
 ```json
 {
-  "year": 2021,
-  "model": "Yamaha",
-  "plate": "ABC-9012"
+  "year": 2024,
+  "model": "Honda",
+  "plate": "ABC-9007"
 }
 ```
 
@@ -740,8 +740,8 @@ The response of this request is a JSON schema representing the updated details o
 ```json
 {
   "year": 2022,
-  "model": "Honda",
-  "plate": "XYZ-5678"
+  "model": "Yamaha",
+  "plate": "ABC-9001"
 }
 ```
 
@@ -762,6 +762,44 @@ This endpoint allows the user to update the status of a specific motorcycle usin
 **Headers:**
 
 - Authorization: Bearer {{accessToken}}
+
+---
+
+## MotorcycleController - Get Motorcycle Notification
+
+**Method:** `GET`
+
+**URL:** `{{baseUrl}}/api/v1.0/motorcycles/{{motorcycleId}}/notification`
+
+**Description:**
+
+This endpoint retrieves the notification details for a specific motorcycle identified by the `motorcycleId`.
+
+### Response
+
+The response for this request is a JSON object conforming to the following schema:
+
+``` json
+{
+  "type": "object",
+  "properties": {
+    "notificationId": {
+      "type": "string",
+      "description": "The unique identifier for the notification."
+    },
+    "message": {
+      "type": "string",
+      "description": "The message content of the notification."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The timestamp when the notification was sent."
+    }
+  }
+}
+
+ ```
 
 ---
 
@@ -846,7 +884,6 @@ The response of this request is a JSON object representing the list of rentals. 
       "items": {
         "type": "object",
         "properties": {
-
         }
       }
     },
@@ -905,9 +942,9 @@ The response of this request is a JSON schema representing the structure of the 
 {
   "courierId": "{{courierId}}",
   "motorcycleId": "{{motorcycleId}}",
-  "startDate": "2024-07-17T00:00:00Z",
-  "endDate": "2024-07-25T00:00:00Z",
-  "expectedEndDate": "2024-07-24T00:00:00Z",
+  "startDate": "2024-07-23T00:00:00Z",
+  "endDate": "2024-07-31T00:00:00Z",
+  "expectedEndDate": "2024-07-30T00:00:00Z",
   "dailyRate": 30.0,
   "plan": "SevenDays"
 }
@@ -969,6 +1006,71 @@ The response of this request is a JSON schema representing the updated rental de
 **Headers:**
 
 - Authorization: Bearer {{accessToken}}
+
+---
+
+## HealthChecks - Check HealthChecks
+
+**Method:** `GET`
+
+**URL:** `{{baseUrl}}/health`
+
+**Description:**
+
+
+The endpoint performs an HTTP GET request to check the health status of the system components. The response is in JSON format and includes the status of different system components such as npgsql, redis, rabbitmq, and azure_blob_storage. Each component entry contains data, duration, status, and tags information.
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "status": {"type": "string"},
+    "totalDuration": {"type": "string"},
+    "entries": {
+      "type": "object",
+      "properties": {
+        "npgsql": {
+          "type": "object",
+          "properties": {
+            "data": {"type": "object"},
+            "duration": {"type": "string"},
+            "status": {"type": "string"},
+            "tags": {"type": "array"}
+          }
+        },
+        "redis": {
+          "type": "object",
+          "properties": {
+            "data": {"type": "object"},
+            "duration": {"type": "string"},
+            "status": {"type": "string"},
+            "tags": {"type": "array"}
+          }
+        },
+        "rabbitmq": {
+          "type": "object",
+          "properties": {
+            "data": {"type": "object"},
+            "duration": {"type": "string"},
+            "status": {"type": "string"},
+            "tags": {"type": "array"}
+          }
+        },
+        "azure_blob_storage": {
+          "type": "object",
+          "properties": {
+            "data": {"type": "object"},
+            "duration": {"type": "string"},
+            "status": {"type": "string"},
+            "tags": {"type": "array"}
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 
 ---
 

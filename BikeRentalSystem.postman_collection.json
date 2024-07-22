@@ -240,7 +240,7 @@
 								},
 								{
 									"key": "Cnpj",
-									"value": "12345678902349",
+									"value": "12345678907890",
 									"type": "text"
 								},
 								{
@@ -250,7 +250,7 @@
 								},
 								{
 									"key": "CnhNumber",
-									"value": "1234567898",
+									"value": "01234567891",
 									"type": "text"
 								},
 								{
@@ -483,7 +483,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"year\": 2021,\n  \"model\": \"Yamaha\",\n  \"plate\": \"ABC-9001\"\n}"
+							"raw": "{\n  \"year\": 2024,\n  \"model\": \"Honda\",\n  \"plate\": \"ABC-9007\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1.0/motorcycles",
@@ -558,6 +558,28 @@
 							]
 						},
 						"description": "\nThis endpoint allows the user to update the status of a specific motorcycle using a PATCH request. The request should be made to the specified URL with the motorcycleId as a path parameter. Upon successful execution, the response will be in the form of a JSON schema documenting the structure of the response data.\n"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Motorcycle Notification",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1.0/motorcycles/{{motorcycleId}}/notification",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1.0",
+								"motorcycles",
+								"{{motorcycleId}}",
+								"notification"
+							]
+						},
+						"description": "This endpoint retrieves the notification details for a specific motorcycle identified by the `motorcycleId`.\n\n### Response\n\nThe response for this request is a JSON object conforming to the following schema:\n\n``` json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"notificationId\": {\n      \"type\": \"string\",\n      \"description\": \"The unique identifier for the notification.\"\n    },\n    \"message\": {\n      \"type\": \"string\",\n      \"description\": \"The message content of the notification.\"\n    },\n    \"timestamp\": {\n      \"type\": \"string\",\n      \"format\": \"date-time\",\n      \"description\": \"The timestamp when the notification was sent.\"\n    }\n  }\n}\n\n ```"
 					},
 					"response": []
 				}
@@ -642,7 +664,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"courierId\": \"{{courierId}}\",\n  \"motorcycleId\": \"{{motorcycleId}}\",\n  \"startDate\": \"2024-07-19T00:00:00Z\",\n  \"endDate\": \"2024-07-27T00:00:00Z\",\n  \"expectedEndDate\": \"2024-07-26T00:00:00Z\",\n  \"dailyRate\": 30.0,\n  \"plan\": \"SevenDays\"\n}"
+							"raw": "{\n  \"courierId\": \"{{courierId}}\",\n  \"motorcycleId\": \"{{motorcycleId}}\",\n  \"startDate\": \"2024-07-23T00:00:00Z\",\n  \"endDate\": \"2024-07-31T00:00:00Z\",\n  \"expectedEndDate\": \"2024-07-30T00:00:00Z\",\n  \"dailyRate\": 30.0,\n  \"plan\": \"SevenDays\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1.0/rentals",
@@ -721,6 +743,29 @@
 				}
 			],
 			"description": "Endpoints da RentalController"
+		},
+		{
+			"name": "HealthChecks",
+			"item": [
+				{
+					"name": "Check HealthChecks",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "\nThe endpoint performs an HTTP GET request to check the health status of the system components. The response is in JSON format and includes the status of different system components such as npgsql, redis, rabbitmq, and azure_blob_storage. Each component entry contains data, duration, status, and tags information.\n\n```json\n{\n  \"type\": \"object\",\n  \"properties\": {\n    \"status\": {\"type\": \"string\"},\n    \"totalDuration\": {\"type\": \"string\"},\n    \"entries\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"npgsql\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"data\": {\"type\": \"object\"},\n            \"duration\": {\"type\": \"string\"},\n            \"status\": {\"type\": \"string\"},\n            \"tags\": {\"type\": \"array\"}\n          }\n        },\n        \"redis\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"data\": {\"type\": \"object\"},\n            \"duration\": {\"type\": \"string\"},\n            \"status\": {\"type\": \"string\"},\n            \"tags\": {\"type\": \"array\"}\n          }\n        },\n        \"rabbitmq\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"data\": {\"type\": \"object\"},\n            \"duration\": {\"type\": \"string\"},\n            \"status\": {\"type\": \"string\"},\n            \"tags\": {\"type\": \"array\"}\n          }\n        },\n        \"azure_blob_storage\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"data\": {\"type\": \"object\"},\n            \"duration\": {\"type\": \"string\"},\n            \"status\": {\"type\": \"string\"},\n            \"tags\": {\"type\": \"array\"}\n          }\n        }\n      }\n    }\n  }\n}\n```\n"
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"auth": {
