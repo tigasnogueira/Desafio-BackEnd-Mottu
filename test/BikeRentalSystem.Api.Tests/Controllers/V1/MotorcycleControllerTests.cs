@@ -296,4 +296,96 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
         VerifyCommonErrorResponse(badRequestResult, "Test Exception");
     }
+
+    [Fact]
+    public async Task GetMotorcycleNotification_ShouldReturnNotification_WhenNotificationExistsInCache()
+    {
+        // Arrange
+        var motorcycleId = Guid.NewGuid();
+        var cacheKey = $"MotorcycleNotification:{motorcycleId}";
+        var cachedNotification = new MotorcycleNotificationDto();
+
+        _redisCacheServiceMock.GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey).Returns(cachedNotification);
+
+        // Act
+        var result = await controller.GetMotorcycleNotification(motorcycleId);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+
+        var response = okResult.Value;
+        Assert.True((bool)response.GetType().GetProperty("success").GetValue(response));
+        Assert.Equal(cachedNotification, response.GetType().GetProperty("data").GetValue(response));
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey);
+    }
+
+    [Fact]
+    public async Task GetMotorcycleNotification_ShouldReturnNotification_WhenNotificationExistsInService()
+    {
+        // Arrange
+        var motorcycleId = Guid.NewGuid();
+        var cacheKey = $"MotorcycleNotification:{motorcycleId}";
+        var notification = new MotorcycleNotification();
+        var notificationDto = new MotorcycleNotificationDto();
+
+        _redisCacheServiceMock.GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey).Returns((MotorcycleNotificationDto)null);
+        _motorcycleServiceMock.GetMotorcycleNotification(motorcycleId).Returns(notification);
+        _mapperMock.Map<MotorcycleNotificationDto>(notification).Returns(notificationDto);
+
+        // Act
+        var result = await controller.GetMotorcycleNotification(motorcycleId);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.NotNull(okResult.Value);
+
+        var response = okResult.Value;
+        Assert.True((bool)response.GetType().GetProperty("success").GetValue(response));
+        Assert.Equal(notificationDto, response.GetType().GetProperty("data").GetValue(response));
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey);
+        await _redisCacheServiceMock.Received(1).SetCacheValueAsync(cacheKey, notificationDto);
+    }
+
+    [Fact]
+    public async Task GetMotorcycleNotification_ShouldReturnNotFound_WhenNotificationDoesNotExist()
+    {
+        // Arrange
+        var motorcycleId = Guid.NewGuid();
+        var cacheKey = $"MotorcycleNotification:{motorcycleId}";
+
+        _redisCacheServiceMock.GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey).Returns((MotorcycleNotificationDto)null);
+        _motorcycleServiceMock.GetMotorcycleNotification(motorcycleId).Returns(Task.FromResult<MotorcycleNotification>(null));
+
+        // Act
+        var result = await controller.GetMotorcycleNotification(motorcycleId);
+
+        // Assert
+        var notFoundResult = Assert.IsType<NotFoundObjectResult>(result);
+        VerifyCommonErrorResponse(notFoundResult, "Resource not found");
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey);
+    }
+
+    [Fact]
+    public async Task GetMotorcycleNotification_ShouldReturnBadRequest_WhenExceptionOccurs()
+    {
+        // Arrange
+        var motorcycleId = Guid.NewGuid();
+        var cacheKey = $"MotorcycleNotification:{motorcycleId}";
+
+        _redisCacheServiceMock.GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey).Returns(Task.FromResult<MotorcycleNotificationDto>(null));
+        _motorcycleServiceMock.GetMotorcycleNotification(motorcycleId).Throws(new Exception("Test Exception"));
+
+        // Act
+        var result = await controller.GetMotorcycleNotification(motorcycleId);
+
+        // Assert
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+        VerifyCommonErrorResponse(badRequestResult, "Test Exception");
+
+        await _redisCacheServiceMock.Received(1).GetCacheValueAsync<MotorcycleNotificationDto>(cacheKey);
+    }
 }

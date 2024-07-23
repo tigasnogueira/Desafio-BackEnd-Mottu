@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Helpers\**" />
+    <EmbeddedResource Remove="Helpers\**" />
+    <None Remove="Helpers\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="7.0.0" />
     <PackageReference Include="FluentAssertions" Version="6.12.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.6.0" />
@@ -30,10 +36,6 @@
     <ProjectReference Include="..\BikeRentalSystem.Core.Tests\BikeRentalSystem.Core.Tests.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.Identity.Tests\BikeRentalSystem.Identity.Tests.csproj" />
     <ProjectReference Include="..\BikeRentalSystem.RentalServices.Tests\BikeRentalSystem.RentalServices.Tests.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Helpers\" />
   </ItemGroup>
 
 </Project>
