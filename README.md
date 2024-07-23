@@ -899,10 +899,6 @@ The response of this request is a JSON object representing the list of rentals. 
 }
 ```
 
-Replace "// Define the properties of each rental object here" with the specific properties of each rental object, such as id, address, price, etc.
-
-
-
 ---
 
 ## RentalController - Create Rental
