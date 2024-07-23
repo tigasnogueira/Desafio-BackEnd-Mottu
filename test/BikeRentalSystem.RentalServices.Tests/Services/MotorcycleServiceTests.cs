@@ -20,13 +20,15 @@ public class MotorcycleServiceTests
     private readonly IUnitOfWork _unitOfWorkMock;
     private readonly INotifier _notifierMock;
     private readonly IMessageProducer _messageProducerMock;
+    private readonly IRedisCacheService _redisCacheServiceMock;
 
     public MotorcycleServiceTests()
     {
         _unitOfWorkMock = UnitOfWorkMock.Create();
         _notifierMock = NotifierMock.Create();
         _messageProducerMock = MessageProducerMock.Create();
-        _motorcycleService = new MotorcycleService(_unitOfWorkMock, _messageProducerMock, _notifierMock);
+        _redisCacheServiceMock = Substitute.For<IRedisCacheService>();
+        _motorcycleService = new MotorcycleService(_unitOfWorkMock, _messageProducerMock, _notifierMock, _redisCacheServiceMock);
     }
 
     [Fact]

@@ -20,13 +20,15 @@ public class CourierServiceTests
     private readonly IUnitOfWork _unitOfWorkMock;
     private readonly IMessageProducer _messageProducerMock;
     private readonly INotifier _notifierMock;
+    private readonly IRedisCacheService _redisCacheServiceMock;
 
     public CourierServiceTests()
     {
         _unitOfWorkMock = UnitOfWorkMock.Create();
         _messageProducerMock = MessageProducerMock.Create();
         _notifierMock = NotifierMock.Create();
-        _courierService = new CourierService(_unitOfWorkMock, _messageProducerMock, _notifierMock);
+        _redisCacheServiceMock = Substitute.For<IRedisCacheService>();
+        _courierService = new CourierService(_unitOfWorkMock, _messageProducerMock, _notifierMock, _redisCacheServiceMock);
     }
 
     [Fact]

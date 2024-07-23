@@ -110,7 +110,7 @@ public class CourierControllerTests : BaseControllerTests<CourierController>
         var couriers = new List<Courier> { new Courier() };
         var paginatedResponse = new PaginatedResponse<Courier>(couriers, 1, page, pageSize);
         var paginatedDto = new PaginatedResponse<CourierDto>(new List<CourierDto> { new CourierDto() }, 1, page, pageSize);
-        var cacheKey = $"CourierList:Page:{page}:PageSize:{pageSize}";
+        var cacheKey = "CourierList:All";
 
         _redisCacheServiceMock.GetCacheValueAsync<PaginatedResponse<CourierDto>>(cacheKey).Returns((PaginatedResponse<CourierDto>)null);
         _courierServiceMock.GetAllPaged(page, pageSize).Returns(Task.FromResult(paginatedResponse));

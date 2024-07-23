@@ -101,7 +101,7 @@ public class MotorcycleControllerTests : BaseControllerTests<MotorcycleControlle
         var motorcycles = new List<Motorcycle> { new Motorcycle() };
         var paginatedResponse = new PaginatedResponse<Motorcycle>(motorcycles, 1, page, pageSize);
         var paginatedDto = new PaginatedResponse<MotorcycleDto>(new List<MotorcycleDto> { new MotorcycleDto() }, 1, page, pageSize);
-        var cacheKey = $"MotorcycleList:Page:{page}:PageSize:{pageSize}";
+        var cacheKey = "MotorcycleList:All";
 
         _redisCacheServiceMock.GetCacheValueAsync<PaginatedResponse<MotorcycleDto>>(cacheKey).Returns((PaginatedResponse<MotorcycleDto>)null);
         _motorcycleServiceMock.GetAllPaged(page, pageSize).Returns(Task.FromResult(paginatedResponse));

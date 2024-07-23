@@ -21,13 +21,15 @@ public class RentalServiceTests
     private readonly IUnitOfWork _unitOfWorkMock;
     private readonly INotifier _notifierMock;
     private readonly IMessageProducer _messageProducerMock;
+    private readonly IRedisCacheService _redisCacheServiceMock;
 
     public RentalServiceTests()
     {
         _unitOfWorkMock = UnitOfWorkMock.Create();
         _notifierMock = NotifierMock.Create();
         _messageProducerMock = MessageProducerMock.Create();
-        _rentalService = new RentalService(_unitOfWorkMock, _messageProducerMock, _notifierMock);
+        _redisCacheServiceMock = Substitute.For<IRedisCacheService>();
+        _rentalService = new RentalService(_unitOfWorkMock, _messageProducerMock, _notifierMock, _redisCacheServiceMock);
     }
 
     [Fact]

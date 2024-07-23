@@ -1,4 +1,5 @@
 ﻿using BikeRentalSystem.Core.Interfaces.Repositories;
+using BikeRentalSystem.Core.Interfaces.Services;
 using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Messaging.Consumers;
@@ -94,11 +95,13 @@ public class MotorcycleRegisteredConsumerTests
         _channel.When(x => x.BasicConsume("motorcycle_queue", false, Arg.Any<IBasicConsumer>()))
                 .Do(x => registeredConsumer = x.Arg<IBasicConsumer>() as EventingBasicConsumer);
 
-        // Configurar o mock da unidade de trabalho
         var mockNotificationRepo = Substitute.For<IMotorcycleNotificationRepository>();
         mockNotificationRepo.Find(Arg.Any<Expression<Func<MotorcycleNotification, bool>>>()).Returns(new List<MotorcycleNotification>());
 
         _unitOfWork.MotorcycleNotifications.Returns(mockNotificationRepo);
+
+        var mockRedisCacheService = Substitute.For<IRedisCacheService>();
+        _serviceProvider.GetService(typeof(IRedisCacheService)).Returns(mockRedisCacheService);
 
         // Act
         await _consumer.ConsumeAsync();
@@ -117,6 +120,9 @@ public class MotorcycleRegisteredConsumerTests
 
         await _unitOfWork.MotorcycleNotifications.Received(1).Add(Arg.Is<MotorcycleNotification>(n => n.MotorcycleId == motorcycleRegisteredEvent.Id));
         await _unitOfWork.Received(1).SaveAsync();
+
+        await mockRedisCacheService.Received(1).RemoveCacheValueAsync(Arg.Is<string>(s => s == $"MotorcycleNotification:{motorcycleRegisteredEvent.Id}"));
+        await mockRedisCacheService.Received(1).RemoveCacheValueAsync(Arg.Is<string>(s => s == "MotorcycleList:All"));
     }
 
     [Fact]

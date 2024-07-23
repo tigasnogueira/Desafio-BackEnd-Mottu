@@ -101,7 +101,7 @@ public class RentalControllerTests : BaseControllerTests<RentalController>
         var rentals = new List<Rental> { new Rental() };
         var paginatedResponse = new PaginatedResponse<Rental>(rentals, 1, page, pageSize);
         var paginatedDto = new PaginatedResponse<RentalDto>(new List<RentalDto> { new RentalDto() }, 1, page, pageSize);
-        var cacheKey = $"RentalList:Page:{page}:PageSize:{pageSize}";
+        var cacheKey = "RentalList:All";
 
         _redisCacheServiceMock.GetCacheValueAsync<PaginatedResponse<RentalDto>>(cacheKey).Returns((PaginatedResponse<RentalDto>)null);
         _rentalServiceMock.GetAllPaged(page, pageSize).Returns(Task.FromResult(paginatedResponse));
