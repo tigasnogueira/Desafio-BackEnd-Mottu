@@ -14,11 +14,13 @@ public class MotorcycleService : BaseService, IMotorcycleService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessageProducer _messageProducer;
+    private readonly IRedisCacheService _redisCacheService;
 
-    public MotorcycleService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
+    public MotorcycleService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier, IRedisCacheService redisCacheService) : base(notifier)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _messageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
+        _redisCacheService = redisCacheService ?? throw new ArgumentNullException(nameof(redisCacheService));
     }
 
     public async Task<Motorcycle> GetById(Guid id)
@@ -138,6 +140,8 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     _notifier.Handle("Motorcycle added successfully");
 
                     PublishMotorcycleRegisteredEvent(motorcycle);
+                    await _redisCacheService.RemoveCacheValueAsync("MotorcycleList:All");
+
                     return true;
                 }
 
@@ -194,6 +198,9 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     _notifier.Handle("Motorcycle updated successfully");
 
                     PublishMotorcycleRegisteredEvent(existingMotorcycle);
+                    var cacheKey = $"Motorcycle:{motorcycle.Id}";
+                    await _redisCacheService.RemoveCacheValueAsync(cacheKey);
+                    await _redisCacheService.RemoveCacheValueAsync("MotorcycleList:All");
 
                     return true;
                 }
@@ -242,6 +249,11 @@ public class MotorcycleService : BaseService, IMotorcycleService
                     {
                         await transaction.CommitAsync();
                         _notifier.Handle("Motorcycle soft deleted successfully");
+
+                        var cacheKey = $"Motorcycle:{id}";
+                        await _redisCacheService.RemoveCacheValueAsync(cacheKey);
+                        await _redisCacheService.RemoveCacheValueAsync("MotorcycleList:All");
+
                         return true;
                     }
 

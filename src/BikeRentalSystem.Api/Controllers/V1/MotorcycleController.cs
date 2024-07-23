@@ -67,9 +67,7 @@ public class MotorcycleController : MainController
         return await HandleRequestAsync(
             async () =>
             {
-                string cacheKey = page.HasValue && pageSize.HasValue
-                    ? $"MotorcycleList:Page:{page.Value}:PageSize:{pageSize.Value}"
-                    : "MotorcycleList:All";
+                string cacheKey = "MotorcycleList:All";
 
                 if (page.HasValue && pageSize.HasValue)
                 {
@@ -126,7 +124,7 @@ public class MotorcycleController : MainController
                 return CustomResponse(notificationDto);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
-        );  
+        );
     }
 
     [HttpPost]
@@ -143,6 +141,7 @@ public class MotorcycleController : MainController
                     return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
                 }
                 var createdMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
+
                 return CustomResponse(createdMotorcycleDto, StatusCodes.Status201Created);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
@@ -160,6 +159,7 @@ public class MotorcycleController : MainController
                 motorcycle.Id = id;
                 await _motorcycleService.Update(motorcycle, UserEmail);
                 var updatedMotorcycleDto = _mapper.Map<MotorcycleDto>(motorcycle);
+
                 return CustomResponse(updatedMotorcycleDto, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
@@ -174,6 +174,7 @@ public class MotorcycleController : MainController
             async () =>
             {
                 await _motorcycleService.SoftDelete(id, UserEmail);
+
                 return CustomResponse(null, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)

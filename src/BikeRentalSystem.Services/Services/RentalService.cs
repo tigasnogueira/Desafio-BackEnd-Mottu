@@ -14,11 +14,13 @@ public class RentalService : BaseService, IRentalService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessageProducer _messageProducer;
+    private readonly IRedisCacheService _redisCacheService;
 
-    public RentalService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
+    public RentalService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier, IRedisCacheService redisCacheService) : base(notifier)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _messageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
+        _redisCacheService = redisCacheService ?? throw new ArgumentNullException(nameof(redisCacheService));
     }
 
     public async Task<Rental> GetById(Guid id)
@@ -155,6 +157,7 @@ public class RentalService : BaseService, IRentalService
                     _notifier.Handle("Rental added successfully");
 
                     PublishRentalRegisteredEvent(rental);
+                    await _redisCacheService.RemoveCacheValueAsync("RentalList:All");
 
                     return true;
                 }
@@ -210,6 +213,9 @@ public class RentalService : BaseService, IRentalService
                     _notifier.Handle("Rental updated successfully");
 
                     PublishRentalRegisteredEvent(existingRental);
+                    var cacheKey = $"Rental:{existingRental.Id}";
+                    await _redisCacheService.SetCacheValueAsync(cacheKey, existingRental);
+                    await _redisCacheService.RemoveCacheValueAsync("RentalList:All");
 
                     return true;
                 }
@@ -257,6 +263,11 @@ public class RentalService : BaseService, IRentalService
                     {
                         await transaction.CommitAsync();
                         _notifier.Handle("Rental soft deleted successfully");
+
+                        var cacheKey = $"Rental:{rental.Id}";
+                        await _redisCacheService.RemoveCacheValueAsync(cacheKey);
+                        await _redisCacheService.RemoveCacheValueAsync("RentalList:All");
+
                         return true;
                     }
 

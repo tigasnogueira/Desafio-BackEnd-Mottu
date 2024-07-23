@@ -1,4 +1,5 @@
-﻿using BikeRentalSystem.Core.Interfaces.UoW;
+﻿using BikeRentalSystem.Core.Interfaces.Services;
+using BikeRentalSystem.Core.Interfaces.UoW;
 using BikeRentalSystem.Core.Models;
 using BikeRentalSystem.Messaging.Events;
 using BikeRentalSystem.Messaging.Interfaces;
@@ -39,7 +40,8 @@ public class MotorcycleRegisteredConsumer : IMessageConsumer
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
-                    await ProcessMessageAsync(motorcycleRegisteredEvent, unitOfWork);
+                    var cacheService = scope.ServiceProvider.GetRequiredService<IRedisCacheService>();
+                    await ProcessMessageAsync(motorcycleRegisteredEvent, unitOfWork, cacheService);
                 }
 
                 _channel.BasicAck(ea.DeliveryTag, false);
@@ -56,7 +58,7 @@ public class MotorcycleRegisteredConsumer : IMessageConsumer
         await Task.CompletedTask;
     }
 
-    private async Task ProcessMessageAsync(MotorcycleRegistered motorcycleRegisteredEvent, IUnitOfWork unitOfWork)
+    private async Task ProcessMessageAsync(MotorcycleRegistered motorcycleRegisteredEvent, IUnitOfWork unitOfWork, IRedisCacheService cacheService)
     {
         _logger.LogInformation("Processing MotorcycleRegistered event: {Event}", motorcycleRegisteredEvent);
 
@@ -81,6 +83,10 @@ public class MotorcycleRegisteredConsumer : IMessageConsumer
 
             await unitOfWork.MotorcycleNotifications.Add(notification);
             await unitOfWork.SaveAsync();
+
+            var cacheKey = $"MotorcycleNotification:{notification.MotorcycleId}";
+            await cacheService.RemoveCacheValueAsync(cacheKey);
+            await cacheService.RemoveCacheValueAsync("MotorcycleList:All");
         }
     }
 }

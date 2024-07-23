@@ -14,11 +14,13 @@ public class CourierService : BaseService, ICourierService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMessageProducer _messageProducer;
+    private readonly IRedisCacheService _redisCacheService;
 
-    public CourierService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier) : base(notifier)
+    public CourierService(IUnitOfWork unitOfWork, IMessageProducer messageProducer, INotifier notifier, IRedisCacheService redisCacheService) : base(notifier)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _messageProducer = messageProducer ?? throw new ArgumentNullException(nameof(messageProducer));
+        _redisCacheService = redisCacheService ?? throw new ArgumentNullException(nameof(redisCacheService));
     }
 
     public async Task<Courier> GetById(Guid id)
@@ -122,7 +124,10 @@ public class CourierService : BaseService, ICourierService
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier added successfully");
+
                     PublishCourierRegisteredEvent(courier);
+                    await _redisCacheService.RemoveCacheValueAsync("CourierList:All");
+
                     return true;
                 }
 
@@ -177,7 +182,12 @@ public class CourierService : BaseService, ICourierService
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier updated successfully");
+
                     PublishCourierRegisteredEvent(courier);
+                    var cacheKey = $"Courier:{courier.Id}";
+                    await _redisCacheService.RemoveCacheValueAsync(cacheKey);
+                    await _redisCacheService.RemoveCacheValueAsync("CourierList:All");
+
                     return true;
                 }
 
@@ -221,6 +231,11 @@ public class CourierService : BaseService, ICourierService
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("Courier soft deleted successfully");
+
+                    var cacheKey = $"Courier:{id}";
+                    await _redisCacheService.RemoveCacheValueAsync(cacheKey);
+                    await _redisCacheService.RemoveCacheValueAsync("CourierList:All");
+
                     return true;
                 }
 
@@ -283,6 +298,11 @@ public class CourierService : BaseService, ICourierService
                 {
                     await transaction.CommitAsync();
                     _notifier.Handle("CNH image updated successfully");
+
+                    var cacheKey = $"Courier:{courier.Id}";
+                    await _redisCacheService.RemoveCacheValueAsync(cacheKey);
+                    await _redisCacheService.RemoveCacheValueAsync("CourierList:All");
+
                     return true;
                 }
 

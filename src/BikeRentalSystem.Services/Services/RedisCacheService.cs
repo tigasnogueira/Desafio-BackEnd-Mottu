@@ -23,4 +23,9 @@ public class RedisCacheService : IRedisCacheService
     {
         await _database.StringSetAsync(key, JsonConvert.SerializeObject(value));
     }
+
+    public async Task RemoveCacheValueAsync(string key)
+    {
+        await _database.KeyDeleteAsync(key);
+    }
 }

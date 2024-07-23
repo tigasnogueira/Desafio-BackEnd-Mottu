@@ -68,9 +68,7 @@ public class CourierController : MainController
         return await HandleRequestAsync(
             async () =>
             {
-                string cacheKey = page.HasValue && pageSize.HasValue
-                    ? $"CourierList:Page:{page.Value}:PageSize:{pageSize.Value}"
-                    : "CourierList:All";
+                string cacheKey = "CourierList:All";
 
                 if (page.HasValue && pageSize.HasValue)
                 {
@@ -117,8 +115,8 @@ public class CourierController : MainController
                 {
                     return CustomResponse("Resource conflict", StatusCodes.Status400BadRequest);
                 }
-
                 var createdCourierDto = _mapper.Map<CourierDto>(courier);
+
                 return CustomResponse(createdCourierDto, StatusCodes.Status201Created);
             },
             ex => CustomResponse(ex.Message, StatusCodes.Status400BadRequest)
@@ -138,6 +136,7 @@ public class CourierController : MainController
                 await _courierService.Update(courier, UserEmail);
 
                 var updatedCourierDto = _mapper.Map<CourierDto>(courier);
+
                 return CustomResponse(updatedCourierDto, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)
@@ -152,6 +151,7 @@ public class CourierController : MainController
             async () =>
             {
                 await _courierService.SoftDelete(id, UserEmail);
+
                 return CustomResponse(null, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)
@@ -174,6 +174,7 @@ public class CourierController : MainController
                         return CustomResponse("Failed to update CNH image", StatusCodes.Status400BadRequest);
                     }
                 }
+
                 return CustomResponse("CNH image updated successfully", StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)

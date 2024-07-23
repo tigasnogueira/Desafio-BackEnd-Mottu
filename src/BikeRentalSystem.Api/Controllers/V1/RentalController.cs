@@ -67,9 +67,7 @@ public class RentalController : MainController
         return await HandleRequestAsync(
             async () =>
             {
-                string cacheKey = page.HasValue && pageSize.HasValue
-                    ? $"RentalList:Page:{page.Value}:PageSize:{pageSize.Value}"
-                    : "RentalList:All";
+                string cacheKey = "RentalList:All";
 
                 if (page.HasValue && pageSize.HasValue)
                 {
@@ -118,6 +116,7 @@ public class RentalController : MainController
                 }
 
                 var createdRentalDto = _mapper.Map<RentalDto>(rental);
+                
                 return CustomResponse(createdRentalDto, StatusCodes.Status201Created);
             },
             ex => CustomResponse(ex.Message)
@@ -135,6 +134,7 @@ public class RentalController : MainController
                 rental.Id = id;
                 await _rentalService.Update(rental, UserEmail);
                 var updatedRentalDto = _mapper.Map<RentalDto>(rental);
+
                 return CustomResponse(updatedRentalDto, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)
@@ -149,6 +149,7 @@ public class RentalController : MainController
             async () =>
             {
                 await _rentalService.SoftDelete(id, UserEmail);
+
                 return CustomResponse(null, StatusCodes.Status204NoContent);
             },
             ex => CustomResponse(ex.Message)

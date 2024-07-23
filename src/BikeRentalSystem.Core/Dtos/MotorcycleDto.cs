@@ -11,4 +11,6 @@ public class MotorcycleDto
     public DateTime? UpdatedAt { get; set; }
     public string? UpdatedByUser { get; set; }
     public bool IsDeleted { get; set; }
+
+    public MotorcycleNotificationDto MotorcycleNotification { get; set; } = new();
 }
